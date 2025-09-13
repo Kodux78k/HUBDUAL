@@ -104,9 +104,22 @@
   }
   .tog[aria-pressed="true"]{ box-shadow: inset 0 0 0 1px rgba(255,255,255,.18) }
   @media (max-width:480px){ .wrap{ gap:18px } }
+  .stage{position:fixed; inset:0; z-index:999; display:block; background:#000}
+.layer{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+
 </style>
 </head>
 <body>
+  <!-- SPLASH LAYER (3.03s) -->
+<section class="stage" id="stage">
+  <video id="splashVid" class="layer" autoplay muted playsinline
+         poster="./assets/animations/animado/hub_home_static.png" preload="auto">
+    <source src="./assets/animations/animado/hub_splash.webm" type="video/webm">
+    <source src="./assets/animations/animado/hub_splash.mp4"  type="video/mp4">
+  </video>
+  <img id="splashGif" class="layer" alt="Splash"
+       src="./assets/animations/animado/hub_splash.gif" style="display:none">
+</section>
   <main class="wrap">
     <div></div>
 
@@ -208,8 +221,34 @@
   // ação do CTA (substitua pela sua rota do Hub)
   document.getElementById('enterBtn').addEventListener('click', () => {
     // exemplo: abrir hub.html dentro do seu app
-    location.href = './hub.html';
+    location.href = './index-hub-apps.html';
   });
+</script>
+<script>
+(function(){
+  const vid = document.getElementById('splashVid');
+  const gif = document.getElementById('splashGif');
+  const stage = document.getElementById('stage');
+  const DURATION = 3030; // 3.03s
+
+  // tenta tocar o vídeo; se não tocar, mostra o GIF
+  function start(){
+    const p = vid.play && vid.play();
+    if (p && typeof p.then === 'function') {
+      p.catch(()=>{ vid.style.display='none'; gif.style.display='block'; });
+    }
+  }
+  vid.addEventListener('error', ()=>{ vid.style.display='none'; gif.style.display='block'; });
+  vid.addEventListener('loadeddata', start, { once:true });
+  start();
+
+  // Após 3.03s, some o splash e revela o conteúdo (ou redireciona)
+  setTimeout(()=>{
+    stage.style.display = 'none';
+    // Se preferir pular pro “mundo” direto:
+    // location.href = './indexado.html'; // ou './hub_v4.html'
+  }, DURATION);
+})();
 </script>
 </body>
 </html>
