@@ -29,7 +29,7 @@
     {
       "name": "Abrir Hub",
       "short_name": "Hub",
-      "url": "./hub_v4.html#hub",
+      "url": "./index_hub_apps.html",
       "icons": [
         {
           "src": "./assets/icons/icon-192.png",
