@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>DUAL.app — Hub de Apps</title>
+  <!-- Progressive Web App (PWA) metadata -->
+  <!-- Manifest file describing icons, colours and behaviour of the app when installed -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <!-- Primary theme colour for the address bar and system UI -->
+  <meta name="theme-color" content="#0a0f16">
+  <!-- Fallback icon for iOS home screen -->
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <style>
+    /*
+     * A paleta de cores e estilos aqui foi baseada no tema Nebula usado nas páginas
+     * splash e hub originais. As variáveis definidas em :root permitem ajustar
+     * facilmente as tonalidades principais, acentos e transparências utilizadas
+     * em gradientes, elementos de vidro (glass) e sombras. Para manter a
+     * coerência visual com o restante da aplicação basta reutilizar essas
+     * variáveis ao longo do CSS.
+     */
+    :root {
+      /* Paleta principal (ajustável) */
+      --c-blue-0: #0bd0ff;
+      --c-blue-1: #0aa4ff;
+      --c-blue-2: #0b68ff;
+      --c-orange-0: #ff8a1f;
+      --c-orange-1: #ff5a2f;
+      --c-deep: #0a0f1a;
+
+      /* Nebula (fundo) */
+      --nebula-a: #0b1020;
+      --nebula-b: #0d1a2b;
+      --nebula-c: #0e2640;
+      --nebula-d: #111a2a;
+      --nebula-acc-1: #2a0b3a;  /* violeta */
+      --nebula-acc-2: #003a49;  /* ciano escuro */
+
+      /* Glass / UI */
+      --glass-bg: rgba(255,255,255,.06);
+      --glass-stroke: rgba(255,255,255,.18);
+      --shadow-soft: 0 10px 40px rgba(0,0,0,.45);
+      --radius-2xl: 22px;
+
+      /* Textos */
+      --txt: #eaf5ff;
+      --txt-dim: #b9c7d9;
+
+      /* Definição de cores de acento (teal e orange) para o gradiente principal */
+      --gradient-angle: 42deg;
+      --gradient-teal: var(--c-blue-1);
+      --gradient-orange: var(--c-orange-0);
+      /* Mantemos --accent para compatibilidade, apontando para a cor laranja */
+      --accent: var(--c-orange-0);
+    }
+
+    /* Reset e regras gerais */
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      /* Fundo Nebula com gradientes sobrepostos */
+      /*
+       * Fundo com vinheta escura e gradientes teal e orange. Duas manchas de luz
+       * coloridas adicionam contraste e profundidade sobre um gradiente linear
+       * escuro. Ajuste as posições e opacidades conforme necessário.
+       */
+      background:
+        radial-gradient(800px 600px at 85% 15%, rgba(11,208,255,0.35) 0%, transparent 70%),
+        radial-gradient(800px 600px at 15% 80%, rgba(255,138,31,0.30) 0%, transparent 70%),
+        linear-gradient(180deg, #0a0e17, #010308);
+      color: var(--txt);
+      font: 500 16px/1.4 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Barra superior onde ficam o botão de upload e o Dual Brain */
+    #topBar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      gap: 16px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: auto;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      align-items: flex-start;
+    }
+
+    /* Campos do Dual Brain */
+    #dualBrain {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-start;
+    }
+    /* Linha do campo SK com botão de colar */
+    .sk-row {
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    .sk-row input {
+      flex: 1;
+    }
+    #dualBrain input,
+    #dualBrain select {
+      /* Campos reduzidos para caber em mobile sem quebrar o layout */
+      background: var(--glass-bg);
+      border: 1px solid rgba(255,138,31,.3);
+      border-radius: 10px;
+      padding: 6px 10px;
+      color: var(--txt);
+      backdrop-filter: blur(16px) saturate(120%);
+      -webkit-backdrop-filter: blur(16px) saturate(120%);
+      outline: none;
+      font: inherit;
+      width: 180px;
+      display: block;
+    }
+    #dualBrain select {
+      appearance: none;
+    }
+    /* Botão de colar chave: agora fica em uma nova linha abaixo do input, sem margem lateral */
+    #pasteBtn {
+      margin-left: 0;
+      margin-top: 4px;
+      background: linear-gradient(var(--gradient-angle), rgba(11,208,255,0.55), rgba(255,138,31,0.55));
+      border: 1px solid rgba(255,138,31,0.55);
+      color: var(--txt);
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      cursor: pointer;
+      backdrop-filter: blur(16px) saturate(120%);
+      -webkit-backdrop-filter: blur(16px) saturate(120%);
+      white-space: nowrap;
+      width: 180px;
+      display: block;
+    }
+    #pasteBtn:hover {
+      box-shadow: 0 6px 18px rgba(0,0,0,.55), 0 0 0 1px rgba(255,138,31,.4) inset;
+    }
+
+    /* Botão de upload (Carregar HTML) */
+    #loadBtn {
+      -webkit-tap-highlight-color: transparent;
+      padding: 12px 20px;
+      border-radius: var(--radius-2xl);
+      /* Botão com gradiente teal → orange e borda laranja */
+      background: linear-gradient(var(--gradient-angle), rgba(11,208,255,.55), rgba(255,138,31,.55));
+      border: 1px solid rgba(255,138,31,.55);
+      backdrop-filter: blur(16px) saturate(120%);
+      -webkit-backdrop-filter: blur(16px) saturate(120%);
+      box-shadow: var(--shadow-soft), 0 0 0 1px rgba(255,255,255,.06) inset;
+      color: var(--txt);
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+    #loadBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 42px rgba(0,0,0,.55), 0 0 0 1px rgba(255,138,31,.4) inset;
+    }
+    #loadBtn:active {
+      transform: translateY(0);
+    }
+
+    /* Input file escondido */
+    #fileInput {
+      display: none;
+    }
+
+    /* Dock de apps fixo na base */
+    #appsDock {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      z-index: 100;
+      height: 72px;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .app-card {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: var(--glass-bg);
+      border: 1px solid rgba(255,138,31,.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--txt);
+      backdrop-filter: blur(14px) saturate(120%);
+      -webkit-backdrop-filter: blur(14px) saturate(120%);
+      box-shadow: 0 8px 30px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.05) inset;
+      text-transform: uppercase;
+    }
+    .app-card:hover {
+      box-shadow: 0 12px 38px rgba(0,0,0,.55), 0 0 0 1px rgba(255,138,31,.6) inset;
+    }
+
+    /* Container de janelas */
+    #windows {
+      position: fixed;
+      top: 100px;
+      bottom: 72px;
+      left: 0;
+      right: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .window {
+      position: absolute;
+      width: calc(100% - 32px);
+      height: calc(100% - 32px);
+      top: 0;
+      left: 0;
+      margin: 16px;
+      border-radius: var(--radius-2xl);
+      background: rgba(5,7,9,0.65);
+      border: 1px solid rgba(255,138,31,.3);
+      backdrop-filter: blur(24px) saturate(120%);
+      -webkit-backdrop-filter: blur(24px) saturate(120%);
+      box-shadow: 0 14px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(255,138,31,.25) inset;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      pointer-events: auto;
+    }
+    .window-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: rgba(0,0,0,.35);
+      user-select: none;
+      cursor: default;
+    }
+    .window-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .window-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .window-actions button {
+      background: transparent;
+      border: none;
+      color: var(--txt);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px 6px;
+      line-height: 1;
+    }
+    .window-actions button:hover {
+      color: var(--c-orange-0);
+    }
+    .window-content {
+      flex: 1;
+      overflow: hidden;
+    }
+    .window iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="topBar">
+    <button id="loadBtn" aria-label="Carregar HTML">Carregar HTML</button>
+    <div id="dualBrain">
+      <!--
+        O Dual Brain agora está organizado verticalmente para evitar que elementos quebrem
+        a linha em telas pequenas. O campo de chave SK vem primeiro, seguido por um
+        botão de colar, e finalmente o seletor de modelos. Este layout impede que o
+        botão "Colar" ocupe o mesmo espaço horizontal do input, resolvendo o problema
+        de quebra de layout reportado.
+      -->
+      <input id="skInput" type="password" placeholder="Cole sua chave SK" aria-label="Chave secreta" />
+      <button id="pasteBtn" title="Colar chave" aria-label="Colar chave">Colar</button>
+      <select id="modelSelect" aria-label="Modelo">
+        <option value="psique">psique</option>
+        <option value="lama">lama</option>
+        <!-- Modelos gratuitos do OpenRouter para seleção -->
+        <option value="deepseek/deepseek-chat-v3-0324:free">deepseek-chat-v3 (grátis)</option>
+        <option value="meta-llama/llama-4-maverick:free">llama-4-maverick (grátis)</option>
+        <option value="deepseek/deepseek-r1:free">deepseek-r1 (grátis)</option>
+        <option value="qwen/qwen3-235b-a22b:free">qwen3-235b (grátis)</option>
+      </select>
+    </div>
+  </div>
+  <!-- Input de arquivo oculto para seleção do HTML local -->
+  <input type="file" id="fileInput" accept=".html,.htm">
+  <!-- Contêiner de janelas abertas (cada app carregado vive em uma window) -->
+  <div id="windows"></div>
+  <!-- Dock inferior com miniaturas/atalhos para reabrir apps -->
+  <div id="appsDock"></div>
+
+  <script>
+  (function() {
+    const fileInput   = document.getElementById('fileInput');
+    const loadBtn     = document.getElementById('loadBtn');
+    const windowsEl   = document.getElementById('windows');
+    const dock        = document.getElementById('appsDock');
+    const skInput     = document.getElementById('skInput');
+    const modelSelect = document.getElementById('modelSelect');
+
+    // Botão para colar do clipboard
+    const pasteBtn    = document.getElementById('pasteBtn');
+
+    // Estado em memória para apps e Dual Brain
+    let apps  = [];
+    let brain = { sk: '', model: 'psique' };
+
+    // Persistência em localStorage
+    function saveApps() {
+      try {
+        localStorage.setItem('dualApps', JSON.stringify(apps));
+      } catch (_) {}
+    }
+    function saveBrain() {
+      try {
+        localStorage.setItem('dualBrain', JSON.stringify(brain));
+      } catch (_) {}
+    }
+    function loadState() {
+      try {
+        const storedApps = JSON.parse(localStorage.getItem('dualApps') || '[]');
+        if (Array.isArray(storedApps)) apps = storedApps;
+      } catch (_) { apps = []; }
+      try {
+        const storedBrain = JSON.parse(localStorage.getItem('dualBrain') || '{}');
+        if (storedBrain && typeof storedBrain === 'object') {
+          brain = Object.assign(brain, storedBrain);
+        }
+      } catch (_) {}
+      // Repopula campos
+      if (brain.sk) skInput.value = brain.sk;
+      if (brain.model) modelSelect.value = brain.model;
+    }
+
+    // Actualiza dock visual
+    function updateDock() {
+      dock.innerHTML = '';
+      apps.forEach(app => {
+        const card = document.createElement('div');
+        card.className = 'app-card';
+        card.title = app.name;
+        // Usa as primeiras letras como label
+        card.textContent = app.name.slice(0,2).toUpperCase();
+        card.addEventListener('click', () => {
+          openApp(app.id);
+        });
+        dock.appendChild(card);
+      });
+    }
+
+    // Injeta a configuração do Dual Brain dentro do HTML de destino. Para evitar
+    // quebras em tags script, escapamos a string adequadamente. A função
+    // procura a tag <head> no HTML e injeta imediatamente após, caso exista.
+    function injectDual(html) {
+      const data = JSON.stringify(brain);
+      const injection = '<script>window.__DUAL__ = ' + data + ';<' + '/script>';
+      // Se houver <head>, insere logo após
+      const headMatch = /<head[^>]*>/i.exec(html);
+      if (headMatch) {
+        const index = headMatch.index + headMatch[0].length;
+        return html.slice(0, index) + injection + html.slice(index);
+      }
+      // Caso contrário, injeta no início
+      return injection + html;
+    }
+
+    // Cria ou mostra a janela de um app. Usa data-id para identificar.
+    function openApp(id) {
+      const app = apps.find(a => a.id === id);
+      if (!app) return;
+      // Procura janela existente
+      let win = windowsEl.querySelector('.window[data-id="' + id + '"]');
+      if (win) {
+        win.style.display = 'flex';
+        win.style.zIndex = String(Date.now());
+        return;
+      }
+      // Cria a janela
+      win = document.createElement('div');
+      win.className = 'window';
+      win.dataset.id = id;
+      // Cabeçalho
+      const header = document.createElement('div');
+      header.className = 'window-header';
+      const title = document.createElement('div');
+      title.className = 'window-title';
+      title.textContent = app.name;
+      const actions = document.createElement('div');
+      actions.className = 'window-actions';
+      // Botões
+      const btnMinimize = document.createElement('button');
+      btnMinimize.innerHTML = '&#x2014;'; // símbolo de traço para minimizar
+      const btnExternal = document.createElement('button');
+      btnExternal.innerHTML = '&#x2197;'; // seta diagonal
+      const btnClose = document.createElement('button');
+      btnClose.innerHTML = '&#x2716;'; // X para fechar
+      actions.appendChild(btnMinimize);
+      actions.appendChild(btnExternal);
+      actions.appendChild(btnClose);
+      header.appendChild(title);
+      header.appendChild(actions);
+      // Conteúdo
+      const content = document.createElement('div');
+      content.className = 'window-content';
+      const iframe = document.createElement('iframe');
+      iframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals');
+      iframe.srcdoc = injectDual(app.html);
+      content.appendChild(iframe);
+      // Monta
+      win.appendChild(header);
+      win.appendChild(content);
+      // Posicionamento inicial aleatório (dentro de limites)
+      const randTop = 5 + Math.random() * 40;  // 5% a 45%
+      const randLeft = 5 + Math.random() * 60; // 5% a 65%
+      win.style.top = randTop + '%';
+      win.style.left = randLeft + '%';
+      // Atribui z-index incremental
+      win.style.zIndex = String(Date.now());
+      // Eventos de ação
+      btnMinimize.addEventListener('click', () => {
+        win.style.display = 'none';
+      });
+      btnClose.addEventListener('click', () => {
+        win.remove();
+      });
+      btnExternal.addEventListener('click', () => {
+        // Cria um blob com o HTML injetado e abre em nova aba
+        const blob = new Blob([injectDual(app.html)], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      });
+      // Permite arrastar pela barra de título
+      let dragOffsetX, dragOffsetY;
+      function onMouseMove(e) {
+        win.style.left = e.clientX - dragOffsetX + 'px';
+        win.style.top  = e.clientY - dragOffsetY + 'px';
+      }
+      header.addEventListener('mousedown', (e) => {
+        dragOffsetX = e.clientX - win.offsetLeft;
+        dragOffsetY = e.clientY - win.offsetTop;
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', () => {
+          document.removeEventListener('mousemove', onMouseMove);
+        }, { once: true });
+      });
+      windowsEl.appendChild(win);
+    }
+
+    // Botão de carregar: abre diálogo de arquivo
+    loadBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+    // Manipula upload do arquivo HTML
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const html = ev.target.result;
+        // Gera id único
+        const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+        const name = file.name.replace(/\.html?$/i, '');
+        const app = { id, name, html };
+        apps.push(app);
+        saveApps();
+        updateDock();
+        openApp(id);
+        fileInput.value = '';
+      };
+      reader.readAsText(file);
+    });
+
+    // Atualiza Dual Brain quando usuário digita ou seleciona
+    skInput.addEventListener('input', () => {
+      brain.sk = skInput.value.trim();
+      saveBrain();
+    });
+    modelSelect.addEventListener('change', () => {
+      brain.model = modelSelect.value;
+      saveBrain();
+    });
+
+    // Permite colar a chave da área de transferência
+    if (pasteBtn) {
+      pasteBtn.addEventListener('click', async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            skInput.value = text.trim();
+            brain.sk = skInput.value;
+            saveBrain();
+          }
+        } catch (e) {
+          console.warn('Clipboard error', e);
+          alert('Não foi possível acessar a área de transferência.');
+        }
+      });
+    }
+
+    // Inicialização: carrega estado salvo, popula dock e cria janelas invisíveis
+    loadState();
+    updateDock();
+    apps.forEach(app => {
+      openApp(app.id);
+      // minimiza ao iniciar
+      const win = windowsEl.querySelector('.window[data-id="' + app.id + '"]');
+      if (win) win.style.display = 'none';
+    });
+  })();
+  </script>
+
+  <!-- Registra o Service Worker após o carregamento da página -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js').catch(err => {
+          console.warn('Falha ao registrar Service Worker', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
