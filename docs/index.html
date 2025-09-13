@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>DUAL.app — Nebula Pro</title>
   <style>
     html,body{height:100%;margin:0}
@@ -12,7 +14,7 @@
     .layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
     .overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.35))}
     /* CTA */
-    .cta{position:fixed;z-index:3;left:50%;bottom:8vh;transform:translateX(-50%);
+    .cta{position:fixed;z-index:3;left:50%;bottom:29vh;transform:translateX(-50%);
          appearance:none;border:1px solid rgba(255,138,31,.55);
          background:linear-gradient(42deg, rgba(11,208,255,.45), rgba(255,138,31,.45));
          color:#eaf5ff;padding:12px 18px;border-radius:16px;cursor:pointer}
@@ -23,7 +25,7 @@
     <!-- Vídeo de fundo (usa WebM e MP4; poster mostra enquanto carrega) -->
     <video id="bgVid" class="layer" autoplay muted playsinline loop
            poster="./assets/animations/animado/hub_home_static.PNG" preload="auto">
-      <source src="./assets/animations/animado/hub_splash.webm" type="video/webm">
+      <source src="./assets/animations/animado/hub_home_loop.webm" type="video/webm">
       <source src="./assets/animations/animado/hub_home_loop.MP4"  type="video/mp4">
     </video>
 
