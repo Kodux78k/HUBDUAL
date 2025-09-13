@@ -15,16 +15,16 @@ const RUNTIME = `runtime-${SW_VERSION}`;
 
 /* Liste aqui os essenciais pro primeiro paint */
 const PRECACHE_URLS = [
-  '/',
-  '/index.html',
-  '/manifest.webmanifest',
+  './',
+  './index.html',
+  './manifest.webmanifest',
   /* Posters e pílula (versões PNG) */
-  '/assets/animations/animado/hub_splash.png',
-  '/assets/animations/animado/hub_home_static.png',
-  '/assets/animations/animado/hub_pill_home.png',
+  './assets/animations/animado/hub_splash.png',
+  './assets/animations/animado/hub_home_static.png',
+  './assets/animations/animado/hub_pill_home.png',
   /* Um ou dois loops críticos (os browsers baixam o resto sob demanda) */
-  '/assets/animations/animado/hub_splash.mp4',
-  '/assets/animations/animado/hub_home_loop.mp4'
+  './assets/animations/animado/hub_splash.mp4',
+  './assets/animations/animado/hub_home_loop.mp4'
 ];
 
 self.addEventListener('install', (event) => {
@@ -65,7 +65,7 @@ self.addEventListener('fetch', (event) => {
       } catch (e) {
         const cache = await caches.open(PRECACHE);
         // Always fall back to index.html for navigation
-        return (await cache.match('/index.html')) || new Response('offline', { status: 503 });
+        return (await cache.match('./index.html')) || new Response('offline', { status: 503 });
       }
     })());
     return;
