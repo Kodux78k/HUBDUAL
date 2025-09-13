@@ -3,14 +3,63 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DUAL.app — Redirect</title>
-  <meta http-equiv="refresh" content="0; url=index-splash.html">
+  <title>DUAL.app — Nebula Pro</title>
+  <style>
+    html,body{height:100%;margin:0}
+    body{background:#000;color:#eaf5ff;font:600 16px/1.3 Inter,ui-sans-serif}
+    /* Camadas */
+    .stage{position:fixed;inset:0;overflow:hidden}
+    .layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.35))}
+    /* CTA */
+    .cta{position:fixed;z-index:3;left:50%;bottom:8vh;transform:translateX(-50%);
+         appearance:none;border:1px solid rgba(255,138,31,.55);
+         background:linear-gradient(42deg, rgba(11,208,255,.45), rgba(255,138,31,.45));
+         color:#eaf5ff;padding:12px 18px;border-radius:16px;cursor:pointer}
+  </style>
 </head>
 <body>
-  <p>Carregando Hub...</p>
+  <main class="stage">
+    <!-- Vídeo de fundo (usa WebM e MP4; poster mostra enquanto carrega) -->
+    <video id="bgVid" class="layer" autoplay muted playsinline loop
+           poster="./assets/animations/animado/hub_home_static.png" preload="auto">
+      <source src="./assets/animations/animado/hub_home_loop.webm" type="video/webm">
+      <source src="./assets/animations/animado/hub_home_loop.mp4"  type="video/mp4">
+    </video>
+
+    <!-- Fallback imagem caso o vídeo falhe (Safari antigo, modo economia, etc.) -->
+    <img id="bgImg" class="layer" alt="Fundo" style="display:none"
+         src="./assets/animations/animado/hub_home_static.png"/>
+
+    <div class="overlay" aria-hidden="true"></div>
+  </main>
+
+  <button class="cta" id="go">Entrar no Hub</button>
+
   <script>
-    // fallback caso meta refresh não funcione
-    window.location.href = "index-splash.html";
+  (function(){
+    const vid = document.getElementById('bgVid');
+    const img = document.getElementById('bgImg');
+    const go  = document.getElementById('go');
+
+    // Tenta dar play; se falhar (autoplay bloqueado), cai pra imagem
+    function ensurePlayback(){
+      if (!vid) return;
+      const p = vid.play && vid.play();
+      if (p && typeof p.then === 'function') {
+        p.catch(()=> { vid.style.display='none'; img.style.display='block'; });
+      }
+    }
+    // Se o vídeo travar/erro → fallback
+    vid.addEventListener('error', ()=>{ vid.style.display='none'; img.style.display='block'; });
+    // Em iOS, às vezes precisa aguardar meta-dados
+    vid.addEventListener('loadeddata', ensurePlayback, { once:true });
+    // Chama também direto (navegadores que já permitem autoplay)
+    ensurePlayback();
+
+    // CTA → seu Hub
+    go.addEventListener('click', ()=> { location.href = './hub_v4.html'; });
+  })();
   </script>
 </body>
 </html>
