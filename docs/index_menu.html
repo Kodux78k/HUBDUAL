@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Hub Dual – Menu</title>
+<style>
+  :root{
+    /* Paleta baseada no mockup: azuis e roxos cósmicos */
+    --bg-start:#0a1332;
+    --bg-end:#120c28;
+    --panel-bg:rgba(255,255,255,0.08);
+    --panel-border:rgba(255,255,255,0.18);
+    --highlight-grad:linear-gradient(90deg,#ff6978,#00c6ff);
+    --btn-bg:rgba(255,255,255,0.05);
+    --btn-border:rgba(255,255,255,0.15);
+    --txt:#ffffff;
+    --txt-dim:rgba(255,255,255,0.8);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',ui-sans-serif,sans-serif;}
+  body{
+    min-height:100vh;
+    background:radial-gradient(circle at 20% 10%, rgba(0,123,255,0.3), transparent 50%),
+               radial-gradient(circle at 80% 30%, rgba(255,106,168,0.25), transparent 60%),
+               linear-gradient(180deg,var(--bg-start),var(--bg-end));
+    color:var(--txt);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding-top:40px;
+  }
+  header{
+    width:100%;
+    max-width:420px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 20px;
+  }
+  .title-group{text-align:left;}
+  .title-group small{letter-spacing:3px; font-size:0.65rem; color:var(--txt-dim); text-transform:uppercase;}
+  .title-group h1{font-size:1.6rem; font-weight:800; line-height:1.2; margin-top:4px;}
+  .user-icon{
+    width:48px; height:48px; border-radius:50%;
+    border:2px solid rgba(255,255,255,0.3);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:1.6rem;
+    color:var(--txt-dim);
+  }
+  .heart{
+    margin:40px 0 20px;
+    width:180px; height:180px;
+    background:url('assets/heart_big.png') center/contain no-repeat;
+  }
+  .menu-panel{
+    width:90%;
+    max-width:460px;
+    padding:30px 20px;
+    border-radius:24px;
+    background:var(--panel-bg);
+    border:1px solid var(--panel-border);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:18px;
+  }
+  .menu-panel h2{
+    font-size:1.8rem;
+    font-weight:700;
+    text-align:center;
+    margin-bottom:10px;
+  }
+  .menu-btn{
+    padding:14px 20px;
+    border-radius:14px;
+    border:1px solid var(--btn-border);
+    background:var(--btn-bg);
+    color:var(--txt);
+    font-weight:600;
+    font-size:1rem;
+    text-align:center;
+    cursor:pointer;
+    transition:background 0.25s ease, transform 0.15s ease;
+  }
+  .menu-btn:hover{
+    background:var(--highlight-grad);
+    transform:translateY(-2px);
+  }
+  .mic{
+    margin-top:30px;
+    font-size:2rem;
+    color:var(--txt-dim);
+    cursor:pointer;
+    transition:color 0.3s ease;
+  }
+  .mic:hover{ color:var(--txt); }
+  @media(max-width:500px){
+    .heart{width:140px;height:140px;}
+    .menu-panel h2{font-size:1.5rem;}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="title-group">
+      <small>HUB DUAL</small>
+      <h1>UNO DUAL<br>TRINITY</h1>
+    </div>
+    <div class="user-icon">👤</div>
+  </header>
+  <div class="heart"></div>
+  <div class="menu-panel">
+    <h2>Entrar no Hub</h2>
+    <a class="menu-btn" href="index_hub_apps.html#apps">Apps</a>
+    <a class="menu-btn" href="index_hub_apps.html#stack">Stack</a>
+    <a class="menu-btn" href="index_hub_apps.html#minimized">Minimizado</a>
+  </div>
+  <div class="mic">🎤</div>
+</body>
+</html>

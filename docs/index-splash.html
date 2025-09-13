@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Dual — Splash Nebula Pro</title>
+<style>
+  :root{
+    /* Paleta principal (ajustável) */
+    --c-blue-0:#0bd0ff;
+    --c-blue-1:#0aa4ff;
+    --c-blue-2:#0b68ff;
+    --c-orange-0:#ff8a1f;
+    --c-orange-1:#ff5a2f;
+    --c-deep:#0a0f1a;
+
+    /* Nebula (fundo) */
+    --nebula-a:#0b1020;
+    --nebula-b:#0d1a2b;
+    --nebula-c:#0e2640;
+    --nebula-d:#111a2a;
+    --nebula-acc-1:#2a0b3a;  /* violeta */
+    --nebula-acc-2:#003a49;  /* ciano escuro */
+
+    /* Glass / UI */
+    --glass-bg: rgba(255,255,255,.06);
+    --glass-stroke: rgba(255,255,255,.18);
+    --shadow-soft: 0 10px 40px rgba(0,0,0,.45);
+    --radius-2xl: 22px;
+
+    /* Textos */
+    --txt:#eaf5ff;
+    --txt-dim:#b9c7d9;
+  }
+
+  /* Reset rápido */
+  * { box-sizing: border-box }
+  html,body{ height:100% }
+  body{
+    margin:0; background: radial-gradient(1200px 900px at 80% 10%, var(--nebula-acc-2) -10%, transparent 50%),
+                       radial-gradient(900px 700px at 15% 20%, var(--nebula-acc-1) -10%, transparent 55%),
+                       linear-gradient(160deg, var(--nebula-a), var(--nebula-b) 30%, var(--nebula-c) 65%, var(--nebula-d));
+    color:var(--txt); font: 500 16px/1.4 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+    display:grid; place-items:center;
+  }
+
+  .wrap{
+    width:min(1200px, 92vw);
+    height:100dvh;
+    display:grid;
+    grid-template-rows: 1fr auto 1fr;
+    align-items:center;
+    justify-items:center;
+    gap:28px;
+    padding: clamp(16px, 4vw, 40px);
+  }
+
+  /* ====== LOGOS (SVG inline) ====== */
+  .logo{
+    width:min(420px, 70vw);
+    aspect-ratio: 1/1.2;
+    filter: drop-shadow(0 12px 40px rgba(0,0,0,.45))
+            drop-shadow(0 0 42px rgba(11,208,255,.22))
+            drop-shadow(0 0 54px rgba(255,106,47,.14));
+  }
+  .logo.seed{ aspect-ratio: 1/1; }
+
+  /* ====== Botão Glass ====== */
+  .cta{
+    -webkit-tap-highlight-color: transparent;
+    padding: 16px 28px;
+    border-radius: var(--radius-2xl);
+    color: var(--txt);
+    font-weight: 700;
+    font-size: clamp(16px, 3.4vw, 22px);
+    background: linear-gradient(180deg, rgba(255,255,255,.15), rgba(255,255,255,.04));
+    border: 1px solid var(--glass-stroke);
+    backdrop-filter: blur(16px) saturate(120%);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
+    box-shadow: var(--shadow-soft), 0 0 0 1px rgba(255,255,255,.06) inset;
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    display:inline-flex; align-items:center; gap:12px;
+  }
+  .cta:before{
+    content:"";
+    width:12px; height:12px; border-radius:999px;
+    background: radial-gradient(circle at 35% 35%, white 0 12%, rgba(255,255,255,.6) 20%, transparent 55%),
+                radial-gradient(circle at 65% 70%, var(--c-blue-0), var(--c-blue-1) 60%, transparent 75%),
+                radial-gradient(circle at 20% 80%, var(--c-orange-0), transparent 60%);
+    box-shadow: 0 0 28px rgba(11,208,255,.55), 0 0 18px rgba(255,106,47,.35);
+  }
+  .cta:hover{ transform: translateY(-1px); box-shadow: 0 12px 38px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.10) inset }
+  .cta:active{ transform: translateY(0); }
+
+  .hint{ color:var(--txt-dim); font-size: 13px; opacity:.85 }
+
+  /* ====== util ====== */
+  .row{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; justify-content:center }
+  .tog{
+    appearance:none; outline:0; border:1px solid var(--glass-stroke);
+    background: var(--glass-bg); color:var(--txt); cursor:pointer;
+    padding:10px 14px; border-radius: 14px; font-weight:600;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+  .tog[aria-pressed="true"]{ box-shadow: inset 0 0 0 1px rgba(255,255,255,.18) }
+  @media (max-width:480px){ .wrap{ gap:18px } }
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <div></div>
+
+    <!-- ====== LOGO: CÁPSULA (SVG vetorial com gradientes e glow) ====== -->
+    <svg id="logoCapsule" class="logo" viewBox="0 0 100 120" aria-label="Dual Capsule" role="img">
+      <defs>
+        <linearGradient id="gWarm" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="var(--c-orange-1)"/>
+          <stop offset="55%" stop-color="var(--c-orange-0)"/>
+          <stop offset="100%" stop-color="rgba(255,180,120,.85)"/>
+        </linearGradient>
+        <linearGradient id="gCool" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="var(--c-blue-2)"/>
+          <stop offset="60%" stop-color="var(--c-blue-1)"/>
+          <stop offset="100%" stop-color="var(--c-blue-0)"/>
+        </linearGradient>
+        <radialGradient id="edgeGlow" cx="50%" cy="50%" r="65%">
+          <stop offset="50%" stop-color="rgba(255,255,255,.18)"/>
+          <stop offset="95%" stop-color="rgba(255,255,255,.02)"/>
+          <stop offset="100%" stop-color="transparent"/>
+        </radialGradient>
+        <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="1.2" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- corpo (vidro) -->
+      <rect x="8" y="6" width="84" height="108" rx="28" ry="28"
+            fill="url(#edgeGlow)" stroke="rgba(255,255,255,.25)" stroke-width="0.6"/>
+      <!-- metade fria -->
+      <path d="M92,60c0,30-18,54-40,54S12,90,12,60s18-54,40-54S92,30,92,60Z
+               M50,18c-10,0-18,8-18,18c0,28,18,18,18,42c0-24,18-14,18-42c0-10-8-18-18-18Z"
+            fill="url(#gCool)" filter="url(#soft)"/>
+      <!-- metade quente (sutil por baixo) -->
+      <path d="M92,60c0,30-18,54-40,54V6c22,0,40,24,40,54Z" fill="url(#gWarm)" opacity=".75" filter="url(#soft)"/>
+      <!-- linha S brilhante -->
+      <path d="M34,36c8,-18 40,0 34,24c-4,16-22,14-18,36" fill="none"
+            stroke="white" stroke-opacity=".9" stroke-width="1.2" filter="url(#soft)"/>
+      <path d="M34,36c8,-18 40,0 34,24c-4,16-22,14-18,36" fill="none"
+            stroke="var(--c-blue-0)" stroke-width="0.9" stroke-opacity=".9"/>
+    </svg>
+
+    <!-- ====== LOGO: SEED SPLIT (par) ====== -->
+    <svg id="logoSeed" class="logo seed" viewBox="0 0 100 100" aria-label="Dual Seed Split" role="img" style="display:none">
+      <defs>
+        <linearGradient id="seedCool" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0%" stop-color="var(--c-blue-2)"/>
+          <stop offset="100%" stop-color="var(--c-blue-0)"/>
+        </linearGradient>
+        <linearGradient id="seedWarm" x1="1" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="var(--c-orange-1)"/>
+          <stop offset="100%" stop-color="var(--c-orange-0)"/>
+        </linearGradient>
+        <filter id="seedBlur" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="0.9"/>
+        </filter>
+      </defs>
+      <!-- left bean -->
+      <path d="M12,50c0,-22 18,-38 34,-38c10,0 12,6 12,9c0,5 -5,7 -9,12c-4,5 -7,9 -7,17
+               c0,8 3,12 7,17c4,5 9,7 9,12c0,3 -2,9 -12,9C30,88 12,72 12,50Z"
+            fill="url(#seedWarm)" filter="url(#seedBlur)"/>
+      <!-- right bean -->
+      <path d="M88,50c0,22 -18,38 -34,38c-10,0 -12,-6 -12,-9c0,-5 5,-7 9,-12c4,-5 7,-9 7,-17
+               c0,-8 -3,-12 -7,-17c-4,-5 -9,-7 -9,-12c0,-3 2,-9 12,-9C70,12 88,28 88,50Z"
+            fill="url(#seedCool)" filter="url(#seedBlur)"/>
+      <!-- S-lines -->
+      <path d="M36,28c10,-9 24,2 20,12c-3,8 -12,8 -12,20" fill="none" stroke="white" stroke-opacity=".85" stroke-width="1.2"/>
+      <path d="M64,72c-10,9 -24,-2 -20,-12c3,-8 12,-8 12,-20" fill="none" stroke="white" stroke-opacity=".85" stroke-width="1.2"/>
+    </svg>
+
+    <!-- CTA -->
+    <button class="cta" id="enterBtn">Entrar no Hub</button>
+
+    <div class="row">
+      <button class="tog" id="togCapsule" aria-pressed="true">Cápsula</button>
+      <button class="tog" id="togSeed" aria-pressed="false">Seed Split</button>
+      <span class="hint">Glass ativo • Fundo Nebula Pro</span>
+    </div>
+  </main>
+
+<script>
+  // troca entre logos
+  const cap = document.getElementById('logoCapsule');
+  const seed = document.getElementById('logoSeed');
+  const bCap = document.getElementById('togCapsule');
+  const bSeed = document.getElementById('togSeed');
+
+  const setMode = (mode) => {
+    const isCapsule = mode === 'capsule';
+    cap.style.display = isCapsule ? '' : 'none';
+    seed.style.display = isCapsule ? 'none' : '';
+    bCap.setAttribute('aria-pressed', isCapsule);
+    bSeed.setAttribute('aria-pressed', !isCapsule);
+  };
+  bCap.onclick = () => setMode('capsule');
+  bSeed.onclick = () => setMode('seed');
+
+  // ação do CTA (substitua pela sua rota do Hub)
+  document.getElementById('enterBtn').addEventListener('click', () => {
+    // exemplo: abrir hub.html dentro do seu app
+    location.href = './hub.html';
+  });
+</script>
+</body>
+</html>
