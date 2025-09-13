@@ -4,7 +4,7 @@
   "short_name": "DUAL Hub",
   "description": "Splash ▶ Idle ▶ Hub com animações Glow",
   "lang": "pt-BR",
-  "start_url": "./index.html",
+  "start_url": "./hub_v4.html",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone"],
@@ -29,7 +29,7 @@
     {
       "name": "Abrir Hub",
       "short_name": "Hub",
-      "url": "./index.html#hub",
+      "url": "./hub_v4.html#hub",
       "icons": [
         {
           "src": "./assets/icons/icon-192.png",
