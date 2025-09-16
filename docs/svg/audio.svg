@@ -1,0 +1,10 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <linearGradient id="gradWave" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00b4db" />
+      <stop offset="100%" stop-color="#0083b0" />
+    </linearGradient>
+  </defs>
+  <circle cx="256" cy="256" r="180" fill="url(#gradWave)" />
+  <path d="M100 256 C150 200 200 312 250 256 C300 200 350 312 400 256" stroke="#ffffff" stroke-width="32" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
