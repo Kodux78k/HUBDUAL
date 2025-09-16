@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="nebula">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Dual • UNO v3.2 — Nebula Pro Seamless + Retrátil + Flex Frames</title>
+<meta name="theme-color" content="#0b0c10"/>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+/* ================= Paletas ================= */
+:root{
+  --fg:#eaf2ff; --mut:#9fb0c7; --line:#ffffff1c; --glass:rgba(255,255,255,.06);
+  --r:18px; --r-lg:22px; --blur:16px; --pad:12px; --gap:12px; --h:56px;
+  --mono: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans: system-ui,-apple-system,Inter,Segoe UI,Roboto,Arial;
+  --plasma1:#ff00ff; --plasma2:#00ffff; --acc:#D4AF37;
+}
+:root.minuz{ --pad:8px; --gap:8px; --h:46px; }
+
+/* Nebula Pro seamless: usa camadas conic+radial com parallax suave */
+html[data-theme="nebula"] body{
+  --bg:#0a0b10;
+  background:
+    radial-gradient(1200px 800px at 50% -15%, rgba(212,175,55,.10), transparent 65%),
+    conic-gradient(from 42deg at 30% 10%, rgba(255,0,255,.10), rgba(0,255,255,.10), rgba(255,0,255,.10)),
+    radial-gradient(1400px 900px at 80% -20%, rgba(0,255,255,.08), transparent 60%),
+    linear-gradient(180deg,#0a0b10 0%, #0b0d15 38%, #090b12 100%);
+  background-attachment: fixed,fixed,fixed,fixed;
+}
+/* Dark Porcelana */
+html[data-theme="porcelana"] body{
+  --bg:#0b0c10;
+  background:
+    radial-gradient(900px 600px at 20% 10%, rgba(255,255,255,.06), transparent 60%),
+    linear-gradient(180deg,#0b0c10 0%, #0f1117 40%, #0b0c10 100%);
+  background-attachment: fixed,fixed;
+}
+/* Daylight */
+html[data-theme="daylight"] body{
+  --bg:#f7f8fb; --fg:#0d1117; --mut:#405168; --line:#0d111722; --glass:rgba(13,17,23,.04);
+  background:
+    radial-gradient(900px 600px at 10% -10%, rgba(0,0,0,.04), transparent 60%),
+    linear-gradient(180deg,#ffffff 0%, #f2f6ff 40%, #ffffff 100%);
+  background-attachment: fixed,fixed;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{ margin:0; color:var(--fg); font-family:var(--sans); display:flex; flex-direction:column; overflow-x:hidden; }
+
+/* Halos dinâmicos (suaves e sem banding) */
+.nebula-halo{position:fixed; inset:-25vh -20vw auto auto; pointer-events:none; z-index:0;
+  width:60vw; height:60vh; filter:blur(48px) saturate(1.1);
+  background: conic-gradient(from 42deg, var(--plasma1), var(--plasma2));
+  opacity:.10; border-radius:50%; animation:nebula-rotate 28s linear infinite;}
+.nebula-halo.second{ inset:auto auto -25vh -20vw; width:50vw; height:50vh; opacity:.08; animation-duration:36s;}
+html[data-theme="daylight"] .nebula-halo{display:none}
+@keyframes nebula-rotate { to { transform:rotate(360deg) } }
+
+.shadow-pulse{ box-shadow:0 20px 60px rgba(0,0,0,.45), 0 0 40px 0 rgba(255,0,255,.12), 0 0 80px 0 rgba(0,255,255,.10); }
+html[data-theme="daylight"] .shadow-pulse{ box-shadow:0 10px 30px rgba(0,0,0,.08); }
+
+.header{ position:sticky; top:0; z-index:20; backdrop-filter: blur(var(--blur)); background: rgba(11,12,16,.55); border-bottom:1px solid var(--line); }
+html[data-theme="daylight"] .header{ background:rgba(255,255,255,.7); }
+.hwrap{max-width:1200px;margin:0 auto;padding:var(--pad);display:flex;gap:var(--gap);align-items:center;justify-content:space-between}
+.brand{display:flex;gap:12px;align-items:center;position:relative}
+.logo{ width:50px;height:50px;border-radius:50%; background: conic-gradient(from 42deg, var(--plasma1), var(--plasma2)); border:1px solid #ffffff30; position:relative; }
+.logo::after{ content:""; position:absolute; inset:-8px; border-radius:50%; background: radial-gradient(closest-side, rgba(255,255,255,.18), transparent 70%); filter: blur(10px); }
+.title{margin:0;font-weight:900;letter-spacing:.2px}
+.sub{margin:0;color:var(--mut);font-size:.86rem}
+
+.tabs{position:sticky;top:calc(var(--h) + env(safe-area-inset-top));z-index:15;background:transparent}
+.twrap{max-width:1200px;margin:0 auto;padding:0 var(--pad) var(--pad)}
+.tabbar{display:flex;gap:8px;flex-wrap:wrap}
+.tab, .chip{padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:#0f1218;color:#dfe8ff;cursor:pointer;font-weight:800}
+.tab.active{outline:2px solid #ffd76a55}
+html[data-theme="daylight"] .tab, html[data-theme="daylight"] .chip{ background:#fff; color:#0d1117 }
+
+/* Layout com opção Flex Frames */
+main{flex:1;display:grid;gap:var(--gap);grid-template-columns: 1.15fr 1fr;max-width:1200px;margin:0 auto;padding:var(--pad)}
+@media (max-width:1100px){main{grid-template-columns:1fr}}
+
+.card{ background:linear-gradient(180deg, var(--glass), rgba(255,255,255,.03)); border:1px solid var(--line); border-radius:var(--r-lg); padding:0; overflow:hidden }
+.card h3{margin:.2rem 0 .6rem;font-size:.95rem;letter-spacing:.08em;text-transform:uppercase;color:#cfdaf0}
+html[data-theme="daylight"] .card h3{ color:#2b3850 }
+
+/* Retrátil (accordion) */
+.card > summary{
+  list-style:none; cursor:pointer; padding:12px 14px; display:flex; align-items:center; justify-content:space-between;
+  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  border-bottom:1px solid var(--line);
+}
+.card > summary::marker{display:none}
+.card summary .ttl{display:flex;align-items:center;gap:10px;font-weight:900}
+.card summary .actions{display:flex;gap:8px;align-items:center}
+.card .content{padding:12px}
+.chev{transition:transform .2s ease}
+details[open] .chev{transform:rotate(90deg)}
+
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grid-2{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+.grid-3{display:grid;gap:8px;grid-template-columns:repeat(3,1fr)}
+.btn{appearance:none;border:1px solid #ffffff28;background:linear-gradient(42deg,var(--plasma1),var(--plasma2));color:#10131a;border-radius:14px;padding:10px 14px;font-weight:900;cursor:pointer}
+.btn.ghost{background:transparent;border-style:dashed;color:#cde4ff}
+.kbd{font-family:var(--mono);font-size:.86rem;padding:.35rem .6rem;border:1px solid var(--line);border-radius:8px;background:#0d1118;color:#b9c7db}
+
+.dock{position:sticky;bottom:0;z-index:25;border-top:1px solid var(--line);backdrop-filter:blur(10px);
+  background:linear-gradient(180deg,rgba(10,12,16,.55),rgba(10,12,16,.95));}
+html[data-theme="daylight"] .dock{ background:rgba(255,255,255,.85) }
+.dwrap{max-width:1200px;margin:0 auto;padding:8px 10px calc(env(safe-area-inset-bottom,0) + 8px);display:flex;gap:8px;align-items:center;justify-content:space-between}
+.dbtn{border:1px solid #ffffff28;background:linear-gradient(42deg,var(--plasma1),var(--plasma2));color:#10131a;border-radius:12px;padding:.7rem 1rem;font-weight:900}
+
+.viewer{position:fixed;inset:0;background:#000b;backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:10px;z-index:30}
+html[data-theme="daylight"] .viewer{ background:#0004 }
+.viewer.show{display:flex}
+.frame{width:100%;max-width:1000px;height:82vh;border-radius:20px;border:1px solid var(--line);overflow:hidden;background:#0f1117;position:relative}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#0a0f14,#0b1116)}
+.iframe{width:100%;height:calc(82vh - 50px);border:0}
+.loader{position:absolute;inset:50px 0 0 0;display:grid;place-items:center;background:linear-gradient(180deg,#0a0f14ee,#0b0f14dd);opacity:0;transition:opacity .25s ease}
+.loader.show{opacity:1}
+.spinner{width:52px;height:52px;border-radius:50%;border:3px solid #1f2a37;border-top-color:#ffd76a;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}
+
+/* Editor FULL basics */
+textarea.code{width:100%;min-height:260px;border:1px solid #203154;border-radius:14px;background:#0f1320;color:#dfe8ff;padding:10px 12px;font-family:var(--mono);font-size:13px;line-height:1.36}
+pre.out{white-space:pre-wrap;background:#0a0f1f;border:1px dashed #203154;border-radius:12px;padding:12px;font-family:var(--mono);font-size:13px;line-height:1.36}
+.hint{color:#a7b8cf;font-size:.86rem}
+html[data-theme="daylight"] .hint{ color:#4b5f7a }
+footer{color:#9bb4c4;font-size:.84rem;text-align:center;margin:14px 0}
+
+/* Flex App Frames */
+#framesArea{display:none; position:relative; min-height:40vh; border:1px dashed var(--line); border-radius:14px; padding:10px; background:rgba(0,0,0,.12)}
+.frameWin{position:absolute; left:10px; top:10px; width:360px; height:260px; border:1px solid var(--line); background:#0b0f14; border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.frameHead{display:flex; align-items:center; justify-content:space-between; padding:6px 8px; background:#0d121a; border-bottom:1px solid var(--line); cursor:move}
+.frameBody{position:absolute; inset:36px 0 0 0}
+.frameBody iframe{width:100%; height:100%; border:0}
+.grip{position:absolute; right:6px; bottom:6px; width:14px; height:14px; cursor:nwse-resize; border-right:2px solid #8fb; border-bottom:2px solid #8fb}
+.winBtn{border:1px solid var(--line); background:#0f1520; color:#cce; border-radius:8px; padding:3px 8px; font-weight:800}
+
+/* PNG Overlay per card */
+.pngOverlay{display:none; position:relative}
+.pngOverlay img{display:block; width:100%; height:auto; border-radius:0 0 var(--r-lg) var(--r-lg)}
+.pngBar{display:flex; gap:8px; align-items:center; padding:8px; border-top:1px solid var(--line); background:#0e1218}
+</style>
+</head>
+<body>
+  <div class="nebula-halo shadow-pulse"></div>
+  <div class="nebula-halo second shadow-pulse"></div>
+
+  <header class="header shadow-pulse">
+    <div class="hwrap">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1 class="title">Dual • UNO v3.2</h1>
+          <p class="sub">Seamless Gradient • Retrátil • Flex Frames • PNG nos blocos</p>
+        </div>
+      </div>
+      <div class="row">
+        <select id="palette" class="kbd">
+          <option value="nebula">Nebula Pro</option>
+          <option value="porcelana">Dark Porcelana</option>
+          <option value="daylight">Daylight</option>
+        </select>
+        <button id="btnMinuz" class="btn" title="Alternar densidade">Minuz</button>
+        <button id="btnInstall" class="btn">Instalar PWA</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <div class="twrap">
+      <div class="tabbar">
+        <button class="tab active" data-tab="hub">⊙ Hub</button>
+        <button class="tab" data-tab="editor">⇄ Editor FULL</button>
+        <button class="tab" data-tab="smig">△ Smigdrix FULL</button>
+        <button class="tab" data-tab="splash">☆ Procedural</button>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <!-- COL A -->
+    <details id="cardHub" class="card shadow-pulse" open>
+      <summary>
+        <div class="ttl">⊙ Hub</div>
+        <div class="actions">
+          <label class="btn ghost" for="pngHub">PNG</label><input id="pngHub" type="file" accept="image/png,image/webp,image/jpeg" style="display:none"/>
+          <button class="btn ghost" id="toggleFrames">Flex Frames</button>
+          <span class="chev">›</span>
+        </div>
+      </summary>
+      <div class="content">
+        <div class="row">
+          <span class="kbd">Remote JSON</span>
+          <span class="kbd">Local JSON</span>
+          <span class="kbd">Viewer iFrame</span>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <input id="remoteURL" class="kbd" style="flex:1" placeholder="https://infodose.com.br/apps.json (ou sua URL)"/>
+          <button id="btnCarregar" class="btn">Carregar</button>
+        </div>
+        <div id="chips" class="row" style="margin:10px 0;flex-wrap:wrap"></div>
+        <div id="cards" class="row" style="flex-direction:column;gap:10px"></div>
+
+        <div id="framesArea" aria-label="Área de Multi-Frames"></div>
+        <div class="pngOverlay" id="pngHubOverlay">
+          <img id="pngHubImg" alt="Overlay Hub"/>
+          <div class="pngBar">
+            <button class="btn" id="pngHubHide">Voltar ao conteúdo</button>
+            <span class="hint">Overlay PNG aplicado</span>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- COL B -->
+    <details id="cardTools" class="card shadow-pulse" open>
+      <summary>
+        <div class="ttl">⚙ Ferramentas + Upload HTML</div>
+        <div class="actions">
+          <label class="btn ghost" for="pngTools">PNG</label><input id="pngTools" type="file" accept="image/png,image/webp,image/jpeg" style="display:none"/>
+          <span class="chev">›</span>
+        </div>
+      </summary>
+      <div class="content">
+        <div class="grid-2">
+          <div class="card" style="padding:10px">
+            <h3 style="margin-top:0">Bloco de Anotações</h3>
+            <textarea id="notes" class="code" spellcheck="false" placeholder="Anote ideias..."></textarea>
+            <div class="row" style="margin-top:8px">
+              <button id="saveNotes" class="btn">Salvar</button>
+              <button id="clearNotes" class="btn ghost">Limpar</button>
+            </div>
+          </div>
+          <div class="card" style="padding:10px">
+            <h3 style="margin-top:0">Preview rápido (srcdoc)</h3>
+            <textarea id="miniCode" class="code" spellcheck="false"><!doctype html><meta charset="utf-8"><style>body{font-family:system-ui;margin:2rem}h1{color:#0ff}</style><h1>Preview rápido</h1></textarea>
+            <div class="row" style="margin-top:8px">
+              <button id="btnPreview" class="btn">Preview</button>
+              <button id="btnSave" class="btn ghost">Baixar .html</button>
+            </div>
+            <div class="hint">Abre no Viewer.</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:10px; margin-top:8px">
+          <h3 style="margin-top:0">Upload de HTML Local</h3>
+          <div class="row">
+            <label class="btn ghost" for="localHTML">Selecionar .html</label>
+            <input id="localHTML" type="file" accept=".html,text/html" style="display:none"/>
+            <button id="upPreview" class="btn">Preview no Viewer</button>
+            <button id="upNewTab" class="btn ghost">Abrir em Aba</button>
+          </div>
+          <div class="hint">FileReader → srcdoc / Blob URL.</div>
+          <pre id="upInfo" class="out" style="margin-top:8px"></pre>
+        </div>
+
+        <div class="pngOverlay" id="pngToolsOverlay">
+          <img id="pngToolsImg" alt="Overlay Tools"/>
+          <div class="pngBar">
+            <button class="btn" id="pngToolsHide">Voltar ao conteúdo</button>
+            <span class="hint">Overlay PNG aplicado</span>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details id="cardEditor" class="card shadow-pulse" open>
+      <summary>
+        <div class="ttl">⇄ Editor FULL</div>
+        <div class="actions">
+          <label class="btn ghost" for="pngEditor">PNG</label><input id="pngEditor" type="file" accept="image/png,image/webp,image/jpeg" style="display:none"/>
+          <button class="btn" id="edPreview">Preview</button>
+          <button class="btn" id="edSaveHTML">Baixar index.html</button>
+          <button class="btn" id="edExport">Exportar Projeto</button>
+          <label class="btn ghost" for="edImport">Importar Projeto</label><input id="edImport" type="file" accept="application/json" style="display:none"/>
+          <button class="btn ghost" id="edReset">Zerar</button>
+          <span class="chev">›</span>
+        </div>
+      </summary>
+      <div class="content">
+        <div class="row" style="gap:12px; flex-wrap:wrap">
+          <button class="tab chip active" data-tab="html">HTML</button>
+          <button class="tab chip" data-tab="css">CSS</button>
+          <button class="tab chip" data-tab="js">JS</button>
+        </div>
+        <textarea id="edHTML" class="code" spellcheck="false"><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Meu App</title>
+</head>
+<body>
+  <main>
+    <h1>Olá, Kodux ⚡</h1>
+    <p>Edite HTML/CSS/JS e clique Preview.</p>
+    <button id="helloBtn">Olá</button>
+  </main>
+</body>
+</html></textarea>
+        <textarea id="edCSS" class="code" style="display:none" spellcheck="false">:root{--bg:#0b0c10;--fg:#eaf2ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui}
+main{max-width:760px;margin:6vh auto;padding:20px}
+h1{letter-spacing:.02em}
+button{border:1px solid #ffffff33;background:linear-gradient(42deg,#f0f,#0ff);color:#10131a;border-radius:12px;padding:.6rem 1rem;font-weight:900}</textarea>
+        <textarea id="edJS" class="code" style="display:none" spellcheck="false">document.getElementById('helloBtn')?.addEventListener('click',()=>{
+  alert('Bem-vindo ao Editor FULL do UNO!');
+});</textarea>
+
+        <div class="pngOverlay" id="pngEditorOverlay">
+          <img id="pngEditorImg" alt="Overlay Editor"/>
+          <div class="pngBar">
+            <button class="btn" id="pngEditorHide">Voltar ao conteúdo</button>
+            <span class="hint">Overlay PNG aplicado</span>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details id="cardSmig" class="card shadow-pulse" open>
+      <summary>
+        <div class="ttl">△ Smigdrix FULL</div>
+        <div class="actions">
+          <label class="btn ghost" for="pngSmig">PNG</label><input id="pngSmig" type="file" accept="image/png,image/webp,image/jpeg" style="display:none"/>
+          <button class="btn" id="smRun">Rodar</button>
+          <button class="btn" id="smCopy">Copiar</button>
+          <button class="btn ghost" id="smDownload">Baixar .txt</button>
+          <button class="btn ghost" id="smClear">Limpar</button>
+          <span class="chev">›</span>
+        </div>
+      </summary>
+      <div class="content">
+        <div class="row">
+          <input id="smSeed" class="kbd" placeholder="seed / frase / prompt" style="flex:1"/>
+          <select id="smPreset" class="kbd"><option value="ALL">ALL</option><option>UNO</option><option>DUAL</option><option>TRINITY</option><option>STAR</option><option>CROWN</option><option>HEX</option></select>
+          <select id="smRuns" class="kbd"><option>1x</option><option>2x</option><option>3x</option><option>5x</option></select>
+          <input id="smWidth" class="kbd" type="number" min="24" max="120" value="64" title="largura"/>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <label class="hint">Tamanho fonte <input id="smFont" class="kbd" type="range" min="10" max="22" value="13" style="width:160px"></label>
+          <label class="hint">Altura máx <input id="smHeight" class="kbd" type="range" min="200" max="900" value="520" style="width:200px"></label>
+        </div>
+        <pre id="smiOut" class="out" style="max-height:52vh"></pre>
+
+        <div class="pngOverlay" id="pngSmigOverlay">
+          <img id="pngSmigImg" alt="Overlay Smigdrix"/>
+          <div class="pngBar">
+            <button class="btn" id="pngSmigHide">Voltar ao conteúdo</button>
+            <span class="hint">Overlay PNG aplicado</span>
+          </div>
+        </div>
+      </div>
+    </details>
+  </main>
+
+  <footer>“Sempre único, sempre seu.”</footer>
+
+  <div class="dock" role="navigation" aria-label="Dock">
+    <div class="dwrap">
+      <button class="dbtn" id="dockHome" type="button">Home</button>
+      <button class="dbtn" id="dockInfodose" type="button">Infodose</button>
+      <button class="dbtn" id="dockInstall" type="button">Instalar</button>
+      <button class="dbtn" id="dockSplash" type="button">Procedural</button>
+    </div>
+  </div>
+
+  <div class="viewer" id="viewer">
+    <div class="frame shadow-pulse">
+      <div class="bar">
+        <strong id="barTitle">Abrindo…</strong>
+        <div class="row">
+          <button class="btn ghost" id="btnHome">🏠 Home</button>
+          <a class="btn ghost" id="btnExternal" href="#" target="_blank" rel="noopener">↗️ Em Aba</a>
+        </div>
+      </div>
+      <div class="loader" id="loader"><div class="spinner"></div></div>
+      <iframe class="iframe" id="appFrame" src="about:blank" referrerpolicy="no-referrer"></iframe>
+    </div>
+  </div>
+
+<script>
+const $ = (q,root=document)=>root.querySelector(q);
+const $$= (q,root=document)=>[...root.querySelectorAll(q)];
+function flash(msg){ const n=document.createElement('div'); n.textContent=msg; n.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#0f172a;border:1px solid #26334d;color:#eaf2ff;padding:8px 12px;border-radius:10px;z-index:9999'; document.body.appendChild(n); setTimeout(()=>n.remove(),1400); }
+
+/* Paletas */
+(function(){
+  const sel=$('#palette'); try{ const saved=localStorage.getItem('UNO_THEME'); if(saved) { document.documentElement.setAttribute('data-theme', saved); sel.value=saved; } }catch{}
+  sel.onchange=()=>{ document.documentElement.setAttribute('data-theme', sel.value); try{ localStorage.setItem('UNO_THEME', sel.value); }catch{} };
+})();
+
+/* Tabs (apenas muda âncoras visualmente; conteúdo está em details retráteis) */
+(function(){
+  $$('.tab').forEach(b=>b.addEventListener('click',()=>{
+    $$('.tab').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+    const t=b.dataset.tab;
+    const map={hub:'#cardHub',editor:'#cardEditor',smig:'#cardSmig',splash:null};
+    if(map[t]) document.querySelector(map[t]).open = true;
+    if(t==='splash'){ openApp({title:'Procedural Live Splash', url:'#_procedural'}); }
+    window.scrollTo({top:0,behavior:'smooth'});
+  }));
+})();
+
+/* Minuz */
+(function(){
+  const btn=$('#btnMinuz');
+  try{ if(localStorage.getItem('UNO_MINUZ')==='1') document.documentElement.classList.add('minuz'); }catch{}
+  function update(){
+    const m=document.documentElement.classList.toggle('minuz');
+    btn.textContent = m ? 'Expand' : 'Minuz';
+    try{ localStorage.setItem('UNO_MINUZ', m?'1':'0'); }catch{}
+  }
+  btn.addEventListener('click', update);
+})();
+
+/* Dock */
+$('#dockHome').onclick=()=>{ window.scrollTo({top:0,behavior:'smooth'}); };
+$('#dockInfodose').onclick=()=>{ window.open('https://infodose.com.br','_blank','noopener'); };
+$('#dockSplash').onclick=()=>{ openApp({title:'Procedural Live Splash', url:'#_procedural'}); };
+
+/* Viewer */
+const viewer = $('#viewer');
+const frame  = $('#appFrame');
+const barTitle = $('#barTitle');
+const btnExternal = $('#btnExternal');
+const loader = $('#loader');
+$('#btnHome').onclick = ()=>{ frame.src = 'about:blank'; viewer.classList.remove('show'); };
+function openApp(app){
+  if(app.url==='#_procedural'){
+    const html = `<!doctype html><meta charset=utf-8>
+      <style>body{margin:0;font-family:system-ui;background:#04070b;color:#e9effa}
+      .center{display:grid;place-items:center;height:100vh;background:radial-gradient(80vw 60vh at 50% 40%, rgba(0,0,0,.35), rgba(0,0,0,.85) 70%), rgba(4,7,11,.96)}
+      .btn{padding:12px 16px;border:1px solid #ffffff22;background:linear-gradient(180deg, rgba(18,180,255,.35), rgba(18,180,255,.14));color:#e9effa;border-radius:14px;font-weight:800}
+      </style>
+      <div class="center"><button class="btn" onclick="alert('Ativar Áudio (mock)')">Ativar Áudio (TOCAR)</button></div>`;
+    barTitle.textContent='Procedural Live — Splash'; loader.classList.remove('show'); frame.srcdoc = html; viewer.classList.add('show'); btnExternal.href = location.href; return;
+  }
+  barTitle.textContent = app.title||app.key||'Abrindo…';
+  btnExternal.href = app.url;
+  loader.classList.add('show');
+  frame.onload = ()=> setTimeout(()=> loader.classList.remove('show'), 140);
+  frame.src = app.url; viewer.classList.add('show');
+}
+
+/* HUB básico */
+const LOCAL_URL = './apps/apps.json';
+$('#remoteURL').value = (localStorage.getItem('UNO_REMOTE') || 'https://infodose.com.br/apps.json');
+$('#btnCarregar').onclick = async ()=>{
+  const url = $('#remoteURL').value.trim(); try{ localStorage.setItem('UNO_REMOTE', url); }catch{}
+  const apps = await loadApps(url).catch(()=>[]);
+  if(!apps.length){ $('#cards').innerHTML = '<div class="hint">Falha ao carregar apps</div>'; return; }
+  renderHub(apps);
+};
+async function fetchWithTimeout(url, ms=7000){
+  const ctrl = new AbortController(); const id = setTimeout(()=>ctrl.abort(), ms);
+  const r = await fetch(url, {signal:ctrl.signal,mode:'cors',cache:'no-store'});
+  clearTimeout(id); if(!r.ok) throw new Error('HTTP '+r.status); return await r.json();
+}
+async function loadApps(remote){
+  try{ const data = await fetchWithTimeout(remote, 7000); return data.apps||[]; }
+  catch(e){ const r = await fetch(LOCAL_URL).catch(()=>null); if(!r) throw e; const d = await r.json(); return d.apps||[]; }
+}
+function uniq(a){ return [...new Set(a)]; }
+function renderHub(apps){
+  const cats = uniq(apps.map(a=>a.category).filter(Boolean));
+  const chipsRoot = $('#chips'); chipsRoot.innerHTML='';
+  ['Todos', ...cats].forEach((c,i)=>{
+    const b=document.createElement('button'); b.className='chip'; b.textContent=c; if(i===0) b.classList.add('active');
+    b.onclick=()=>{ $$('#chips .chip').forEach(x=>x.classList.remove('active')); b.classList.add('active'); draw(c); };
+    chipsRoot.appendChild(b);
+  });
+  function cardFor(app){
+    const el = document.createElement('div'); el.className='card shadow-pulse'; el.style.padding='10px';
+    const badges = (app.badges||[]).map(b=>`<span class="kbd" style="background:#0f121a;border-color:#ffffff22">${b}</span>`).join('');
+    el.innerHTML = `
+      <div class="row" style="align-items:flex-start">
+        <div style="width:64px;height:64px;border-radius:16px;border:1px solid var(--line);background:#0f1320;overflow:hidden">
+          <img src="${app.icon||'icons/icon-192.png'}" alt="" style="width:100%;height:100%;object-fit:cover"/>
+        </div>
+        <div style="flex:1">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:900">${app.title||app.key}</div>
+              <div class="hint">${app.desc||''}</div>
+            </div>
+            <div>${badges}</div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button class="btn" data-open="${app.key}">Abrir</button>
+            <button class="btn ghost" data-open="${app.key}" data-newtab="1">Em Aba</button>
+            <button class="btn ghost" data-open="${app.key}" data-frame="1">Em Frame</button>
+          </div>
+        </div>
+      </div>`;
+    return el;
+  }
+  function draw(cat){
+    const root = $('#cards'); root.innerHTML='';
+    apps.filter(a => cat==='Todos' || a.category===cat).forEach(app => root.appendChild(cardFor(app)));
+    $$('#cards [data-open]').forEach(b=>{
+      b.onclick = (ev) => {
+        const key = b.getAttribute('data-open');
+        const newtab = b.hasAttribute('data-newtab');
+        const inFrame = b.hasAttribute('data-frame');
+        const app = apps.find(x=>x.key===key);
+        if(!app) return;
+        if(newtab) window.open(app.url,'_blank','noopener');
+        else if(inFrame) addFrame(app);
+        else openApp(app);
+      };
+    });
+  }
+  draw('Todos');
+}
+$('#btnCarregar').click();
+
+/* Flex Frames */
+let framesEnabled=false;
+$('#toggleFrames').onclick = ()=>{
+  framesEnabled = !framesEnabled;
+  $('#framesArea').style.display = framesEnabled ? 'block' : 'none';
+  flash(framesEnabled? 'Flex Frames ON' : 'Flex Frames OFF');
+};
+function addFrame(app){
+  if(!framesEnabled){ flash('Ative Flex Frames'); return; }
+  const area = $('#framesArea');
+  const id = 'w'+Math.random().toString(36).slice(2,7);
+  const win = document.createElement('div'); win.className='frameWin'; win.id=id;
+  const head = document.createElement('div'); head.className='frameHead';
+  head.innerHTML = `<strong>${app.title||app.key}</strong><div class="row"><button class="winBtn" data-act="pop">↗</button><button class="winBtn" data-act="x">✕</button></div>`;
+  const body = document.createElement('div'); body.className='frameBody';
+  const ifr = document.createElement('iframe'); ifr.src=app.url; body.appendChild(ifr);
+  const grip = document.createElement('div'); grip.className='grip';
+  win.appendChild(head); win.appendChild(body); win.appendChild(grip); area.appendChild(win);
+  // drag
+  let ox=0,oy=0,dx=0,dy=0,drag=false;
+  head.addEventListener('mousedown',e=>{drag=true; ox=e.clientX; oy=e.clientY; const r=win.getBoundingClientRect(); dx=r.left; dy=r.top; e.preventDefault();});
+  window.addEventListener('mousemove',e=>{ if(!drag) return; win.style.left=(dx+e.clientX-ox)+'px'; win.style.top=(dy+e.clientY-oy)+'px';});
+  window.addEventListener('mouseup',()=>drag=false);
+  // resize
+  let rx=0, ry=0, rw=0, rh=0, rs=false;
+  grip.addEventListener('mousedown',e=>{rs=true; rx=e.clientX; ry=e.clientY; rw=win.offsetWidth; rh=win.offsetHeight; e.preventDefault();});
+  window.addEventListener('mousemove',e=>{ if(!rs) return; win.style.width=(rw+e.clientX-rx)+'px'; win.style.height=(rh+e.clientY-ry)+'px'; });
+  window.addEventListener('mouseup',()=>rs=false);
+  // buttons
+  head.querySelectorAll('.winBtn').forEach(btn=> btn.onclick=(ev)=>{
+    const act=btn.dataset.act;
+    if(act==='x'){ win.remove(); }
+    if(act==='pop'){ window.open(app.url,'_blank','noopener'); }
+  });
+}
+
+/* PNG overlays (substitui o bloco por imagem) */
+function bindPNG(cardId, inputId, overlayId, imgId, hideBtnId){
+  const card = $(cardId), input=$(inputId), overlay=$(overlayId), img=$(imgId), hideBtn=$(hideBtnId);
+  input.onchange = (e)=>{
+    const f = e.target.files?.[0]; if(!f) return;
+    const url = URL.createObjectURL(f);
+    img.src = url;
+    // esconder conteúdo e mostrar overlay
+    card.querySelector('.content').style.display='none';
+    overlay.style.display='block';
+  };
+  hideBtn.onclick=()=>{
+    overlay.style.display='none';
+    card.querySelector('.content').style.display='block';
+  };
+}
+bindPNG('#cardHub','#pngHub','#pngHubOverlay','#pngHubImg','#pngHubHide');
+bindPNG('#cardTools','#pngTools','#pngToolsOverlay','#pngToolsImg','#pngToolsHide');
+bindPNG('#cardEditor','#pngEditor','#pngEditorOverlay','#pngEditorImg','#pngEditorHide');
+bindPNG('#cardSmig','#pngSmig','#pngSmigOverlay','#pngSmigImg','#pngSmigHide');
+
+/* Editor FULL (localStorage) */
+const PRJ_KEY = 'UNO_PROJECT';
+const ed = { html: $('#edHTML'), css: $('#edCSS'), js: $('#edJS') };
+function loadProject(){
+  try{ const raw = localStorage.getItem(PRJ_KEY); if(!raw) return; const p = JSON.parse(raw);
+    if(p.html) ed.html.value=p.html; if(p.css) ed.css.value=p.css; if(p.js) ed.js.value=p.js; }catch{}
+}
+function saveProject(){
+  const p={ html:ed.html.value, css:ed.css.value, js:ed.js.value, t:Date.now() };
+  try{ localStorage.setItem(PRJ_KEY, JSON.stringify(p)); }catch{}
+}
+['input','change'].forEach(evt=>{
+  ed.html.addEventListener(evt, saveProject);
+  ed.css .addEventListener(evt, saveProject);
+  ed.js  .addEventListener(evt, saveProject);
+});
+loadProject();
+// tabs do editor
+$$('#cardEditor .chip').forEach(b=> b.addEventListener('click',()=>{
+  $$('#cardEditor .chip').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  const t=b.dataset.tab;
+  ed.html.style.display=(t==='html')?'block':'none';
+  ed.css .style.display=(t==='css')?'block':'none';
+  ed.js  .style.display=(t==='js') ?'block':'none';
+}));
+// ações editor
+$('#edReset').onclick = ()=>{
+  if(confirm('Limpar projeto do Editor?')){
+    localStorage.removeItem(PRJ_KEY);
+    ed.html.value = document.querySelector('#edHTML').defaultValue;
+    ed.css.value  = document.querySelector('#edCSS').defaultValue;
+    ed.js.value   = document.querySelector('#edJS').defaultValue;
+    saveProject();
+  }
+};
+$('#edExport').onclick = ()=>{
+  const blob = new Blob([localStorage.getItem(PRJ_KEY) || '{}'], {type:'application/json;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download='uno_project.json'; a.click(); URL.revokeObjectURL(a.href);
+};
+$('#edImport').onchange = (e)=>{
+  const f = e.target.files?.[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{ try{ localStorage.setItem(PRJ_KEY, r.result); loadProject(); flash('Projeto importado'); }catch{ alert('Falha ao importar JSON'); } };
+  r.readAsText(f);
+};
+$('#edPreview').onclick = ()=>{
+  const html = ed.html.value, css = ed.css.value, js = ed.js.value;
+  const bundle = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style>${html}<script>${js}<\/script>`;
+  barTitle.textContent = 'Preview — Editor FULL'; btnExternal.href = '#'; loader.classList.remove('show');
+  frame.srcdoc = bundle; viewer.classList.add('show');
+};
+$('#edSaveHTML').onclick = ()=>{
+  const html = ed.html.value, css = ed.css.value, js = ed.js.value;
+  const bundle = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>index</title><style>${css}</style></head><body>${html}<script>${js}<\/script></body></html>`;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([bundle], {type:'text/html;charset=utf-8'})); a.download='index.html'; a.click(); URL.revokeObjectURL(a.href);
+};
+
+/* Notes + mini preview */
+$('#saveNotes').onclick=()=>{ try{ localStorage.setItem('UNO_NOTES',$('#notes').value); flash('Notas salvas'); }catch{} };
+$('#clearNotes').onclick=()=>{ $('#notes').value=''; try{ localStorage.removeItem('UNO_NOTES'); }catch{} };
+$('#notes').value = localStorage.getItem('UNO_NOTES')||'';
+$('#btnPreview').onclick = ()=>{
+  const html = $('#miniCode').value; barTitle.textContent = 'Preview — srcdoc'; btnExternal.href = '#';
+  loader.classList.remove('show'); frame.srcdoc = html; viewer.classList.add('show');
+};
+$('#btnSave').onclick = ()=>{
+  const blob = new Blob([$('#miniCode').value], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download='mini.html'; a.click(); URL.revokeObjectURL(a.href);
+};
+
+/* Upload HTML Local */
+let localHTMLText = '';
+$('#localHTML').onchange = (e)=>{
+  const f = e.target.files?.[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    localHTMLText = r.result;
+    const info = ['Arquivo: '+(f.name||'(sem nome)'), 'Tamanho: '+f.size+' bytes', 'Tipo: '+(f.type||'text/html'), 'Prévia: pronta'].join('\\n');
+    $('#upInfo').textContent = info; flash('HTML carregado');
+  }; r.readAsText(f);
+};
+$('#upPreview').onclick = ()=>{
+  if(!localHTMLText){ alert('Selecione um .html primeiro'); return; }
+  barTitle.textContent = 'Preview — HTML Local'; btnExternal.href = '#'; loader.classList.remove('show');
+  frame.srcdoc = localHTMLText; viewer.classList.add('show');
+};
+$('#upNewTab').onclick = ()=>{
+  if(!localHTMLText){ alert('Selecione um .html primeiro'); return; }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([localHTMLText], {type:'text/html;charset=utf-8'}));
+  a.target = '_blank'; a.rel='noopener'; a.click(); setTimeout(()=> URL.revokeObjectURL(a.href), 2000);
+};
+</script>
+</body>
+</html>

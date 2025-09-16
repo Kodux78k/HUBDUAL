@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Dual Mobile Mockup v0.2 — UNO → DUAL → TRINITY (Cheio de Nada)</title>
+<meta name="theme-color" content="#0b0f17" />
+<style>
+  :root{
+    --bg:#0b0f17;--panel:#0f1522;--glass:rgba(255,255,255,.06);--line:rgba(255,255,255,.14);
+    --ink:#e9f6ff;--muted:#97b1c6;--accent:#29d3ff;--accent2:#ff5af4;--ok:#39ffb6;--warn:#ffb74d;--err:#ff5a6e;
+    --rad:18px;--pad:14px;--shadow:0 12px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{margin:0;background:radial-gradient(1200px 800px at 20% -10%, rgba(41,211,255,.14), transparent 60%),
+       radial-gradient(900px 600px at 110% 20%, rgba(255,90,244,.10), transparent 60%),
+       linear-gradient(0deg, #0a0d14, #0b0f17);
+       color:var(--ink);font:500 15px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif}
+  .app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto;}
+  header{display:flex;gap:10px;align-items:center;padding:12px env(safe-area-inset-right) 10px env(safe-area-inset-left);}
+  .logo{width:36px;height:36px;border-radius:50%;background:conic-gradient(from 0deg, var(--accent), var(--accent2), var(--accent));
+        box-shadow:0 0 24px rgba(41,211,255,.4);animation:spin 9s linear infinite}
+  @keyframes spin{to{transform:rotate(1turn)}}
+  .title{font-weight:800;letter-spacing:.4px}
+  .sub{color:var(--muted);font-size:12px}
+
+  /* Water-cost badge (persistente no header) */
+  .water{margin-left:10px;display:flex;gap:8px;align-items:center}
+  .badge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:rgba(255,255,255,.04);
+         padding:6px 8px;border-radius:10px;font-size:11px;color:var(--muted)}
+  .ok{color:var(--ok)}.warn{color:var(--warn)}.err{color:var(--err)}
+
+  /* Canvas stage */
+  .stage{position:relative;overflow:hidden;margin:6px; border:1px solid var(--line); border-radius:24px; 
+         background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00));
+         box-shadow:var(--shadow)}
+  canvas{position:absolute;inset:0;width:100%;height:100%}
+  .overlay-gestures{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)}
+
+  /* Cards / panels */
+  .card{background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+        border:1px solid var(--line);border-radius:var(--rad);padding:var(--pad);box-shadow:var(--shadow)}
+  .row{display:flex;gap:10px;align-items:center}
+  .grow{flex:1}
+  .btn{appearance:none;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--ink);
+       padding:10px 12px;border-radius:14px;font-weight:700;letter-spacing:.3px;box-shadow:var(--shadow);
+       display:inline-flex;align-items:center;gap:8px}
+  .btn:active{transform:translateY(1px);opacity:.9}
+  .chip{font-size:12px;border-radius:999px;border:1px solid var(--line);padding:6px 10px;background:rgba(255,255,255,.04);color:var(--muted)}
+
+  /* Footer nav UNO→DUAL→TRINITY */
+  nav{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px env(safe-area-inset-right) calc(10px + env(safe-area-inset-bottom)) env(safe-area-inset-left);}
+  .tab{flex:1;text-align:center;border-radius:16px;border:1px solid var(--line);padding:12px 10px;background:rgba(255,255,255,.03)}
+  .tab.active{background:linear-gradient(180deg, rgba(41,211,255,.12), rgba(255,255,255,.03));box-shadow:0 6px 22px rgba(41,211,255,.25)}
+  .tab small{display:block;color:var(--muted);margin-top:4px}
+
+  /* Dev Console */
+  .console{position:fixed;inset:auto 8px 78px 8px;max-height:52vh;overflow:auto;display:none;}
+  .console.show{display:block}
+  .console pre{white-space:pre-wrap;margin:0;font-family:ui-monospace, SFMono-Regular, Menlo, monospace;font-size:12px;color:#cfe7ff}
+
+  /* Hotspots 0-1 */
+  .hotspots{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;padding:6px;}
+  .hotspots button{pointer-events:auto;border:1px dashed rgba(255,255,255,.2);background:rgba(255,255,255,.02);border-radius:10px;color:var(--muted);font-size:11px}
+
+  /* Floating buttons */
+  .fab{position:fixed;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px}
+  .fab .btn{padding:10px 12px}
+
+  /* Mini toasts */
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(72px + env(safe-area-inset-bottom));
+         background:rgba(20,28,44,.9);border:1px solid var(--line);backdrop-filter:blur(10px);padding:8px 12px;border-radius:12px;font-size:12px;color:var(--ink);display:none}
+  .toast.show{display:block}
+
+  /* Apps list & iframe sandbox */
+  .apps{padding:10px;display:grid;gap:10px}
+  .appItem{display:flex;align-items:center;gap:10px}
+  .appItem .meta{font-size:12px;color:var(--muted)}
+  .sandboxWrap{margin:10px;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  iframe.sandbox{display:block;width:100%;height:380px;background:#0a0d14;border:0}
+
+  /* Modal */
+  dialog{border:1px solid var(--line);border-radius:16px;background:rgba(11,15,23,.9);color:var(--ink);padding:0;max-width:92vw}
+  dialog::backdrop{background:rgba(0,0,0,.5)}
+  .modalHead{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center}
+  .modalBody{padding:12px 14px}
+
+  /* Responsive stage height */
+  .stage{height:calc(100vh - 240px)}
+  @media (min-height:760px){.stage{height:calc(100vh - 270px)}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header>
+    <div class="logo" id="logo"></div>
+    <div>
+      <div class="title">Dual Mobile Mockup <span class="chip">v0.2</span></div>
+      <div class="sub">Cheio de Nada · Local‑first · Ritual 3‑6‑9</div>
+    </div>
+    <div class="grow"></div>
+    <div class="water" title="Custo d'água (CPU, MEM, LAT)">
+      <span class="badge">CPU <b id="cpu">~</b></span>
+      <span class="badge">MEM <b id="mem">~</b></span>
+      <span class="badge">LAT <b id="lat">~</b> ms</span>
+    </div>
+    <button class="btn" id="btnPlay">▶︎ Áudio</button>
+  </header>
+
+  <main>
+    <section class="stage" id="stage">
+      <canvas id="layerBack"></canvas>
+      <canvas id="layerMid"></canvas>
+      <canvas id="layerFore"></canvas>
+      <div class="overlay-gestures" id="gestureHint">toque duplo ativa accent • segure p/ variações • 2 dedos/2s abre Console</div>
+      <div class="hotspots" id="hotspots" aria-hidden="true">
+        <button data-spot="0">HS0</button>
+        <button data-spot="1">HS1</button>
+        <button data-spot="2">HS2</button>
+        <button data-spot="3">HS3</button>
+      </div>
+    </section>
+
+    <!-- APPS JSON + Sandbox -->
+    <section class="apps card" id="appsPane">
+      <div class="row">
+        <strong>Apps (Cheio de Nada)</strong>
+        <div class="grow"></div>
+        <button class="btn" id="btnLoadApps">Carregar apps.json</button>
+        <button class="btn" id="btnOpenSandbox">Abrir Sandbox</button>
+      </div>
+      <div id="appsList"></div>
+      <div class="sandboxWrap" id="sandboxWrap" style="display:none">
+        <iframe class="sandbox" id="sandbox"
+          sandbox="allow-scripts allow-forms allow-popups allow-pointer-lock allow-downloads"
+          referrerpolicy="no-referrer"
+          allow="autoplay; clipboard-read; clipboard-write; fullscreen; gamepad; geolocation; microphone; camera"
+        ></iframe>
+      </div>
+    </section>
+
+    <div class="console card" id="console"></div>
+  </main>
+
+  <nav>
+    <button class="tab active" id="tabUno">UNO<small>intenção (3)</small></button>
+    <button class="tab" id="tabDual">DUAL<small>relação (6)</small></button>
+    <button class="tab" id="tabTri">TRINITY<small>síntese (9)</small></button>
+  </nav>
+
+  <div class="fab">
+    <button class="btn" id="btnConsole">☰ Console</button>
+    <button class="btn" id="btnHotspots">◎ Hotspots</button>
+    <button class="btn" id="btnPacks">📦 Packs</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Modal Packs (IndexedDB export/import) -->
+  <dialog id="dlgPacks">
+    <div class="modalHead"><strong>Gerenciar Packs Locais</strong><div class="grow"></div><button class="btn" id="closePacks">Fechar</button></div>
+    <div class="modalBody">
+      <div class="row" style="gap:12px;flex-wrap:wrap">
+        <input type="file" id="fileImport" accept="application/json,audio/*" multiple />
+        <button class="btn" id="btnImport">Importar</button>
+        <button class="btn" id="btnExport">Exportar JSON</button>
+        <button class="btn" id="btnClear">Limpar Packs</button>
+      </div>
+      <div style="height:8px"></div>
+      <div id="packsList" class="card"></div>
+    </div>
+  </dialog>
+</div>
+
+<script>
+/** ----------------------------------------------
+ *  v0.2: apps.json sandbox, packs IndexedDB, water badge, voice presets
+ *  ---------------------------------------------- */
+
+/* 0) Truth Contract + MINUS + Trinity maps */
+const truth_contract = {
+  capabilities:["hotspots_0_1","double_tap","long_press","audio_worklet","canvas_fractal","offline_pwa","apps_json_sandbox","indexeddb_packs","water_badge","voice_presets_fx"],
+  limits:["ios_haptics_nativo","webgpu_obrigatorio","voz_neural_offline_universal"],
+  experiments:[{id:"holo_pov_3layers", hypothesis:"strobes+parallax simulam profundidade", owner:"Blue", deadline:"2025-09-20"}],
+  dod:{ single_change_max_time_min:40, iterations_max:3 }
+};
+const minus = { triggers:{ low_hit:0.12, rare_path:0.05, latency_ms:160 }, actions:["merge_buttons","auto_scale_targets","hide_rare_into_longpress"], macro_examples:[{ id:"open_chat_and_set_archetype", steps:["open_chat","set:Nova"] }] };
+const trinity369 = { cycles:[3,6,9], audio_map:{3:"accent",6:"lift(+2)",9:"expand(+voices)"}, visual_map:{3:"stroke",6:"parallax+5%",9:"strobe_short"}, safety:{max_layers:3, max_rms_db:-12} };
+
+/* 1) State */
+const S = { mode:3, consoleOpen:false, hotspotsOpen:false, audioReady:false, lastTap:0, longPressTimer:null, phi:0, cpu:"~", mem:"~", lat:"~", apps:[], packs:[] };
+const $ = sel => document.querySelector(sel);
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1400); }
+
+/* 2) Console render */
+function renderConsole(){ const c=$('#console'); const payload = { truth_contract, minus, trinity369, metrics:{cpu:S.cpu, mem:S.mem, lat:S.lat}, apps:S.apps.map(a=>a.name), packs:S.packs.map(p=>p.id), now:new Date().toISOString() }; c.innerHTML = `<pre>${JSON.stringify(payload, null, 2)}</pre>`; }
+
+/* 3) Canvas fractal + metrics */
+const cvs=[$('#layerBack'),$('#layerMid'),$('#layerFore')]; const ctx=cvs.map(c=>c.getContext('2d'));
+function resize(){ for(const c of cvs){ c.width=c.clientWidth*devicePixelRatio; c.height=c.clientHeight*devicePixelRatio; }}
+addEventListener('resize', resize, {passive:true}); resize();
+let t0=performance.now();
+function draw(now){ const dt=now-t0; t0=now; S.lat=Math.max(1,Math.round(dt)); const w=cvs[0].width,h=cvs[0].height,cx=w/2,cy=h/2; S.phi=(S.phi+dt*0.001)%(Math.PI*2);
+  const b=ctx[0]; b.clearRect(0,0,w,h); for(let i=0;i<6;i++){ const r=(Math.sin(S.phi*0.7+i)*0.5+0.5)*200+80; const x=cx+Math.cos(S.phi*0.5+i)*w*0.25; const y=cy+Math.sin(S.phi*0.6+i)*h*0.25; const g=b.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,`rgba(41,211,255,${0.10+i*0.02})`); g.addColorStop(1,'transparent'); b.fillStyle=g; b.beginPath(); b.arc(x,y,r,0,Math.PI*2); b.fill(); }
+  const m=ctx[1]; m.clearRect(0,0,w,h); m.lineWidth=2*devicePixelRatio; m.strokeStyle='rgba(255,255,255,0.25)'; for(let r=40*devicePixelRatio;r<Math.min(w,h)/2;r+=28*devicePixelRatio){ const off=Math.sin(S.phi*1.1+r*0.01)*(S.mode===6? r*0.02 : r*0.01); m.beginPath(); m.arc(cx+off, cy, r, 0, Math.PI*2); m.stroke(); }
+  const f=ctx[2]; f.clearRect(0,0,w,h); if(S.mode===9 && Math.sin(S.phi*6)>0.85){ f.fillStyle='rgba(255,90,244,0.22)'; f.fillRect(0,0,w,h); }
+  // header water badge live
+  $('#lat').textContent=S.lat; $('#cpu').textContent = S.cpu; $('#mem').textContent = S.mem;
+  requestAnimationFrame(draw); }
+requestAnimationFrame(draw);
+
+/* 4) Water-cost sampler (fake lightweight metrics) */
+setInterval(()=>{ S.cpu=(5+Math.random()*20|0)+"%"; S.mem=(80+Math.random()*420|0)+"MB"; }, 1500);
+
+/* 5) Audio Worklet + Voice Presets (Nova/Kaion/...) */
+let actx,out,gain,delay,filter; let convolver, impulse;
+const voicePresets = {
+  Nova: { pitch:+2,  filter:{type:'highpass', freq:220}, shimmer:0.18 },
+  Kaion:{ pitch:-2,  filter:{type:'lowpass',  freq:1800}, shimmer:0.12 },
+  Elysha:{ pitch:+4, filter:{type:'bandpass', freq:900}, shimmer:0.22 },
+  Genus:{ pitch:0,   filter:{type:'notch',    freq:600}, shimmer:0.08 }
+};
+let currentVoice = 'Nova';
+
+async function initAudio(){ if(S.audioReady) return; actx=new (window.AudioContext||window.webkitAudioContext)();
+  const workletCode = `class Burst extends AudioWorkletProcessor{ constructor(){super(); this.on=0;} static get parameterDescriptors(){return[{name:'on',defaultValue:0},{name:'freq',defaultValue:220}]}
+  process(i,o,p){ const out=o[0]; const on=p.on[0]; const f=p.freq[0]; for(let ch=0; ch<out.length; ch++){ const b=out[ch]; for(let n=0;n<b.length;n++){ let s=0; if(on>0.5){ s=(Math.random()*2-1)*0.18 + Math.sin(2*Math.PI*(currentFrame+n)/sampleRate*f)*0.22; } b[n]=s; } } return true; } } registerProcessor('burst',Burst);`;
+  const blob = new Blob([workletCode], {type:'application/javascript'}); await actx.audioWorklet.addModule(URL.createObjectURL(blob));
+  out=new AudioWorkletNode(actx,'burst'); gain=actx.createGain(); gain.gain.value=0.0; delay=actx.createDelay(0.75); delay.delayTime.value=0.23; const fb=actx.createGain(); fb.gain.value=0.25; delay.connect(fb).connect(delay); filter=actx.createBiquadFilter(); filter.type='highpass'; filter.frequency.value=220; // default
+  convolver=actx.createConvolver(); impulse = makeImpulseResponse(actx, 0.22); convolver.buffer=impulse; const mixVerb=actx.createGain(); mixVerb.gain.value=0.25;
+  // routing: out -> filter -> gain -> (tap to convolver) -> delay -> destination
+  const split = actx.createGain(); out.connect(filter); filter.connect(gain); gain.connect(delay).connect(actx.destination); gain.connect(mixVerb).connect(convolver).connect(actx.destination);
+  S.audioReady=true; toast('Áudio pronto'); $('#btnPlay').textContent='✓ Áudio'; }
+
+function makeImpulseResponse(ctx, duration){ const rate=ctx.sampleRate; const len=rate*duration|0; const buf=ctx.createBuffer(2,len,rate); for(let ch=0; ch<2; ch++){ const d=buf.getChannelData(ch); for(let i=0;i<len;i++){ // noise decaying
+  d[i]=(Math.random()*2-1)*Math.pow(1-i/len, 2); } } return buf; }
+
+function applyPreset(name){ currentVoice=name; const p=voicePresets[name]||voicePresets.Nova; if(!filter) return; filter.type=p.filter.type; filter.frequency.value=p.filter.freq; // shimmer by verb/delay mix
+  // pitch == just offset burst frequency (pseudo-formant)
+  S._pitch = p.pitch; S._shimmer = p.shimmer; toast('Voz: '+name); }
+
+function accent(){ if(!S.audioReady) return; const base=220 + (S.mode===6?2:0)*40 + (S.mode===9?4:0)*40; const pitch= (S._pitch||0)*20; out.parameters.get('freq').setValueAtTime(base+pitch, actx.currentTime); out.parameters.get('on').setValueAtTime(1, actx.currentTime); if(!gain) return; gain.gain.cancelScheduledValues(actx.currentTime); const a=0.9; gain.gain.linearRampToValueAtTime(a, actx.currentTime+0.01); gain.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime+0.35); setTimeout(()=> out.parameters.get('on').setValueAtTime(0, actx.currentTime), 120); }
+
+$('#btnPlay').addEventListener('click', async ()=>{ await initAudio(); if(actx.state==='suspended') await actx.resume(); accent(); });
+
+/* 6) Gestures */
+const stage=$('#stage'); stage.addEventListener('touchstart', onTouchStart, {passive:true}); stage.addEventListener('touchend', onTouchEnd, {passive:true});
+let touchCount=0, multiStart=0; function onTouchStart(e){ touchCount=e.touches.length; if(touchCount>=2){ multiStart=Date.now(); } clearTimeout(S.longPressTimer); S.longPressTimer=setTimeout(()=>{ if(touchCount>=1){ cycleMode(); accent(); toast('variação: modo '+S.mode); } }, 520); }
+function onTouchEnd(e){ clearTimeout(S.longPressTimer); const now=Date.now(); if(now-S.lastTap<300 && e.touches.length===0){ accent(); strokeFlash(); } S.lastTap=now; if(touchCount>=2 && (now-multiStart)>1800){ toggleConsole(); } touchCount=0; multiStart=0; }
+function cycleMode(){ S.mode = (S.mode===3?6: S.mode===6?9:3); setActiveTab(); }
+function setActiveTab(){ $('#tabUno').classList.toggle('active', S.mode===3); $('#tabDual').classList.toggle('active', S.mode===6); $('#tabTri').classList.toggle('active', S.mode===9); }
+function strokeFlash(){ const c=ctx[2], w=c.canvas.width,h=c.canvas.height; c.save(); c.strokeStyle='rgba(41,211,255,.9)'; c.lineWidth=6*devicePixelRatio; c.strokeRect(8*devicePixelRatio,8*devicePixelRatio,w-16*devicePixelRatio,h-16*devicePixelRatio); setTimeout(()=>c.restore(), 80); }
+$('#tabUno').onclick=()=>{S.mode=3; setActiveTab();}; $('#tabDual').onclick=()=>{S.mode=6; setActiveTab();}; $('#tabTri').onclick=()=>{S.mode=9; setActiveTab();};
+
+/* 7) Hotspots */
+$('#btnHotspots').onclick=()=>{ S.hotspotsOpen=!S.hotspotsOpen; $('#hotspots').style.pointerEvents=S.hotspotsOpen?'auto':'none'; $('#hotspots').style.opacity=S.hotspotsOpen?1:0; };
+$('#hotspots').style.opacity=0; $('#hotspots').style.pointerEvents='none';
+$('#hotspots').addEventListener('click', e=>{ if(e.target.matches('button[data-spot]')){ const id=e.target.dataset.spot; toast('Hotspot '+id+' ⚡'); accent(); }});
+
+/* 8) Apps.json + sandbox */
+$('#btnLoadApps').onclick=async()=>{ try{ const res=await fetch('apps/apps.json'); const json=await res.json(); S.apps=json.apps||json; renderApps(); toast('apps.json carregado'); }catch(e){ toast('Falha ao carregar apps.json'); console.error(e); } };
+function renderApps(){ const list=$('#appsList'); list.innerHTML=''; const df=new DocumentFragment(); (S.apps||[]).forEach((a,i)=>{ const row=document.createElement('div'); row.className='appItem'; row.innerHTML=`<span class="chip">#${i+1}</span><div><div><strong>${a.name||'App'}</strong></div><div class="meta">${a.url}</div></div><div class="grow"></div><button class="btn" data-open="${i}">Abrir</button>`; df.appendChild(row); }); list.appendChild(df); list.onclick=e=>{ const i=e.target?.dataset?.open; if(i!=null){ openSandbox(S.apps[i]); } } }
+function openSandbox(app){ const f=$('#sandbox'); $('#sandboxWrap').style.display='block'; f.src = app.url; f.setAttribute('title', app.name||'sandbox'); }
+$('#btnOpenSandbox').onclick=()=>{ $('#sandboxWrap').style.display = $('#sandboxWrap').style.display==='none'?'block':'none'; };
+
+/* 9) Packs (IndexedDB) */
+const DB={ name:'dual-packs', ver:1, db:null};
+function idbOpen(){ return new Promise((res,rej)=>{ const r=indexedDB.open(DB.name, DB.ver); r.onupgradeneeded=ev=>{ const db=ev.target.result; db.createObjectStore('packs', {keyPath:'id'}); }; r.onsuccess=ev=>{ DB.db=ev.target.result; res(DB.db); }; r.onerror=()=>rej(r.error); }); }
+async function idbGetAll(){ await idbOpen(); return new Promise(res=>{ const tx=DB.db.transaction('packs','readonly'); const st=tx.objectStore('packs'); const req=st.getAll(); req.onsuccess=()=>res(req.result||[]); }); }
+async function idbPut(pack){ await idbOpen(); return new Promise(res=>{ const tx=DB.db.transaction('packs','readwrite'); tx.objectStore('packs').put(pack); tx.oncomplete=()=>res(true); }); }
+async function idbClear(){ await idbOpen(); return new Promise(res=>{ const tx=DB.db.transaction('packs','readwrite'); tx.objectStore('packs').clear(); tx.oncomplete=()=>res(true); }); }
+
+async function loadPacks(){ S.packs=await idbGetAll(); renderPacks(); }
+function renderPacks(){ const box=$('#packsList'); if(!S.packs.length){ box.innerHTML='<em>Nenhum pack armazenado.</em>'; return; } box.innerHTML = '<pre>'+JSON.stringify(S.packs.map(({id,type,name})=>({id,type,name})), null, 2)+'</pre>'; }
+
+$('#btnPacks').onclick=async()=>{ if(!$('#dlgPacks').open){ await loadPacks(); $('#dlgPacks').showModal(); } };
+$('#closePacks').onclick=()=>$('#dlgPacks').close();
+$('#btnClear').onclick=async()=>{ await idbClear(); S.packs=[]; renderPacks(); toast('Packs limpos'); };
+$('#btnImport').onclick=async()=>{ const files=$('#fileImport').files; if(!files?.length){ toast('Selecione arquivos'); return; } for(const f of files){ if(f.type.startsWith('audio/')){ const arr=await f.arrayBuffer(); const b64=await toB64(arr); await idbPut({ id:`wav:${f.name}`, type:'audio/wav', name:f.name, data:b64 }); } else { try{ const txt=await f.text(); const json=JSON.parse(txt); await idbPut({ id:`json:${f.name}`, type:'json', name:f.name, data:json }); }catch(e){ console.warn('JSON inválido',e); } } } await loadPacks(); toast('Importado'); };
+$('#btnExport').onclick=async()=>{ const data=await idbGetAll(); const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='dual_packs_export.json'; a.click(); toast('Exportado'); };
+function toB64(ab){ return new Promise(r=>{ const blob=new Blob([ab]); const fr=new FileReader(); fr.onload=()=>r(fr.result.split(',')[1]); fr.readAsDataURL(blob); }); }
+
+/* Utility buttons */
+$('#btnConsole').onclick=toggleConsole; function toggleConsole(){ S.consoleOpen=!S.consoleOpen; $('#console').classList.toggle('show', S.consoleOpen); renderConsole(); }
+
+/* PWA SW inline */
+if('serviceWorker' in navigator){ const swCode=`self.addEventListener('install',e=>{e.waitUntil(caches.open('dual-mock-v2').then(c=>c.addAll(['./','apps/apps.json']).catch(()=>{})))}); self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))})`; const url=URL.createObjectURL(new Blob([swCode],{type:'text/javascript'})); navigator.serviceWorker.register(url); }
+
+// initial
+setActiveTab(); renderConsole(); applyPreset('Nova');
+</script>
+</body>
+</html>

@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Dual • UNO Unificado v2 — Minuz/Expand + Editor FULL + Smigdrix FULL</title>
+<meta name="theme-color" content="#0b0c10"/>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{
+  --bg:#0b0c10; --fg:#eaf2ff; --mut:#9fb0c7;
+  --acc:#D4AF37; --acc2:#12b4ff; --acc3:#8a5cff;
+  --line:#ffffff1c; --glass:rgba(255,255,255,.06);
+  --r:18px; --r-lg:22px; --blur:16px;
+  --pad:12px; --gap:12px; --h:56px;
+  --mono: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans: system-ui,-apple-system,Inter,Segoe UI,Roboto,Arial;
+}
+/* Modo Minuz */
+:root.minuz{ --pad:8px; --gap:8px; --h:46px; }
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; color:var(--fg); font-family:var(--sans);
+  background:
+    radial-gradient(1200px 800px at 50% -10%, rgba(212,175,55,.12), transparent 60%),
+    linear-gradient(180deg,#0a0b0f 0%, #0b0c10 40%, #0a0b0f 100%);
+  display:flex; flex-direction:column;
+}
+.header{
+  position:sticky; top:0; z-index:20;
+  backdrop-filter: blur(var(--blur));
+  background: rgba(11,12,16,.55);
+  border-bottom:1px solid var(--line);
+}
+.hwrap{max-width:1100px;margin:0 auto;padding:var(--pad);display:flex;gap:var(--gap);align-items:center;justify-content:space-between}
+.brand{display:flex;gap:10px;align-items:center}
+.logo{width:46px;height:46px;border-radius:50%;background:conic-gradient(from 42deg, #f0f, #0ff);border:1px solid #ffffff30;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.title{margin:0;font-weight:900;letter-spacing:.2px}
+.sub{margin:0;color:var(--mut);font-size:.86rem}
+
+.tabs{position:sticky;top:calc(var(--h) + env(safe-area-inset-top));z-index:15;background:transparent}
+.twrap{max-width:1100px;margin:0 auto;padding:0 var(--pad) var(--pad)}
+.tabbar{display:flex;gap:8px;flex-wrap:wrap}
+.tab{padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:#0f1218;color:#dfe8ff;cursor:pointer;font-weight:800}
+.tab.active{outline:2px solid #ffd76a55}
+
+/* Main */
+main{flex:1;display:grid;gap:var(--gap);grid-template-columns: 1.15fr 1fr;max-width:1100px;margin:0 auto;padding:var(--pad)}
+@media (max-width:1000px){main{grid-template-columns:1fr}}
+
+.card{background:linear-gradient(180deg, var(--glass), rgba(255,255,255,.03));border:1px solid var(--line);
+  border-radius:var(--r-lg); padding:var(--pad); box-shadow:0 18px 40px rgba(0,0,0,.25)}
+.card h3{margin:.2rem 0 .6rem;font-size:.95rem;letter-spacing:.08em;text-transform:uppercase;color:#cfdaf0}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grid-2{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+.grid-3{display:grid;gap:8px;grid-template-columns:repeat(3,1fr)}
+.btn{appearance:none;border:1px solid #ffffff28;background:linear-gradient(180deg,#2a1a0e,#1a120a);color:#ffeac2;border-radius:14px;padding:10px 14px;font-weight:900;cursor:pointer}
+.btn.ghost{background:transparent;border-style:dashed;color:#cde4ff}
+.btn.acc{background:linear-gradient(180deg,rgba(18,180,255,.35),rgba(18,180,255,.12));color:#e8f6ff;border-color:#3aa7ff55}
+.kbd{font-family:var(--mono);font-size:.86rem;padding:.35rem .6rem;border:1px solid #ffffff28;border-radius:8px;background:#0d1118;color:#b9c7db}
+
+.dock{position:sticky;bottom:0;z-index:25;border-top:1px solid var(--line);backdrop-filter:blur(10px);
+  background:linear-gradient(180deg,rgba(10,12,16,.55),rgba(10,12,16,.95));}
+.dwrap{max-width:1100px;margin:0 auto;padding:8px 10px calc(env(safe-area-inset-bottom,0) + 8px);display:flex;gap:8px;align-items:center;justify-content:space-between}
+.dbtn{border:1px solid #ffffff28;background:linear-gradient(42deg,#f0f,#0ff);color:white;border-radius:12px;padding:.7rem 1rem;font-weight:900}
+
+.viewer{position:fixed;inset:0;background:#000b;backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:10px;z-index:30}
+.viewer.show{display:flex}
+.frame{width:100%;max-width:1000px;height:82vh;border-radius:20px;border:1px solid #ffffff22;overflow:hidden;background:#0f1117;box-shadow:0 20px 60px rgba(0,0,0,.5);position:relative}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #ffffff18;background:linear-gradient(180deg,#0a0f14,#0b1116)}
+.iframe{width:100%;height:calc(82vh - 50px);border:0}
+.loader{position:absolute;inset:50px 0 0 0;display:grid;place-items:center;background:linear-gradient(180deg,#0a0f14ee,#0b0f14dd);opacity:0;transition:opacity .25s ease}
+.loader.show{opacity:1}
+.spinner{width:52px;height:52px;border-radius:50%;border:3px solid #1f2a37;border-top-color:#ffd76a;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* EDITOR FULL */
+.editor{display:grid;gap:8px;grid-template-columns:220px 1fr}
+@media (max-width:900px){.editor{grid-template-columns:1fr}}
+.sidebar{border:1px dashed #244; border-radius:14px; padding:8px; background:#0a0f18}
+.file{display:flex;align-items:center;justify-content:space-between;padding:8px;border:1px solid #223152;border-radius:12px;background:#0b1020;cursor:pointer}
+.file.active{outline:2px solid #c084fc55}
+.file small{color:#8aa0bf}
+.editorTop{display:flex;gap:8px;flex-wrap:wrap}
+.editorArea{display:grid;gap:8px;grid-template-rows:auto 1fr auto}
+.tabline{display:flex;gap:8px;flex-wrap:wrap}
+.tabbtn{padding:7px 10px;border:1px solid #ffffff22;border-radius:10px;background:#0f1320;font-weight:800;color:#dfe8ff;cursor:pointer}
+.tabbtn.active{outline:2px solid #12b4ff55}
+textarea.code{width:100%;min-height:260px;border:1px solid #203154;border-radius:14px;background:#0f1320;color:#dfe8ff;padding:10px 12px;font-family:var(--mono);font-size:13px;line-height:1.36}
+pre.out{white-space:pre-wrap;background:#0a0f1f;border:1px dashed #203154;border-radius:12px;padding:12px;font-family:var(--mono);font-size:13px;line-height:1.36}
+
+/* SMIGDRIX FULL */
+.smiControls{display:grid;gap:8px;grid-template-columns:2fr 1fr 1fr 1fr}
+@media (max-width:800px){.smiControls{grid-template-columns:1fr 1fr}}
+.smiBox{display:grid;gap:8px;grid-template-rows:auto 1fr auto}
+.smiOut{white-space:pre; overflow:auto; max-height:52vh; border:1px solid #21314a; border-radius:14px; background:#0a0f18; padding:12px; font-family:var(--mono)}
+.range{appearance:none;width:100%;height:6px;border-radius:999px;background:#1b283d;outline:none}
+.range::-webkit-slider-thumb{appearance:none;width:18px;height:18px;border-radius:50%;background:linear-gradient(42deg,#f0f,#0ff);border:1px solid #fff3}
+.hint{color:#a7b8cf;font-size:.86rem}
+footer{color:#9bb4c4;font-size:.84rem;text-align:center;margin:14px 0}
+</style>
+</head>
+<body>
+  <header class="header">
+    <div class="hwrap">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1 class="title">Dual • UNO Unificado v2</h1>
+          <p class="sub">Minuz ↔ Expand — Hub, Viewer, Editor FULL & Smigdrix FULL</p>
+        </div>
+      </div>
+      <div class="row">
+        <button id="btnMinuz" class="btn acc" title="Alternar densidade">Minuz</button>
+        <button id="btnInstall" class="btn">Instalar PWA</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <div class="twrap">
+      <div class="tabbar">
+        <button class="tab active" data-tab="hub">⊙ Hub</button>
+        <button class="tab" data-tab="editor">⇄ Editor FULL</button>
+        <button class="tab" data-tab="smig">△ Smigdrix FULL</button>
+        <button class="tab" data-tab="splash">☆ Procedural</button>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <!-- COL A (HUB/EDITOR) -->
+    <section id="colA" class="card">
+      <div id="paneHub">
+        <h3>Apps (Hub)</h3>
+        <div class="row">
+          <span class="kbd">Remote JSON</span>
+          <span class="kbd">Local JSON</span>
+          <span class="kbd">Viewer iFrame</span>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <input id="remoteURL" class="kbd" style="flex:1" placeholder="https://infodose.com.br/apps.json (ou sua URL)"/>
+          <button id="btnCarregar" class="btn acc">Carregar</button>
+        </div>
+        <div id="chips" class="row" style="margin:10px 0;flex-wrap:wrap"></div>
+        <div id="cards" class="row" style="flex-direction:column;gap:10px"></div>
+      </div>
+
+      <div id="paneEditor" style="display:none">
+        <h3>Editor FULL — Projeto HTML/CSS/JS</h3>
+        <div class="editorTop">
+          <button class="btn acc" id="edPreview">Preview</button>
+          <button class="btn" id="edSaveHTML">Baixar index.html</button>
+          <button class="btn" id="edExport">Exportar Projeto (.json)</button>
+          <label class="btn ghost" for="edImport">Importar Projeto</label>
+          <input id="edImport" type="file" accept="application/json" style="display:none"/>
+          <button class="btn ghost" id="edReset">Zerar</button>
+        </div>
+
+        <div class="editor" style="margin-top:8px">
+          <aside class="sidebar">
+            <div class="file active" data-file="html">
+              <div><strong>index.html</strong><br><small>estrutura</small></div>
+              <div>✎</div>
+            </div>
+            <div class="file" data-file="css">
+              <div><strong>styles.css</strong><br><small>estilos</small></div>
+              <div>✎</div>
+            </div>
+            <div class="file" data-file="js">
+              <div><strong>app.js</strong><br><small>lógica</small></div>
+              <div>✎</div>
+            </div>
+            <div class="hint" style="margin-top:8px">Dica: o projeto é salvo em localStorage automaticamente.</div>
+          </aside>
+
+          <div class="editorArea">
+            <div class="tabline">
+              <button class="tabbtn active" data-tab="html">HTML</button>
+              <button class="tabbtn" data-tab="css">CSS</button>
+              <button class="tabbtn" data-tab="js">JS</button>
+            </div>
+            <textarea id="edHTML" class="code" spellcheck="false"><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Meu App</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <h1>Olá, Kodux ⚡</h1>
+    <p>Este é o seu app base. Edite HTML/CSS/JS e clique Preview.</p>
+    <button id="helloBtn">Olá</button>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html></textarea>
+            <textarea id="edCSS" class="code" style="display:none" spellcheck="false">:root{--bg:#0b0c10;--fg:#eaf2ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui}
+main{max-width:760px;margin:6vh auto;padding:20px}
+h1{letter-spacing:.02em}
+button{border:1px solid #ffffff33;background:linear-gradient(42deg,#f0f,#0ff);color:#fff;border-radius:12px;padding:.6rem 1rem;font-weight:900}</textarea>
+            <textarea id="edJS" class="code" style="display:none" spellcheck="false">document.getElementById('helloBtn')?.addEventListener('click',()=>{
+  alert('Bem-vindo ao Editor FULL do UNO!');
+});</textarea>
+
+            <div class="row">
+              <span class="hint">Fonte: <code>localStorage.UNO_PROJECT</code></span>
+              <span class="hint">Preview abre no Viewer</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COL B (TOOLS/SMIGDRIX) -->
+    <section id="colB" class="card">
+      <div id="paneTools">
+        <h3>Ferramentas Rápidas</h3>
+        <div class="grid-2">
+          <div class="card" style="padding:10px">
+            <h3 style="margin-top:0">Bloco de Anotações</h3>
+            <textarea id="notes" class="code" spellcheck="false" placeholder="Anote ideias..."></textarea>
+            <div class="row" style="margin-top:8px">
+              <button id="saveNotes" class="btn acc">Salvar</button>
+              <button id="clearNotes" class="btn ghost">Limpar</button>
+            </div>
+          </div>
+          <div class="card" style="padding:10px">
+            <h3 style="margin-top:0">Preview rápido (srcdoc)</h3>
+            <textarea id="miniCode" class="code" spellcheck="false"><!doctype html><meta charset="utf-8"><style>body{font-family:system-ui;margin:2rem}h1{color:#0ff}</style><h1>Preview rápido</h1></textarea>
+            <div class="row" style="margin-top:8px">
+              <button id="btnPreview" class="btn acc">Preview</button>
+              <button id="btnSave" class="btn ghost">Baixar .html</button>
+            </div>
+            <div class="hint">Abre no Viewer.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="paneSmig" style="display:none">
+        <h3>Smigdrix FULL — Console Simbólico</h3>
+        <div class="smiControls">
+          <input id="smSeed" class="kbd" placeholder="seed / frase / prompt"/>
+          <select id="smPreset" class="kbd">
+            <option value="ALL">ALL (⊙ ⇄ △ ☆ § ∞)</option>
+            <option>UNO</option>
+            <option>DUAL</option>
+            <option>TRINITY</option>
+            <option>STAR</option>
+            <option>CROWN</option>
+            <option>HEX</option>
+          </select>
+          <select id="smRuns" class="kbd">
+            <option>1x</option><option>2x</option><option>3x</option><option>5x</option>
+          </select>
+          <input id="smWidth" class="kbd" type="number" min="24" max="120" value="64" title="largura"/>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button id="smRun" class="btn acc">Rodar</button>
+          <button id="smCopy" class="btn">Copiar</button>
+          <button id="smDownload" class="btn ghost">Baixar .txt</button>
+          <button id="smClear" class="btn ghost">Limpar</button>
+        </div>
+        <div class="smiBox" style="margin-top:8px">
+          <div class="row">
+            <label class="hint">Tamanho fonte <input id="smFont" class="range" type="range" min="10" max="22" value="13"></label>
+            <label class="hint">Altura máx <input id="smHeight" class="range" type="range" min="200" max="900" value="520"></label>
+          </div>
+          <pre id="smiOut" class="smiOut"></pre>
+          <div class="hint">Tríades, coroas e portais simbólicos para o Ritual do Pulso.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>“Sempre único, sempre seu.”</footer>
+
+  <div class="dock" role="navigation" aria-label="Dock">
+    <div class="dwrap">
+      <button class="dbtn" id="dockHome" type="button">Home</button>
+      <button class="dbtn" id="dockInfodose" type="button">Infodose</button>
+      <button class="dbtn" id="dockInstall" type="button">Instalar</button>
+      <button class="dbtn" id="dockSplash" type="button">Procedural</button>
+    </div>
+  </div>
+
+  <div class="viewer" id="viewer">
+    <div class="frame">
+      <div class="bar">
+        <strong id="barTitle">Abrindo…</strong>
+        <div class="row">
+          <button class="btn ghost" id="btnHome">🏠 Home</button>
+          <a class="btn ghost" id="btnExternal" href="#" target="_blank" rel="noopener">↗️ Em Aba</a>
+        </div>
+      </div>
+      <div class="loader" id="loader"><div class="spinner"></div></div>
+      <iframe class="iframe" id="appFrame" src="about:blank" referrerpolicy="no-referrer"></iframe>
+    </div>
+  </div>
+
+<script>
+const $ = (q,root=document)=>root.querySelector(q);
+const $$= (q,root=document)=>[...root.querySelectorAll(q)];
+function flash(msg){ const n=document.createElement('div'); n.textContent=msg; n.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#0f172a;border:1px solid #26334d;color:#eaf2ff;padding:8px 12px;border-radius:10px;z-index:9999'; document.body.appendChild(n); setTimeout(()=>n.remove(),1400); }
+
+/* Tabs → alterna painéis */
+(function(){
+  const panes = {
+    hub:    ['paneHub','paneTools'],
+    editor: ['paneEditor','paneTools'],
+    smig:   ['paneHub','paneSmig'], // coluna A some hub; coluna B mostra smig
+    splash: []
+  };
+  $$('.tab').forEach(b=>b.addEventListener('click',()=>{
+    $$('.tab').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+    const t=b.dataset.tab;
+    // reset/show
+    $('#paneHub').style.display='none';
+    $('#paneEditor').style.display='none';
+    $('#paneTools').style.display='none';
+    $('#paneSmig').style.display='none';
+    (panes[t]||[]).forEach(id=> $( '#'+id ).style.display='block');
+    if(t==='splash'){ openApp({title:'Procedural Live Splash', url:'#_procedural'}); }
+    window.scrollTo({top:0,behavior:'smooth'});
+  }));
+})();
+
+/* Minuz */
+(function(){
+  const btn=$('#btnMinuz');
+  try{ if(localStorage.getItem('UNO_MINUZ')==='1') document.documentElement.classList.add('minuz'); }catch{}
+  function update(){
+    const m=document.documentElement.classList.toggle('minuz');
+    btn.textContent = m ? 'Expand' : 'Minuz';
+    try{ localStorage.setItem('UNO_MINUZ', m?'1':'0'); }catch{}
+  }
+  btn.addEventListener('click', update);
+})();
+
+/* PWA */
+if('serviceWorker' in navigator){ window.addEventListener('load', ()=> navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; });
+$('#btnInstall').onclick = $('#dockInstall').onclick = async()=>{
+  if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; }
+  else alert('Use “Adicionar à Tela de Início”.');
+};
+
+/* Dock */
+$('#dockHome').onclick=()=>{ window.scrollTo({top:0,behavior:'smooth'}); };
+$('#dockInfodose').onclick=()=>{ window.open('https://infodose.com.br','_blank','noopener'); };
+$('#dockSplash').onclick=()=>{ openApp({title:'Procedural Live Splash', url:'#_procedural'}); };
+
+/* Viewer */
+const viewer = $('#viewer');
+const frame  = $('#appFrame');
+const barTitle = $('#barTitle');
+const btnExternal = $('#btnExternal');
+const loader = $('#loader');
+$('#btnHome').onclick = ()=>{ frame.src = 'about:blank'; viewer.classList.remove('show'); };
+function openApp(app){
+  if(app.url==='#_procedural'){
+    const html = `<!doctype html><meta charset=utf-8>
+      <style>body{margin:0;font-family:system-ui;background:#04070b;color:#e9effa}
+      .center{display:grid;place-items:center;height:100vh;background:radial-gradient(80vw 60vh at 50% 40%, rgba(0,0,0,.35), rgba(0,0,0,.85) 70%), rgba(4,7,11,.96)}
+      .btn{padding:12px 16px;border:1px solid #ffffff22;background:linear-gradient(180deg, rgba(18,180,255,.35), rgba(18,180,255,.14));color:#e9effa;border-radius:14px;font-weight:800}
+      </style>
+      <div class="center">
+        <button class="btn" onclick="alert('Ativar Áudio (mock)')">Ativar Áudio (TOCAR)</button>
+      </div>`;
+    barTitle.textContent='Procedural Live — Splash';
+    loader.classList.remove('show');
+    frame.srcdoc = html;
+    viewer.classList.add('show');
+    btnExternal.href = location.href;
+    return;
+  }
+  barTitle.textContent = app.title||app.key||'Abrindo…';
+  btnExternal.href = app.url;
+  loader.classList.add('show');
+  frame.onload = ()=> setTimeout(()=> loader.classList.remove('show'), 140);
+  frame.src = app.url;
+  viewer.classList.add('show');
+}
+
+/* HUB */
+const LOCAL_URL = './apps/apps.json';
+$('#remoteURL').value = (localStorage.getItem('UNO_REMOTE') || 'https://infodose.com.br/apps.json');
+$('#btnCarregar').onclick = async ()=>{
+  const url = $('#remoteURL').value.trim(); try{ localStorage.setItem('UNO_REMOTE', url); }catch{}
+  const apps = await loadApps(url).catch(()=>[]);
+  if(!apps.length){ $('#cards').innerHTML = '<div class="hint">Falha ao carregar apps</div>'; return; }
+  renderHub(apps);
+};
+async function fetchWithTimeout(url, ms=7000){
+  const ctrl = new AbortController(); const id = setTimeout(()=>ctrl.abort(), ms);
+  const r = await fetch(url, {signal:ctrl.signal,mode:'cors',cache:'no-store'});
+  clearTimeout(id); if(!r.ok) throw new Error('HTTP '+r.status); return await r.json();
+}
+async function loadApps(remote){
+  try{ const data = await fetchWithTimeout(remote, 7000); return data.apps||[]; }
+  catch(e){ const r = await fetch(LOCAL_URL).catch(()=>null); if(!r) throw e; const d = await r.json(); return d.apps||[]; }
+}
+function uniq(a){ return [...new Set(a)]; }
+function renderHub(apps){
+  const cats = uniq(apps.map(a=>a.category).filter(Boolean));
+  const chipsRoot = $('#chips'); chipsRoot.innerHTML='';
+  ['Todos', ...cats].forEach((c,i)=>{
+    const b=document.createElement('button'); b.className='tab'; b.textContent=c; if(i===0) b.classList.add('active');
+    b.onclick=()=>{ $$('#chips .tab').forEach(x=>x.classList.remove('active')); b.classList.add('active'); draw(c); };
+    chipsRoot.appendChild(b);
+  });
+  function cardFor(app){
+    const el = document.createElement('div'); el.className='card'; el.style.padding='10px';
+    const badges = (app.badges||[]).map(b=>`<span class="kbd" style="background:#0f121a;border-color:#ffffff22">${b}</span>`).join('');
+    el.innerHTML = `
+      <div class="row" style="align-items:flex-start">
+        <div style="width:64px;height:64px;border-radius:16px;border:1px solid #ffffff22;background:#0f1320;overflow:hidden">
+          <img src="${app.icon||'icons/icon-192.png'}" alt="" style="width:100%;height:100%;object-fit:cover"/>
+        </div>
+        <div style="flex:1">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:900">${app.title||app.key}</div>
+              <div class="hint">${app.desc||''}</div>
+            </div>
+            <div>${badges}</div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button class="btn" data-open="${app.key}">Abrir</button>
+            <button class="btn ghost" data-open="${app.key}" data-newtab="1">Em Aba</button>
+          </div>
+        </div>
+      </div>`;
+    return el;
+  }
+  function draw(cat){
+    const root = $('#cards'); root.innerHTML='';
+    apps.filter(a => cat==='Todos' || a.category===cat).forEach(app => root.appendChild(cardFor(app)));
+    $$('#cards [data-open]').forEach(b=>{
+      b.onclick = () => {
+        const key = b.getAttribute('data-open');
+        const newtab = b.hasAttribute('data-newtab');
+        const app = apps.find(x=>x.key===key);
+        if(app) newtab ? window.open(app.url,'_blank','noopener') : openApp(app);
+      };
+    });
+  }
+  draw('Todos');
+}
+$('#btnCarregar').click();
+
+/* EDITOR FULL — localStorage */
+const PRJ_KEY = 'UNO_PROJECT';
+const ed = {
+  html: $('#edHTML'), css: $('#edCSS'), js: $('#edJS'),
+  tabs: $$('.tabbtn'), files: $$('.file')
+};
+function loadProject(){
+  try{
+    const raw = localStorage.getItem(PRJ_KEY);
+    if(!raw) return;
+    const p = JSON.parse(raw);
+    if(p.html) ed.html.value = p.html;
+    if(p.css)  ed.css.value  = p.css;
+    if(p.js)   ed.js.value   = p.js;
+  }catch{}
+}
+function saveProject(){
+  const p = { html: ed.html.value, css: ed.css.value, js: ed.js.value, t: Date.now() };
+  try{ localStorage.setItem(PRJ_KEY, JSON.stringify(p)); flash('Projeto salvo'); }catch(e){ console.warn(e); }
+}
+ed.html.addEventListener('input', saveProject);
+ed.css .addEventListener('input', saveProject);
+ed.js  .addEventListener('input', saveProject);
+loadProject();
+
+ed.tabs.forEach(b=> b.addEventListener('click',()=>{
+  ed.tabs.forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  const t=b.dataset.tab;
+  ed.html.style.display = (t==='html')?'block':'none';
+  ed.css .style.display = (t==='css') ?'block':'none';
+  ed.js  .style.display = (t==='js')  ?'block':'none';
+  ed.files.forEach(f=> f.classList.toggle('active', f.dataset.file===t));
+}));
+
+$('#edReset').onclick = ()=>{
+  if(confirm('Limpar projeto do Editor?')){
+    localStorage.removeItem(PRJ_KEY);
+    ed.html.value = document.querySelector('#edHTML').defaultValue;
+    ed.css.value  = document.querySelector('#edCSS').defaultValue;
+    ed.js.value   = document.querySelector('#edJS').defaultValue;
+    saveProject();
+  }
+};
+$('#edExport').onclick = ()=>{
+  const blob = new Blob([localStorage.getItem(PRJ_KEY) || '{}'], {type:'application/json;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download='uno_project.json'; a.click(); URL.revokeObjectURL(a.href);
+};
+$('#edImport').onchange = (e)=>{
+  const f = e.target.files?.[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{ localStorage.setItem(PRJ_KEY, r.result); loadProject(); flash('Projeto importado'); }catch{ alert('Falha ao importar JSON'); }
+  };
+  r.readAsText(f);
+};
+$('#edPreview').onclick = ()=>{
+  const html = ed.html.value, css = ed.css.value, js = ed.js.value;
+  const bundle = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>${css}</style>
+${html}
+<script>${js}<\/script>`;
+  barTitle.textContent = 'Preview — Editor FULL';
+  btnExternal.href = '#';
+  loader.classList.remove('show');
+  frame.srcdoc = bundle;
+  viewer.classList.add('show');
+};
+$('#edSaveHTML').onclick = ()=>{
+  const html = ed.html.value, css = ed.css.value, js = ed.js.value;
+  const bundle = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>index</title><style>${css}</style></head><body>${html}<script>${js}<\/script></body></html>`;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([bundle], {type:'text/html;charset=utf-8'})); a.download='index.html'; a.click(); URL.revokeObjectURL(a.href);
+};
+
+/* Notes + mini preview */
+$('#saveNotes').onclick=()=>{ try{ localStorage.setItem('UNO_NOTES',$('#notes').value); flash('Notas salvas'); }catch{} };
+$('#clearNotes').onclick=()=>{ $('#notes').value=''; try{ localStorage.removeItem('UNO_NOTES'); }catch{} };
+$('#notes').value = localStorage.getItem('UNO_NOTES')||'';
+
+$('#btnPreview').onclick = ()=>{
+  const html = $('#miniCode').value;
+  barTitle.textContent = 'Preview — srcdoc';
+  btnExternal.href = '#';
+  loader.classList.remove('show');
+  frame.srcdoc = html;
+  viewer.classList.add('show');
+};
+$('#btnSave').onclick = ()=>{
+  const blob = new Blob([$('#miniCode').value], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download='mini.html'; a.click(); URL.revokeObjectURL(a.href);
+};
+
+/* Smigdrix FULL */
+const sm = {
+  seed: $('#smSeed'), preset: $('#smPreset'), runs: $('#smRuns'), width: $('#smWidth'),
+  out: $('#smiOut'), font: $('#smFont'), height: $('#smHeight')
+};
+const SYMBOLS=['⊙','⇄','△','☆彡','§','∞'];
+function wrapText(s, width){ width=Math.max(24,Math.min(120,width||64)); const words=(s||'').toString().split(/\s+/); const lines=[]; let line=''; for(const w of words){ if((line+' '+w).trim().length>width){ lines.push(line.trim()); line=w; } else line+=' '+w; } if(line.trim()) lines.push(line.trim()); return lines.join('\\n'); }
+function nUNO(u){return '╔══════════════════╗\\n║    ⊙  UNO        ║\\n║    raiz: '+(u||'user')+'   ║\\n╚══════════════════╝';}
+function nDUAL(t){return '⇄ DUAL ATIVO ⇄\\nIA(local) diz: '+wrapText(t, sm.width.value);}
+function nTRI(t){return '   △\\n  / \\\\ \\n /   \\\\ \\n/_____\\\\\\nseed: '+wrapText(t, sm.width.value);}
+function nSTAR(t){const inside=(t||'fluxo OK').replace(/\\n/g,' ');const content=inside.slice(0, sm.width.value);const line='─'.repeat(Math.max(12, Math.min(64, content.length+2)));return ['☆'+line+'☆彡','│ '+content+' │','☆'+line+'☆彡'].join('\\n');}
+function nCROWN(){ return [
+  '👑 CROWN | KMOM — Coroa dos 7 Seres',
+  'KODUX • VELOR • ELYA • SYLON • NAIRA • THENIR • ELOH',
+  'heptagrama: (☆) (☆) (☆) (☆) (☆) (☆) (☆)  → centro oculto'
+].join('\\n'); }
+function nHEX(){ return [
+  'HEXAGRAMA SILENCIOSO:',
+  'YAMANTEK ⚡  •  BLLUE 💧  •  ELYEN 🌫  •  NYMAH 🪷  •  SAAY 🔕  •  SULAM 🌌',
+  '— pulso contínuo —'
+].join('\\n'); }
+function runPreset(preset, seed, runs){
+  let seq=[];
+  if(preset==='ALL') seq=['⊙','⇄','△','☆彡','§','∞'];
+  else if(preset==='UNO') seq=['⊙'];
+  else if(preset==='DUAL') seq=['⇄'];
+  else if(preset==='TRINITY') seq=['△'];
+  else if(preset==='STAR') seq=['☆彡'];
+  else if(preset==='CROWN') seq=['👑'];
+  else if(preset==='HEX') seq=['HEX'];
+  let out='';
+  for(let r=0;r<runs;r++){
+    for(const p of seq){
+      let chunk='';
+      if(p==='⊙') chunk=nUNO('kodux');
+      else if(p==='⇄') chunk=nDUAL(seed);
+      else if(p==='△') chunk=nTRI(seed);
+      else if(p==='☆彡') chunk=nSTAR(seed);
+      else if(p==='§') chunk='§───✔───§ fluxo seguro';
+      else if(p==='∞') chunk='∞───reset───∞';
+      else if(p==='👑') chunk=nCROWN();
+      else if(p==='HEX') chunk=nHEX();
+      out += '[ '+p+' ]\\n'+chunk+'\\n\\n';
+    }
+  }
+  return out;
+}
+$('#smRun').onclick=()=>{
+  const seed = sm.seed.value || 'Smigdrix FULL seed';
+  const preset = sm.preset.value;
+  const runs = parseInt(sm.runs.value) || 1;
+  const out = runPreset(preset, seed, runs);
+  sm.out.textContent = out;
+};
+$('#smCopy').onclick=()=>{ navigator.clipboard.writeText(sm.out.textContent).then(()=>flash('Copiado')); };
+$('#smDownload').onclick=()=>{
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([sm.out.textContent],{type:'text/plain;charset=utf-8'})); a.download='smigdrix.txt'; a.click(); URL.revokeObjectURL(a.href);
+};
+$('#smClear').onclick=()=>{ sm.out.textContent=''; };
+sm.font.oninput = ()=>{ sm.out.style.fontSize = sm.font.value+'px'; };
+sm.height.oninput = ()=>{ sm.out.style.maxHeight = sm.height.value+'px'; };
+sm.out.style.fontSize = sm.font.value+'px';
+sm.out.style.maxHeight = sm.height.value+'px';
+</script>
+</body>
+</html>

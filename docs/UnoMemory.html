@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Dual Memory Board — UNO→DUAL→TRINITY</title>
+<style>
+  :root{
+    --bg:#0a0d14;--ink:#e8f6ff;--muted:#98b2c7;--accent:#29d3ff;--accent2:#ff5af4;--ok:#39ffb6;
+    --glass:rgba(255,255,255,.06);--line:rgba(255,255,255,.12);
+    --rad:18px;--pad:14px;--shadow:0 12px 40px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--ink); background:
+      radial-gradient(1200px 700px at 20% 5%, rgba(255,0,255,.08), transparent 60%),
+      radial-gradient(900px 600px at 85% 15%, rgba(0,255,255,.08), transparent 60%),
+      linear-gradient(180deg,#0a0d14 0%,#070a10 100%);
+    font:15px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif;
+  }
+  .wrap{max-width:1100px;margin:0 auto;padding:20px 16px 100px}
+  header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .logo{display:flex;align-items:center;gap:10px;letter-spacing:.6px}
+  .logo .mark{width:28px;height:28px;border-radius:50%;
+    background:conic-gradient(from 0deg,var(--accent),#8a5cff,var(--accent2),var(--accent));
+    box-shadow:0 0 18px rgba(41,211,255,.55), 0 0 24px rgba(255,90,244,.35);animation:spin 8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .chip{display:inline-block;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--glass);backdrop-filter:blur(8px)}
+
+  .gridbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0 16px}
+  .gridbar select,.gridbar button{background:var(--glass);border:1px solid var(--line);color:var(--ink);padding:8px 12px;border-radius:10px}
+  .gridbar button{cursor:pointer;box-shadow:var(--shadow)}
+  .gridbar .state{margin-left:auto;padding:.4rem .7rem;border:1px solid var(--line);border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
+  .hint{color:var(--muted)}
+
+  .board-area{display:grid;grid-template-columns:360px 1fr;gap:14px}
+  @media (max-width:920px){.board-area{grid-template-columns:1fr}}
+
+  /* Phone mock */
+  .device{
+    aspect-ratio:9/19.5; max-width:420px; width:100%; margin:0 auto; position:relative;
+    border-radius:38px; padding:18px; background:linear-gradient(180deg,#0c1018,#0a0f16);
+    box-shadow:0 30px 80px rgba(0,0,0,.65), inset 0 0 0 2px rgba(255,255,255,.05), inset 0 0 0 8px #0005;
+  }
+  .screen{position:absolute; inset:18px; border-radius:28px; overflow:hidden; background:rgba(0,0,0,.55); border:1px solid var(--line)}
+  .nebula{position:absolute; inset:0; filter:blur(30px); opacity:.55;
+    background:
+      radial-gradient(600px 400px at 30% 18%, rgba(41,211,255,.20), transparent 60%),
+      radial-gradient(500px 350px at 70% 70%, rgba(255,90,244,.18), transparent 60%);
+  }
+  .grid{position:absolute; inset:0; display:grid; gap:6px; padding:10px}
+  .cell{position:relative; background:rgba(255,255,255,.02); border:1px dashed var(--line); border-radius:12px; overflow:hidden;
+        display:flex; align-items:center; justify-content:center; cursor:pointer; min-height:36px}
+  .cell img{max-width:100%; max-height:100%; object-fit:cover; display:block}
+  .cell .label{position:absolute; left:6px; bottom:6px; font-size:11px; color:#cfe9ff; background:rgba(0,0,0,.35); padding:2px 6px; border-radius:6px; border:1px solid #ffffff22}
+  .cell.drag{outline:2px solid var(--accent)}
+
+  /* Asset tray */
+  .tray{border:1px solid var(--line); background:rgba(255,255,255,.03); border-radius:var(--rad); padding:var(--pad); box-shadow:var(--shadow)}
+  .tray h3{margin:0 0 10px; font-size:13px; color:var(--muted); font-weight:600}
+  .assets{display:grid; grid-template-columns:repeat(auto-fill,minmax(80px,1fr)); gap:8px; max-height:340px; overflow:auto}
+  .thumb{border:1px solid var(--line); background:#0b1118; border-radius:10px; display:grid; place-items:center; aspect-ratio:1/1; cursor:grab}
+  .thumb img{max-width:100%; max-height:100%; object-fit:contain}
+
+  /* Footer nav UNO→DUAL→TRINITY */
+  .nav{position:fixed;left:0;right:0;bottom:12px; display:flex;gap:12px; justify-content:center; pointer-events:none}
+  .nav .tab{pointer-events:auto; min-width:96px; text-align:center; padding:10px 14px; border-radius:14px; border:1px solid var(--line);
+            background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02)); box-shadow:var(--shadow); cursor:pointer}
+  .nav .tab small{display:block; color:var(--muted); letter-spacing:.6px}
+  .nav .tab.active{outline:2px solid var(--accent)}
+  .nav .tab.done{border-color:#3cffb677}
+  .nav .tab strong{letter-spacing:.8px}
+
+  /* Toast */
+  .toast{position:fixed; right:16px; bottom:86px; background:#0b131c; border:1px solid var(--line); padding:10px 12px; border-radius:12px; color:var(--ink); opacity:0; transform:translateY(10px);
+         transition:.25s ease; box-shadow:var(--shadow)}
+  .toast.show{opacity:1; transform:translateY(0)}
+
+  .bar{display:flex; gap:8px; flex-wrap:wrap}
+  .bar button{background:var(--glass); color:var(--ink); border:1px solid var(--line); padding:8px 12px; border-radius:10px; cursor:pointer}
+  .bar input[type=file]{display:none}
+  .bar label{background:var(--glass); border:1px solid var(--line); padding:8px 12px; border-radius:10px; cursor:pointer}
+
+  .help{border:1px solid var(--line); border-radius:14px; padding:12px; background:rgba(255,255,255,.03); color:var(--muted); font-size:13px}
+  .help code{color:#d3f1ff}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo"><div class="mark" aria-hidden="true"></div><strong>Dual Memory Board</strong><span class="chip">UNO → DUAL → TRINITY</span></div>
+      <div class="chip">Do seu jeito — sempre único, sempre seu</div>
+    </header>
+
+    <div class="gridbar">
+      <div class="bar" role="group" aria-label="Arquivos e ações">
+        <label for="fileInput" title="Adicionar imagens">＋ Adicionar imagens</label>
+        <input id="fileInput" type="file" accept="image/*,.svg" multiple>
+        <button id="clearTray" title="Limpar assets">Limpar assets</button>
+        <button id="saveBoard" title="Salvar no dispositivo (localStorage)">💾 Salvar</button>
+        <button id="loadBoard" title="Reabrir do dispositivo">⤓ Reabrir</button>
+        <button id="exportPNG" title="Exportar composição como PNG">⬇︎ Exportar PNG</button>
+      </div>
+      <div class="bar" role="group" aria-label="Grade e limpeza">
+        <span class="hint">Grade:</span>
+        <select id="gridSelect" title="Escolher grade">
+          <option value="2x2">2 x 2</option>
+          <option value="4x4" selected>4 x 4</option>
+          <option value="8x8">8 x 8</option>
+          <option value="16x9">16 x 9</option>
+        </select>
+        <button id="clearCells">Limpar células</button>
+      </div>
+      <div class="state" id="stateBadge">Estado: <strong>UNO</strong></div>
+    </div>
+
+    <div class="board-area">
+      <div class="device" aria-label="simulador de telefone">
+        <div class="screen" id="screen">
+          <div class="nebula" aria-hidden="true"></div>
+          <div id="grid" class="grid" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <div class="tray">
+        <h3>Assets (arraste para as células) • <span id="assetCount">0</span></h3>
+        <div id="assets" class="assets" aria-label="Bandeja de imagens"></div>
+        <div class="help" style="margin-top:12px">
+          <strong>Dica rápida</strong>: clique em uma célula para escolher um arquivo, ou arraste uma miniatura da bandeja para dentro. Use <code>💾 Salvar</code> para gravar no seu dispositivo (LocalStorage) e <code>⬇︎ Exportar PNG</code> para gerar uma imagem plana da grade.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav" role="tablist" aria-label="Navegação de estados">
+    <div class="tab active" role="tab" aria-selected="true" id="tabUno" tabindex="0"><strong>UNO</strong><small>início</small></div>
+    <div class="tab" role="tab" aria-selected="false" id="tabDual" tabindex="0"><strong>DUAL</strong><small>criou frames</small></div>
+    <div class="tab" role="tab" aria-selected="false" id="tabTrinity" tabindex="0"><strong>TRINITY</strong><small>memória salva</small></div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite">Pronto.</div>
+
+<script>
+(function(){
+  const gridEl = document.getElementById('grid');
+  const assetsEl = document.getElementById('assets');
+  const assetCount = document.getElementById('assetCount');
+  const toast = document.getElementById('toast');
+  const gridSelect = document.getElementById('gridSelect');
+  const screenEl = document.getElementById('screen');
+  const KEY = 'dual.memory.board.v1';
+  let state = 'UNO';
+  const stateBadge = document.getElementById('stateBadge');
+
+  const tabs = {
+    UNO: document.getElementById('tabUno'),
+    DUAL: document.getElementById('tabDual'),
+    TRINITY: document.getElementById('tabTrinity')
+  };
+
+  function setState(next){
+    state = next;
+    for(const k in tabs){
+      tabs[k].classList.toggle('active', k===next);
+      tabs[k].classList.toggle('done', ['DUAL','TRINITY'].includes(k) && (k===next || (next==='TRINITY')));
+      tabs[k].setAttribute('aria-selected', k===next);
+    }
+    stateBadge.innerHTML = 'Estado: <strong>'+next+'</strong>';
+  }
+  tabs.UNO.onclick = ()=> setState('UNO');
+  tabs.DUAL.onclick = ()=> setState('DUAL');
+  tabs.TRINITY.onclick = ()=> setState('TRINITY');
+  tabs.UNO.onkeydown = tabs.DUAL.onkeydown = tabs.TRINITY.onkeydown = (e)=>{
+    if(e.key==='Enter' || e.key===' ') { e.preventDefault(); e.currentTarget.click(); }
+  };
+
+  function showToast(msg){
+    toast.textContent = msg; toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'), 1600);
+  }
+
+  function parseSize(v){
+    const [c,r] = v.split('x').map(Number); return {cols:c, rows:r};
+  }
+
+  // assets e mapeamento de células
+  const assets = [];             // [{id,name,type,data}]
+  let cellMap = [];              // array de assetId ou null
+
+  function buildGrid(keepMap=false){
+    const {cols, rows} = parseSize(gridSelect.value);
+    gridEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    gridEl.innerHTML = '';
+    const total = cols*rows;
+    if(!keepMap) cellMap = Array(total).fill(null);
+    else if(cellMap.length !== total) cellMap = Array(total).fill(null);
+
+    for(let i=0;i<total;i++){
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.idx = i;
+      cell.innerHTML = `<span class="label">${i+1}</span>`;
+
+      // se havia algo mapeado, recoloca
+      if(cellMap[i]){
+        const a = assets.find(x=>x.id===cellMap[i]);
+        if(a) cell.innerHTML = `<img alt="" src="${a.data}"/><span class="label">${i+1}</span>`;
+      }
+
+      cell.addEventListener('dragover', e=>{e.preventDefault(); cell.classList.add('drag')});
+      cell.addEventListener('dragleave', ()=>cell.classList.remove('drag'));
+      cell.addEventListener('drop', e=>{
+        e.preventDefault(); cell.classList.remove('drag');
+        const id = e.dataTransfer.getData('text/asset-id');
+        if(id) placeAssetInCell(id, cell);
+      });
+
+      cell.addEventListener('click', async ()=>{
+        const picker = Object.assign(document.createElement('input'), {type:'file', accept:'image/*,.svg'});
+        picker.onchange = async ()=>{
+          const file = picker.files[0]; if(!file) return;
+          const a = await fileToAsset(file);
+          addAsset(a); placeAssetInCell(a.id, cell); setState('DUAL');
+        };
+        picker.click();
+      });
+
+      gridEl.appendChild(cell);
+    }
+  }
+
+  function placeAssetInCell(assetId, cell){
+    const asset = assets.find(a=>a.id===assetId);
+    if(!asset) return;
+    const idx = Number(cell.dataset.idx);
+    cell.innerHTML = `<img alt="" src="${asset.data}"/><span class="label">${idx+1}</span>`;
+    cellMap[idx] = assetId;
+    setState('DUAL');
+  }
+
+  function uuid(){return 'a'+Math.random().toString(36).slice(2)+Date.now().toString(36)}
+
+  function addAsset(asset){
+    assets.push(asset);
+    const t = document.createElement('div');
+    t.className='thumb'; t.draggable=true; t.title='arraste para uma célula';
+    t.dataset.id = asset.id;
+    t.addEventListener('dragstart', e=>{
+      e.dataTransfer.setData('text/asset-id', asset.id);
+    });
+    t.innerHTML = `<img alt="asset" src="${asset.data}">`;
+    assetsEl.prepend(t);
+    assetCount.textContent = assets.length;
+  }
+
+  async function fileToAsset(file){
+    const data = await new Promise(res=>{
+      const r = new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file);
+    });
+    return {id:uuid(), name:file.name, type:file.type || 'image/*', data};
+  }
+
+  // File input
+  document.getElementById('fileInput').addEventListener('change', async e=>{
+    const files = [...e.target.files]; if(!files.length) return;
+    for(const f of files){ addAsset(await fileToAsset(f)); }
+    setState('DUAL'); showToast('Assets adicionados'); e.target.value='';
+  });
+
+  // Clear assets
+  document.getElementById('clearTray').addEventListener('click', ()=>{
+    assets.length = 0;
+    assetsEl.innerHTML = '';
+    assetCount.textContent = '0';
+    // opcionalmente limpar células que apontavam pros assets antigos
+    cellMap = cellMap.map(()=>null);
+    buildGrid(true);
+    showToast('Assets limpos');
+  });
+
+  // Clear cells
+  document.getElementById('clearCells').addEventListener('click', ()=>{
+    cellMap = cellMap.map(()=>null);
+    buildGrid(true);
+    showToast('Células limpas');
+  });
+
+  // Troca de grade
+  gridSelect.addEventListener('change', ()=>{
+    localStorage.setItem(KEY+'.grid', gridSelect.value);
+    buildGrid(false);
+    showToast('Grade atualizada');
+  });
+
+  // Salvar no localStorage
+  document.getElementById('saveBoard').addEventListener('click', ()=>{
+    const payload = {
+      grid: gridSelect.value,
+      assets,
+      cellMap
+    };
+    try{
+      localStorage.setItem(KEY, JSON.stringify(payload));
+      setState('TRINITY');
+      showToast('Projeto salvo');
+    }catch(err){
+      console.error(err);
+      showToast('Falha ao salvar (tamanho?)');
+    }
+  });
+
+  // Reabrir do localStorage
+  document.getElementById('loadBoard').addEventListener('click', ()=>{
+    const raw = localStorage.getItem(KEY);
+    if(!raw){ showToast('Nada salvo ainda'); return; }
+    try{
+      const data = JSON.parse(raw);
+      // grade
+      if(data.grid) gridSelect.value = data.grid;
+      // assets
+      assets.length = 0;
+      assetsEl.innerHTML = '';
+      (data.assets||[]).forEach(addAsset);
+      // mapa
+      cellMap = (data.cellMap && Array.isArray(data.cellMap)) ? data.cellMap.slice() : [];
+      buildGrid(true);
+      setState('DUAL');
+      showToast('Projeto reaberto');
+    }catch(err){
+      console.error(err); showToast('Erro ao reabrir');
+    }
+  });
+
+  // Exportar PNG: desenha a “screen” num canvas (sem libs externas)
+  document.getElementById('exportPNG').addEventListener('click', async ()=>{
+    // medidas da área da tela
+    const rect = screenEl.getBoundingClientRect();
+    const scale = window.devicePixelRatio || 1;
+    const w = Math.round(rect.width * scale);
+    const h = Math.round(rect.height * scale);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+
+    // fundo escuro + nébula similar ao CSS
+    const bg = ctx.createLinearGradient(0,0,0,h);
+    bg.addColorStop(0,'#0c1018');
+    bg.addColorStop(1,'#0a0f16');
+    ctx.fillStyle = bg; ctx.fillRect(0,0,w,h);
+
+    // nébula ciano
+    ctx.globalAlpha = 0.20;
+    radialSpot(ctx, w*0.30, h*0.18, Math.max(w,h)*0.35, 'rgba(41,211,255,1)');
+    // nébula magenta
+    ctx.globalAlpha = 0.18;
+    radialSpot(ctx, w*0.70, h*0.70, Math.max(w,h)*0.30, 'rgba(255,90,244,1)');
+    ctx.globalAlpha = 1;
+
+    // grid e células
+    const padding = 10 * scale;         // .grid padding
+    const gap = 6 * scale;              // .grid gap
+    const {cols, rows} = parseSize(gridSelect.value);
+
+    const gridWidth = w - padding*2;
+    const gridHeight = h - padding*2;
+
+    const cellWidth = (gridWidth - gap*(cols-1)) / cols;
+    const cellHeight = (gridHeight - gap*(rows-1)) / rows;
+
+    // desenhar cada célula (se tiver imagem)
+    for(let r=0; r<rows; r++){
+      for(let c=0; c<cols; c++){
+        const idx = r*cols + c;
+        const ax = padding + c*(cellWidth + gap);
+        const ay = padding + r*(cellHeight + gap);
+        // background leve da célula
+        ctx.fillStyle = 'rgba(255,255,255,0.02)';
+        roundRect(ctx, ax, ay, cellWidth, cellHeight, 12*scale);
+        ctx.fill();
+
+        const assetId = cellMap[idx];
+        if(!assetId) continue;
+        const asset = assets.find(a=>a.id===assetId);
+        if(!asset) continue;
+
+        // desenha a imagem dentro da célula com cover
+        try{
+          const img = await loadImage(asset.data);
+          const {sx, sy, sw, sh, dx, dy, dw, dh} = coverRect(img.naturalWidth, img.naturalHeight, ax, ay, cellWidth, cellHeight);
+          ctx.save();
+          roundRect(ctx, ax, ay, cellWidth, cellHeight, 12*scale);
+          ctx.clip();
+          ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+          ctx.restore();
+        }catch(err){
+          console.warn('falha ao desenhar asset', err);
+        }
+
+        // label opcional (número da célula)
+        ctx.font = `${11*scale}px system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif`;
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        const labelW = 26*scale, labelH = 16*scale;
+        const lbx = ax + 6*scale, lby = ay + cellHeight - 6*scale - labelH;
+        roundRect(ctx, lbx, lby, labelW, labelH, 6*scale);
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.13)';
+        ctx.lineWidth = 1;
+        roundRect(ctx, lbx, lby, labelW, labelH, 6*scale);
+        ctx.stroke();
+
+        ctx.fillStyle = '#cfe9ff';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(idx+1), lbx + 6*scale, lby + labelH/2 + 0.5*scale);
+      }
+    }
+
+    // baixa o PNG
+    const url = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = url; a.download = `DualMemoryBoard_${gridSelect.value}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+    showToast('PNG exportado');
+  });
+
+  function radialSpot(ctx, cx, cy, radius, color){
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+    g.addColorStop(0, color);
+    g.addColorStop(0.6, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI*2); ctx.fill();
+  }
+
+  function roundRect(ctx, x, y, w, h, r){
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr, y);
+    ctx.arcTo(x+w, y,   x+w, y+h, rr);
+    ctx.arcTo(x+w, y+h, x,   y+h, rr);
+    ctx.arcTo(x,   y+h, x,   y,   rr);
+    ctx.arcTo(x,   y,   x+w, y,   rr);
+    ctx.closePath();
+  }
+
+  function loadImage(src){
+    return new Promise((res, rej)=>{
+      const img = new Image();
+      img.onload = ()=>res(img);
+      img.onerror = rej;
+      // importante p/ dataURL/SVG inline
+      img.decoding = 'async';
+      img.src = src;
+    });
+  }
+
+  // calcula “object-fit: cover” p/ canvas
+  function coverRect(iw, ih, dx, dy, dw, dh){
+    const ir = iw/ih, dr = dw/dh;
+    let sw, sh, sx, sy;
+    if(ir > dr){
+      // imagem mais “larga” → corta lados
+      sh = ih;
+      sw = ih * dr;
+      sx = (iw - sw)/2;
+      sy = 0;
+    }else{
+      // imagem mais “alta” → corta topo/baixo
+      sw = iw;
+      sh = iw / dr;
+      sx = 0;
+      sy = (ih - sh)/2;
+    }
+    return {sx, sy, sw, sh, dx, dy, dw, dh};
+  }
+
+  // boot
+  (function init(){
+    // carrega grade preferida
+    const savedGrid = localStorage.getItem(KEY+'.grid');
+    if(savedGrid) gridSelect.value = savedGrid;
+    buildGrid(false);
+  })();
+
+})();
+</script>
+</body>
+</html>
