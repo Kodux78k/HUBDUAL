@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="nebula">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>UNO — Dual UNIFIED (mobile)</title>
+  <meta name="theme-color" content="#0b0f17"/>
+  <link rel="preload" as="image" href="img/bg/bg_nebula_01.png"/>
+  <link rel="stylesheet" href="css/uno.neon.css"/>
+  <style>
+    :root{--bg:#0b0f17;--ink:#e9f6ff;--muted:#97b1c6;--line:rgba(255,255,255,.16)}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%} body{margin:0;background:var(--bg);color:var(--ink);font:500 15px/1.35 system-ui,-apple-system,Inter,Roboto,sans-serif;overflow-x:hidden}
+    .app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto}
+    /* BG */
+    #bg{position:fixed;inset:0;z-index:-2;background:url("img/bg/bg_nebula_01.png") center/cover no-repeat}
+    #bg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+    /* TOP HUD */
+    header{display:flex;gap:8px;align-items:center;justify-content:flex-end;padding:10px 12px}
+    .hud{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .badge{display:inline-flex;gap:.35rem;align-items:center;padding:.35rem .6rem;border:1px solid var(--line);border-radius:10px;color:var(--muted);background:rgba(255,255,255,.04);font-size:.78rem}
+    .icon{width:22px;height:22px;color:#d6eaff;display:inline-block;vertical-align:middle}
+    .icon.use-ext{display:inline-block}.icon.use-inline{display:none}
+    .icons--inline .icon.use-ext{display:none}.icons--inline .icon.use-inline{display:inline-block}
+    /* CORE */
+    .center{display:grid;place-items:center;padding:6px}
+    .core{position:relative;width:min(86vw,520px);aspect-ratio:1/1;display:grid;place-items:center}
+    .core .ring{position:absolute;inset:0;background:url("img/core/ring_glow_01.png") center/contain no-repeat;filter:saturate(1.08)}
+    .core .dot{width:22px;height:22px;border-radius:50%;background:url("img/core/dot_core.png") center/cover no-repeat;box-shadow:0 0 24px rgba(92,255,250,.55)}
+    .core .controls{position:absolute;top:10%;display:flex;gap:8px;padding:6px 8px;border-radius:14px}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.7rem .9rem;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#e9f6ff;font-weight:700}
+    /* PANEL */
+    .panel{margin:10px;padding:12px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.05);backdrop-filter:blur(12px)}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .apps-list{margin-top:10px;display:grid;gap:8px}
+    .app-row{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid rgba(255,255,255,.1);border-radius:12px}
+    .grow{flex:1 1 auto;min-width:0}.meta{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sandboxWrap{margin-top:10px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.12);display:none}
+    .sandbox{width:100%;height:360px;border:0;background:#0a0d14}
+    /* FOOTER */
+    .footer{height:64px}
+    .bar{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:38px;align-items:center;padding:.75rem 1.1rem;border-radius:999px;border:1px solid var(--line);backdrop-filter:blur(12px);background:linear-gradient(90deg,rgba(255,80,240,.12),rgba(0,180,255,.12))}
+    .nav-btn{appearance:none;background:none;border:0;display:grid;place-items:center}
+    .fab{position:fixed;right:16px;bottom:84px;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);backdrop-filter:blur(8px);box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  </style>
+</head>
+<body>
+
+<!-- SPRITE INLINE (fallback/forçado) -->
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <symbol id="ico-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-10.5Z"/></symbol>
+  <symbol id="ico-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="ico-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></symbol>
+  <symbol id="ico-bolt" viewBox="0 0 24 24" fill="currentColor"><path d="M11 2 3 14h7l-1 8 8-12h-7l1-8Z"/></symbol>
+  <symbol id="ico-audio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 5-4 4H3v6h4l4 4V5z"/><path d="M19 5c1.5 1.5 2 3 2 7s-.5 5.5-2 7"/></symbol>
+  <symbol id="ico-json" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8v8M7 9h2M7 15h2M12 9h3v6h-3zM18 9h1M18 15h1"/></symbol>
+  <symbol id="ico-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 21h14"/></symbol>
+  <symbol id="ico-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9"/><path d="m17 13-5-5-5 5"/><path d="M5 3h14"/></symbol>
+  <symbol id="ico-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7Z"/></symbol>
+  <symbol id="ico-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></symbol>
+</svg>
+
+<!-- BG -->
+<div id="bg"><video id="bgvid" muted loop playsinline></video></div>
+
+<div class="app" id="app">
+  <!-- HUD -->
+  <header>
+    <div class="hud">
+      <span class="badge" title="Áudio">
+        <img class="icon use-ext" src="svg/play.svg" alt=""/>
+        <svg class="icon use-inline"><use href="#ico-play"/></svg>
+        <button class="btn" id="btnPlay">Áudio</button>
+      </span>
+      <span class="badge" title="Frames por segundo">FPS <b id="fps">~</b></span>
+      <span class="badge" title="Latência do loop">LAT <b id="lat">~</b>ms</span>
+      <span class="badge" title="Long Tasks">LT <b id="lt">0</b></span>
+      <span class="badge" title="Layout Shift">CLS <b id="cls">0.00</b></span>
+    </div>
+  </header>
+
+  <!-- CORE -->
+  <main>
+    <section class="center">
+      <div class="core">
+        <div class="ring" id="ring"></div>
+        <div class="dot" id="dot"></div>
+        <div class="controls">
+          <button class="btn" id="ringPrev">◀︎</button>
+          <button class="btn" id="ringNext">▶︎</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- APPS -->
+    <section class="panel" id="appsPane">
+      <div class="grid2">
+        <button class="btn" id="btnLoadApps">
+          <img class="icon use-ext" src="svg/json.svg" alt=""/>
+          <svg class="icon use-inline"><use href="#ico-json"/></svg>
+          Carregar apps.json
+        </button>
+        <button class="btn" id="btnExport">
+          <img class="icon use-ext" src="svg/download.svg" alt=""/>
+          <svg class="icon use-inline"><use href="#ico-download"/></svg>
+          Exportar ZIP
+        </button>
+        <label class="btn" for="btnImportZip">
+          <img class="icon use-ext" src="svg/upload.svg" alt=""/>
+          <svg class="icon use-inline"><use href="#ico-upload"/></svg>
+          Importar ZIP
+        </label>
+        <input type="file" id="btnImportZip" accept="application/zip" hidden/>
+      </div>
+      <div class="apps-list" id="appsList"></div>
+      <div class="sandboxWrap" id="sandboxWrap"><iframe class="sandbox" id="sandbox"></iframe></div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="bar">
+      <button class="nav-btn" id="navHome" title="Início">
+        <img class="icon use-ext" src="svg/home.svg" alt=""/>
+        <svg class="icon use-inline" aria-hidden="true"><use href="#ico-home"/></svg>
+      </button>
+      <button class="nav-btn" id="navApps" title="Apps">
+        <img class="icon use-ext" src="svg/grid.svg" alt=""/>
+        <svg class="icon use-inline" aria-hidden="true"><use href="#ico-grid"/></svg>
+      </button>
+      <button class="nav-btn" id="navUser" title="Perfil">
+        <img class="icon use-ext" src="svg/user.svg" alt=""/>
+        <svg class="icon use-inline" aria-hidden="true"><use href="#ico-user"/></svg>
+      </button>
+    </div>
+  </footer>
+
+  <!-- Ação única (FAB) -->
+  <button class="fab btn" id="btnInfodose" title="Ação Única">
+    <img class="icon use-ext" src="svg/bolt.svg" alt=""/>
+    <svg class="icon use-inline"><use href="#ico-bolt"/></svg>
+  </button>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<script src="js/uno.bg.js"></script>
+<script>
+/* ===== Sprite fallback: usa inline se externos falharem, ou via ?icons=inline ===== */
+(function(){
+  const forceInline = new URLSearchParams(location.search).get('icons') === 'inline';
+  if (forceInline) return document.body.classList.add('icons--inline');
+  let decided=false; const test=new Image();
+  const goInline=()=>{ if(decided) return; decided=true; document.body.classList.add('icons--inline'); };
+  const keepExt = ()=>{ if(decided) return; decided=true; };
+  test.onload=keepExt; test.onerror=goInline; test.src='svg/home.svg';
+  setTimeout(()=>{ if(!decided) goInline(); }, 1600);
+})();
+
+/* ===== Métricas: FPS/LAT/LT/CLS ===== */
+let t0=performance.now(), rafCount=0, lastFpsT=performance.now();
+function loop(now){
+  const dt=now-t0; t0=now;
+  document.getElementById('lat').textContent=Math.max(1,Math.round(dt));
+  rafCount++; if(now-lastFpsT>1000){ document.getElementById('fps').textContent=rafCount; rafCount=0; lastFpsT=now; }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+if('PerformanceObserver' in window){
+  try{ new PerformanceObserver(l=>{ for(const e of l.getEntries()){ if(e.duration>50){ const el=document.getElementById('lt'); el.textContent=(parseInt(el.textContent,10)||0)+1; }}}).observe({entryTypes:['longtask']}); }catch(e){}
+  try{ let cls=0; new PerformanceObserver(l=>{ for(const e of l.getEntries()){ if(!e.hadRecentInput){ cls+=e.value; } } document.getElementById('cls').textContent=cls.toFixed(3); }).observe({type:'layout-shift', buffered:true}); }catch(e){}
+}
+
+/* ===== Áudio mínimo ===== */
+let actx,out,gain,audioReady=false;
+async function initAudio(){
+  if(audioReady) return;
+  actx=new (window.AudioContext||window.webkitAudioContext)();
+  const code=`class B extends AudioWorkletProcessor{static get parameterDescriptors(){return[{name:'on',defaultValue:0},{name:'freq',defaultValue:220}]} process(i,o,p){const out=o[0];const on=p.on[0],f=p.freq[0];for(let ch=0; ch<out.length; ch++){const b=out[ch];for(let n=0;n<b.length;n++){let s=0;if(on>0.5){s=(Math.random()*2-1)*0.18+Math.sin(2*Math.PI*(currentFrame+n)/sampleRate*f)*0.22;}b[n]=s;}}return true}}registerProcessor('b',B);`;
+  await actx.audioWorklet.addModule(URL.createObjectURL(new Blob([code],{type:'text/javascript'})));
+  out=new AudioWorkletNode(actx,'b'); gain=actx.createGain(); gain.gain.value=0.0; out.connect(gain).connect(actx.destination); audioReady=true;
+}
+function ping(){ if(!audioReady) return; out.parameters.get('on').setValueAtTime(1, actx.currentTime); gain.gain.cancelScheduledValues(actx.currentTime); gain.gain.linearRampToValueAtTime(0.9, actx.currentTime+0.01); gain.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime+0.35); setTimeout(()=> out.parameters.get('on').setValueAtTime(0, actx.currentTime), 140); }
+document.getElementById('btnPlay').onclick=async()=>{ await initAudio(); if(actx.state==='suspended') await actx.resume(); ping(); };
+
+/* ===== Core rings ===== */
+const rings=[
+  "img/core/ring_glow_01.png",
+  "img/core/ring_glow_02.png",
+  "img/core/ring_glow_03.png",
+  "img/core/ring_glow_04.png"
+];
+let rIndex=0; const ringEl=document.getElementById('ring');
+function setRing(i){ rIndex=(i+rings.length)%rings.length; ringEl.style.backgroundImage=`url("${rings[rIndex]}")`; }
+document.getElementById('ringPrev').onclick=()=>setRing(rIndex-1);
+document.getElementById('ringNext').onclick=()=>setRing(rIndex+1);
+setRing(0);
+
+/* ===== Apps (mock básico) ===== */
+const $=s=>document.querySelector(s);
+$('#btnLoadApps').onclick=async()=>{ try{ const r=await fetch('./apps/apps.json'); const j=await r.json(); renderApps(j.apps||j); toast('apps.json OK'); }catch(e){ toast('Falha no apps.json'); console.error(e); } };
+function renderApps(arr){ const list=$('#appsList'); list.innerHTML=''; (arr||[]).forEach((a,i)=>{ const row=document.createElement('div'); row.className='app-row'; row.innerHTML=`<span class="badge">#${i+1}</span><div class="grow"><div><strong>${a.name||'App'}</strong></div><div class="meta">${a.url||''}</div></div><button class="btn" data-open="${i}">Abrir</button>`; list.appendChild(row); }); list.onclick=e=>{ const i=e.target?.dataset?.open; if(i!=null){ openSandbox((arr||[])[i]); } } }
+function openSandbox(app){ const f=$('#sandbox'); const w=$('#sandboxWrap'); w.style.display='block'; f.setAttribute('referrerpolicy','no-referrer'); f.setAttribute('allow', app?.allow||'autoplay'); f.setAttribute('sandbox', app?.sandbox||'allow-scripts'); f.src = app?.url||'about:blank'; }
+document.getElementById('navApps').onclick=()=> document.getElementById('appsPane').scrollIntoView({behavior:'smooth'});
+document.getElementById('navHome').onclick=()=> window.scrollTo({top:0,behavior:'smooth'});
+document.getElementById('navUser').onclick=()=> alert('Perfil em breve');
+document.getElementById('btnInfodose').onclick=()=> alert('Ação única ⚡');
+
+/* ===== Utils ===== */
+function toast(m){ console.log(m); }
+
+/* ===== BG API usage (opcional)
+   UNO.setBgVideo('assets/video/nebula.webm'); // vídeo
+   UNO.setBgImage('img/bg/bg_nebula_02.png');  // png
+*/
+</script>
+</body>
+</html>

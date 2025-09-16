@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="nebula">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>UNO — Monólito (PNG-Only)</title>
+<meta name="theme-color" content="#0b0f17"/>
+<style>
+  :root{--bg:#0b0f17;--ink:#e9f6ff;--muted:#97b1c6;--line:rgba(255,255,255,.16)}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font:500 15px/1.35 system-ui,-apple-system,Inter,Roboto,sans-serif;overflow-x:hidden}
+
+  .app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto}
+
+  /* BACKGROUND */
+  #bg{position:fixed;inset:0;z-index:-2;background:#000 center/cover no-repeat}
+  #bgvideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+
+  /* TOP HUD */
+  header{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px}
+  .hud{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .badge{display:inline-flex;gap:.35rem;align-items:center;padding:.35rem .6rem;border:1px solid var(--line);border-radius:10px;color:var(--muted);background:rgba(255,255,255,.04);font-size:.78rem}
+  .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.7rem .9rem;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#e9f6ff;font-weight:700;cursor:pointer}
+  .btn-ghost{background:transparent}
+
+  /* ÍCONES (PNG base64) */
+  .icon{width:22px;height:22px;display:inline-block;vertical-align:middle;border-radius:6px;object-fit:contain;background-position:center;background-repeat:no-repeat;background-size:contain}
+
+  /* CORE */
+  .center{display:grid;place-items:center;padding:6px}
+  .core{position:relative;width:min(86vw,520px);aspect-ratio:1/1;display:grid;place-items:center}
+  .ring{position:absolute;inset:0;background-position:center;background-repeat:no-repeat;background-size:contain;filter:saturate(1.08)}
+  .dot{width:22px;height:22px;border-radius:50%;box-shadow:0 0 24px rgba(92,255,250,.55);background-position:center;background-size:cover;background-repeat:no-repeat}
+  .controls{position:absolute;top:10%;display:flex;gap:8px}
+
+  /* PANEL */
+  .panel{margin:10px;padding:12px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.05);backdrop-filter:blur(12px)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .apps-list{margin-top:10px;display:grid;gap:8px}
+  .app-row{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid rgba(255,255,255,.1);border-radius:12px}
+  .grow{flex:1 1 auto;min-width:0}
+  .meta{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sandboxWrap{margin-top:10px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.12);display:none}
+  .sandbox{width:100%;height:360px;border:0;background:#0a0d14}
+
+  /* FOOTER */
+  .footer{height:64px}
+  .bar{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:38px;align-items:center;padding:.75rem 1.1rem;border-radius:999px;border:1px solid var(--line);backdrop-filter:blur(12px);background:linear-gradient(90deg,rgba(255,80,240,.12),rgba(0,180,255,.12))}
+  .nav-btn{appearance:none;background:none;border:0;display:grid;place-items:center;cursor:pointer}
+  .fab{position:fixed;right:16px;bottom:84px;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);backdrop-filter:blur(8px);box-shadow:0 10px 30px rgba(0,0,0,.3);cursor:pointer}
+
+  /* UPLOADER (overlay) */
+  .uploader{display:none;position:fixed;inset:0;background:rgba(10,14,22,.75);backdrop-filter:blur(8px);z-index:10;align-items:center;justify-content:center}
+  .uibox{width:min(680px,92vw);border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.05);padding:16px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .drop{border:1px dashed var(--line);border-radius:12px;padding:10px;min-height:82px;display:grid;place-items:center;text-align:center;color:var(--muted)}
+  .key{font-size:12px;color:#cfe7ff}
+</style>
+</head>
+<body>
+
+<!-- BACKGROUND -->
+<div id="bg"><video id="bgvideo" muted loop playsinline></video></div>
+
+<div class="app" id="app">
+
+  <!-- HUD -->
+  <header>
+    <button class="btn btn-ghost" id="btnOpenUploader">Carregar PNGs</button>
+    <div class="hud">
+      <span class="badge" title="Áudio"><span class="icon" id="ico-play"></span><button class="btn" id="btnPlay">Áudio</button></span>
+      <span class="badge" title="Frames por segundo">FPS <b id="fps">~</b></span>
+      <span class="badge" title="Latência do loop">LAT <b id="lat">~</b>ms</span>
+      <span class="badge" title="Long Tasks">LT <b id="lt">0</b></span>
+      <span class="badge" title="Layout Shift">CLS <b id="cls">0.00</b></span>
+    </div>
+  </header>
+
+  <!-- CORE -->
+  <main>
+    <section class="center">
+      <div class="core">
+        <div class="ring" id="ring"></div>
+        <div class="dot" id="dot"></div>
+        <div class="controls">
+          <button class="btn" id="ringPrev">◀︎</button>
+          <button class="btn" id="ringNext">▶︎</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- APPS -->
+    <section class="panel" id="appsPane">
+      <div class="grid2">
+        <button class="btn" id="btnLoadApps"><span class="icon" id="ico-json"></span> Carregar apps.json</button>
+        <button class="btn" id="btnExport"><span class="icon" id="ico-download"></span> Exportar ZIP</button>
+        <label class="btn" for="btnImportZip"><span class="icon" id="ico-upload"></span> Importar ZIP</label>
+        <input type="file" id="btnImportZip" accept="application/zip" hidden/>
+      </div>
+      <div class="apps-list" id="appsList"></div>
+      <div class="sandboxWrap" id="sandboxWrap"><iframe class="sandbox" id="sandbox"></iframe></div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="bar">
+      <button class="nav-btn" id="navHome" title="Início"><span class="icon" id="ico-home"></span></button>
+      <button class="nav-btn" id="navApps" title="Apps"><span class="icon" id="ico-grid"></span></button>
+      <button class="nav-btn" id="navUser" title="Perfil"><span class="icon" id="ico-user"></span></button>
+    </div>
+  </footer>
+
+  <!-- Ação única (FAB) -->
+  <button class="fab btn" id="btnInfodose" title="Ação Única"><span class="icon" id="ico-bolt"></span></button>
+</div>
+
+<!-- UPLOADER OVERLAY -->
+<div class="uploader" id="uploader">
+  <div class="uibox">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
+      <strong>Carregar seus PNGs (arraste/solte ou clique)</strong>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn" id="btnCloseUploader">Fechar</button>
+        <button class="btn" id="btnReset">Reset</button>
+      </div>
+    </div>
+    <div class="grid3" id="dropGrid"></div>
+    <p class="meta" style="margin-top:12px">
+      Dica: nomeie os arquivos conforme a “chave” (ex.: <span class="key">bg1</span>, <span class="key">ring2</span>, <span class="key">ico_home</span>) ou solte um por vez na caixinha certa.
+    </p>
+  </div>
+</div>
+
+<script>
+/* ===========================
+   CONFIGURAÇÃO DAS CHAVES
+   =========================== */
+const KEYS = [
+  // Backgrounds (PNG)
+  {k:'bg1', label:'Background 1'}, {k:'bg2', label:'Background 2'},
+  {k:'bg3', label:'Background 3'}, {k:'bg4', label:'Background 4'},
+  {k:'bg5', label:'Background 5'}, {k:'bg6', label:'Background 6'},
+
+  // Core (PNG)
+  {k:'ring1', label:'Ring 1'}, {k:'ring2', label:'Ring 2'},
+  {k:'ring3', label:'Ring 3'}, {k:'ring4', label:'Ring 4'},
+  {k:'dot',   label:'Dot Core'},
+
+  // Ícones (PNG)
+  {k:'ico_home', label:'Ícone Home'},
+  {k:'ico_grid', label:'Ícone Grid'},
+  {k:'ico_user', label:'Ícone User'},
+  {k:'ico_bolt', label:'Ícone Bolt'},
+  {k:'ico_play', label:'Ícone Play'},
+  {k:'ico_pause',label:'Ícone Pause'},
+  {k:'ico_json', label:'Ícone JSON'},
+  {k:'ico_upload', label:'Ícone Upload'},
+  {k:'ico_download', label:'Ícone Download'}
+];
+
+/* ===========================
+   STORAGE HELPERS
+   =========================== */
+const SKEY = 'uno_png_store_v1';
+function loadStore(){
+  try{ return JSON.parse(localStorage.getItem(SKEY)||'{}'); }catch(e){ return {}; }
+}
+function saveStore(obj){ localStorage.setItem(SKEY, JSON.stringify(obj)); }
+function setPNG(key, dataURL){ const st=loadStore(); st[key]=dataURL; saveStore(st); }
+function getPNG(key){ const st=loadStore(); return st[key]||null; }
+function resetStore(){ localStorage.removeItem(SKEY); }
+
+/* query reset */
+if(new URLSearchParams(location.search).get('reset')==='1'){ resetStore(); }
+
+/* ===========================
+   Uploader UI
+   =========================== */
+const up = document.getElementById('uploader');
+document.getElementById('btnOpenUploader').onclick=()=>{ buildDropGrid(); up.style.display='flex'; };
+document.getElementById('btnCloseUploader').onclick=()=> up.style.display='none';
+document.getElementById('btnReset').onclick=()=>{ if(confirm('Limpar PNGs salvos?')){ resetStore(); applyAll(); } };
+
+function buildDropGrid(){
+  const grid = document.getElementById('dropGrid');
+  grid.innerHTML='';
+  KEYS.forEach(spec=>{
+    const cell=document.createElement('div');
+    cell.className='drop';
+    cell.innerHTML=`<div><div><strong>${spec.label}</strong></div><div class="meta">chave: <span class="key">${spec.k}</span></div><input type="file" accept="image/png" style="margin-top:8px"/></div>`;
+    const input=cell.querySelector('input');
+    input.onchange=(e)=>handleFiles(spec.k, e.target.files);
+    cell.ondragover=(e)=>{e.preventDefault(); cell.style.borderColor='#6cf';};
+    cell.ondragleave=(e)=>{e.preventDefault(); cell.style.borderColor='var(--line)';};
+    cell.ondrop=(e)=>{e.preventDefault(); cell.style.borderColor='var(--line)'; handleFiles(spec.k, e.dataTransfer.files); };
+    grid.appendChild(cell);
+  });
+}
+function handleFiles(key, files){
+  if(!files || !files[0]) return;
+  const f=files[0];
+  if(!f.type.includes('png')){ alert('Envie PNG'); return; }
+  const fr=new FileReader();
+  fr.onload=()=>{ setPNG(key, fr.result); applyAll(); };
+  fr.readAsDataURL(f); // -> data:image/png;base64,....
+}
+
+/* ===========================
+   Aplicação dos PNGs
+   =========================== */
+function setIcon(elId, key, fallbackDataURL=null){
+  const el=document.getElementById(elId);
+  if(!el) return;
+  const data = getPNG(key) || fallbackDataURL;
+  if(data){ el.style.backgroundImage = `url('${data}')`; }
+}
+
+function setBGfromKey(key){
+  const data = getPNG(key);
+  const bg = document.getElementById('bg');
+  const vid = document.getElementById('bgvideo');
+  if(vid){ vid.pause(); vid.removeAttribute('src'); vid.load(); vid.style.display='none'; }
+  if(data){ bg.style.backgroundImage = `url('${data}')`; }
+}
+
+function setCoreRing(ringKey){
+  const data = getPNG(ringKey);
+  const el = document.getElementById('ring');
+  if(data){ el.style.backgroundImage = `url('${data}')`; }
+}
+function setCoreDot(){
+  const data = getPNG('dot');
+  const el = document.getElementById('dot');
+  if(data){ el.style.backgroundImage = `url('${data}')`; }
+}
+
+/* rings rotação */
+const ringKeys = ['ring1','ring2','ring3','ring4'];
+let rIndex=0;
+function setRingIndex(i){ rIndex=(i+ringKeys.length)%ringKeys.length; setCoreRing(ringKeys[rIndex]); }
+
+/* aplicar tudo */
+function applyAll(){
+  // BG (usa bg1 por padrão)
+  setBGfromKey('bg1');
+
+  // RING/DOT
+  setCoreDot();
+  setRingIndex(0);
+
+  // Ícones
+  setIcon('ico-home','ico_home');
+  setIcon('ico-grid','ico_grid');
+  setIcon('ico-user','ico_user');
+  setIcon('ico-bolt','ico_bolt');
+  setIcon('ico-play','ico_play');
+  setIcon('ico-json','ico_json');
+  setIcon('ico-upload','ico_upload');
+  setIcon('ico-download','ico_download');
+}
+
+/* ===========================
+   Métricas
+   =========================== */
+let t0=performance.now(), rafCount=0, lastFpsT=performance.now();
+function loop(now){
+  const dt=now-t0; t0=now;
+  document.getElementById('lat').textContent=Math.max(1,Math.round(dt));
+  rafCount++; if(now-lastFpsT>1000){ document.getElementById('fps').textContent=rafCount; rafCount=0; lastFpsT=now; }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+if('PerformanceObserver' in window){
+  try{ new PerformanceObserver(l=>{ for(const e of l.getEntries()){ if(e.duration>50){ const el=document.getElementById('lt'); el.textContent=(parseInt(el.textContent,10)||0)+1; }}}).observe({entryTypes:['longtask']}); }catch(e){}
+  try{ let cls=0; new PerformanceObserver(l=>{ for(const e of l.getEntries()){ if(!e.hadRecentInput){ cls+=e.value; } } document.getElementById('cls').textContent=cls.toFixed(3); }).observe({type:'layout-shift', buffered:true}); }catch(e){}
+}
+
+/* ===========================
+   Áudio simples (só pra “ping”)
+   =========================== */
+let actx,out,gain,audioReady=false;
+async function initAudio(){ if(audioReady) return;
+  actx=new (window.AudioContext||window.webkitAudioContext)();
+  const code=`class B extends AudioWorkletProcessor{static get parameterDescriptors(){return[{name:'on',defaultValue:0},{name:'freq',defaultValue:220}]} process(i,o,p){const out=o[0];const on=p.on[0],f=p.freq[0];for(let ch=0; ch<out.length; ch++){const b=out[ch];for(let n=0;n<b.length;n++){let s=0;if(on>0.5){s=(Math.random()*2-1)*0.18+Math.sin(2*Math.PI*(currentFrame+n)/sampleRate*f)*0.22;}b[n]=s;}}return true}}registerProcessor('b',B);`;
+  await actx.audioWorklet.addModule(URL.createObjectURL(new Blob([code],{type:'text/javascript'})));
+  out=new AudioWorkletNode(actx,'b'); gain=actx.createGain(); gain.gain.value=0.0; out.connect(gain).connect(actx.destination); audioReady=true;
+}
+function ping(){ if(!audioReady) return; out.parameters.get('on').setValueAtTime(1, actx.currentTime); gain.gain.cancelScheduledValues(actx.currentTime); gain.gain.linearRampToValueAtTime(0.9, actx.currentTime+0.01); gain.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime+0.35); setTimeout(()=> out.parameters.get('on').setValueAtTime(0, actx.currentTime), 140); }
+document.getElementById('btnPlay').onclick=async()=>{ await initAudio(); if(actx.state==='suspended') await actx.resume(); ping(); };
+
+/* ===========================
+   Navegação e ações
+   =========================== */
+document.getElementById('ringPrev').onclick=()=> setRingIndex(rIndex-1);
+document.getElementById('ringNext').onclick=()=> setRingIndex(rIndex+1);
+document.getElementById('navApps').onclick=()=> document.getElementById('appsPane').scrollIntoView({behavior:'smooth'});
+document.getElementById('navHome').onclick=()=> window.scrollTo({top:0,behavior:'smooth'});
+document.getElementById('navUser').onclick=()=> alert('Perfil em breve');
+document.getElementById('btnInfodose').onclick=()=> alert('Ação única ⚡');
+
+/* ===========================
+   Apps (mock)
+   =========================== */
+const $=s=>document.querySelector(s);
+$('#btnLoadApps').onclick=async()=>{ try{ const r=await fetch('./apps/apps.json'); const j=await r.json(); renderApps(j.apps||j); console.log('apps.json OK'); }catch(e){ console.warn('Falha no apps.json',e); } };
+$('#btnExport').onclick=()=> alert('Export ZIP: plugue sua lógica aqui 😉');
+$('#btnImportZip').addEventListener('change', e=> alert('Import ZIP: '+(e.target.files?.[0]?.name||'')));
+
+function renderApps(arr){ const list=$('#appsList'); list.innerHTML=''; (arr||[]).forEach((a,i)=>{ const row=document.createElement('div'); row.className='app-row'; row.innerHTML=`<span class="badge">#${i+1}</span><div class="grow"><div><strong>${a.name||'App'}</strong></div><div class="meta">${a.url||''}</div></div><button class="btn" data-open="${i}">Abrir</button>`; list.appendChild(row); }); list.onclick=e=>{ const i=e.target?.dataset?.open; if(i!=null){ openSandbox((arr||[])[i]); } } }
+function openSandbox(app){ const f=$('#sandbox'); const w=$('#sandboxWrap'); w.style.display='block'; f.setAttribute('referrerpolicy','no-referrer'); f.setAttribute('allow', app?.allow||'autoplay'); f.setAttribute('sandbox', app?.sandbox||'allow-scripts'); f.src = app?.url||'about:blank'; }
+
+/* ===========================
+   Inicialização
+   =========================== */
+applyAll();
+
+/* Abrir uploader via tecla U, fechar com ESC */
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='u' || e.key==='U'){ document.getElementById('btnOpenUploader').click(); }
+  if(e.key==='Escape'){ document.getElementById('uploader').style.display='none'; }
+});
+
+</script>
+</body>
+</html>
