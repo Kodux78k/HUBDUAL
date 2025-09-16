@@ -1,0 +1,7 @@
+:root{--ink:#e9f6ff;--muted:#97b1c6;--line:rgba(255,255,255,.12);--rad:18px}
+.neon{background:rgba(255,255,255,.03);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:16px;box-shadow:0 5px 20px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.04)}
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.7rem .9rem;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--ink);font-weight:600}
+.btn svg{width:18px;height:18px}
+.badge{display:inline-flex;gap:.35rem;align-items:center;padding:.35rem .6rem;border:1px solid var(--line);border-radius:10px;color:var(--muted);background:rgba(255,255,255,.03);font-size:.78rem}
+.footer-glass{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:36px;align-items:center;padding:.7rem 1.1rem;border-radius:999px;border:1px solid var(--line);backdrop-filter:blur(6px);background:linear-gradient(90deg,rgba(255,80,240,.08),rgba(0,180,255,.08))}
+.nav-icon{width:22px;height:22px;color:#d6eaff;opacity:.8}
