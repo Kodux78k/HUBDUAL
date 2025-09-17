@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>UNO • Nebula Pro • Três Bolinhas</title>
+<style>
+:root{
+  --bg:#0a0d14; --ink:#eaf6ff; --muted:#9fb4c6;
+  --c1:#ff00ff; --c2:#00ffff; --ok:#39ffb6; --warn:#ffd166; --err:#ff6b6b;
+  --glass:rgba(255,255,255,.06); --line:rgba(255,255,255,.14);
+  --rad:18px; --pad:14px; --shadow:0 20px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.05);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0; color:var(--ink);
+  background:
+    radial-gradient(1400px 900px at 20% 8%, rgba(255,0,255,.18), transparent 60%),
+    radial-gradient(1200px 800px at 82% 88%, rgba(0,255,255,.18), transparent 60%),
+    #070a11;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+.container{
+  min-height:100svh;
+  display:grid;
+  grid-template-rows: 1fr auto 1fr;
+  align-items:center;
+  justify-items:center;
+  gap:24px;
+  padding: clamp(12px, 4vw, 32px);
+}
+.hint{
+  position:fixed; top:10px; left:50%; transform:translateX(-50%);
+  opacity:.8; font-size:.9rem; letter-spacing:.04em; color:var(--muted)
+}
+
+/* === Bolinhas === */
+.dot{
+  width:120px; height:120px; border-radius:50%;
+  background: radial-gradient(120px 120px at 30% 30%, rgba(0,255,255,.9), rgba(255,0,255,.2) 60%, transparent 70%),
+              rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:
+    0 0 0 8px rgba(0,255,255,.04),
+    0 0 40px rgba(0,255,255,.25),
+    inset 0 0 60px rgba(255,0,255,.2);
+  display:grid; place-items:center;
+  transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+  cursor:pointer; -webkit-user-select:none; user-select:none;
+}
+.dot:hover{ transform:translateY(-2px) scale(1.02); }
+.dot span{ font-weight:700; letter-spacing:.06em; font-size:.8rem; color:#dffcff; text-shadow:0 2px 16px rgba(0,255,255,.45); }
+
+.dot--top   { align-self:end }
+.dot--mid   { align-self:center; width:140px;height:140px }
+.dot--bottom{ align-self:start }
+
+/* === Modal Sheet === */
+.sheet{
+  position:fixed; inset:auto 0 0 0; transform: translateY(100%);
+  background: linear-gradient(180deg, rgba(18,22,36,.7), rgba(10,13,22,.92));
+  backdrop-filter: blur(18px);
+  box-shadow: 0 -20px 60px rgba(0,0,0,.6);
+  border-top:1px solid var(--line);
+  border-radius: 24px 24px 0 0;
+  transition: transform .35s cubic-bezier(.2,.9,.2,1);
+  max-height: 76svh; overflow:auto; padding: 16px 14px 24px 14px;
+}
+.sheet.open{ transform: translateY(0) }
+.sheet .handle{ width:56px;height:6px;border-radius:999px;background:rgba(255,255,255,.18);margin:6px auto 10px; }
+
+.section{
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  border:1px solid var(--line); border-radius:16px; padding:14px; margin:10px 0; box-shadow: var(--shadow);
+}
+.section h3{ margin:3px 0 10px;font-size:1rem;letter-spacing:.02em }
+.row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center }
+.btn{
+  --bgbtn:rgba(255,255,255,.06);
+  background: var(--bgbtn); color:var(--ink);
+  border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:.92rem;
+}
+.btn:active{ transform:translateY(1px) }
+.btn.ok{ --bgbtn:rgba(0,255,255,.08); border-color:rgba(0,255,255,.25) }
+.btn.warn{ --bgbtn:rgba(255,208,0,.06); border-color:rgba(255,208,0,.24) }
+.btn.err{ --bgbtn:rgba(255,0,85,.06); border-color:rgba(255,0,85,.24) }
+input[type="file"]{ display:none }
+
+.grid{
+  display:grid; grid-template-columns: repeat(4, 1fr);
+  gap:8px; margin-top:8px
+}
+.card{
+  aspect-ratio:1/1; border-radius:12px; overflow:hidden; border:1px solid var(--line);
+  position:relative; background:rgba(255,255,255,.03)
+}
+.card img{ width:100%;height:100%; object-fit:cover; display:block }
+.card .mini{
+  position:absolute; right:6px; bottom:6px; display:flex; gap:6px
+}
+.mini .btn{ padding:6px 8px; font-size:.78rem }
+
+.notice{font-size:.9rem;color:var(--muted)}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:10px;font-size:.92rem}
+
+/* Safe-area bottom padding */
+.footerPad{ height: env(safe-area-inset-bottom); }
+
+</style>
+</head>
+<body>
+<div class="hint">Topo = Packs · Meio = Backgrounds · Rodapé = Uploads</div>
+
+<main class="container">
+  <div class="dot dot--top"   data-sheet="packs"><span>Packs</span></div>
+  <div class="dot dot--mid"   data-sheet="backgrounds"><span>Backgrounds</span></div>
+  <div class="dot dot--bottom" data-sheet="uploads"><span>Uploads</span></div>
+</main>
+
+<!-- ==== SHEET: PACKS ==== -->
+<section id="sheet-packs" class="sheet" aria-hidden="true">
+  <div class="handle"></div>
+  <div class="section">
+    <h3>Ativar Packs</h3>
+    <div class="row">
+      <button class="btn" data-pack="fetch">Fetch</button>
+      <button class="btn" data-pack="a">A</button>
+      <button class="btn" data-pack="training">Training</button>
+      <button class="btn" data-pack="robosystem">RoboSystem</button>
+      <button class="btn" data-pack="design">Design</button>
+      <button class="btn" data-pack="injections">Injections</button>
+    </div>
+  </div>
+  <div class="section">
+    <h3>Salvar Configuração</h3>
+    <div class="row">
+      <button class="btn ok" id="saveLocal">Salvar (localStorage)</button>
+      <button class="btn ok" id="saveIDB">Salvar (IndexedDB)</button>
+      <button class="btn warn" id="loadIDB">Carregar (IndexedDB)</button>
+      <button class="btn err" id="clearAll">Limpar tudo</button>
+    </div>
+    <p class="notice">As escolhas de packs ficam salvas. Você pode combinar com Injections e Design Fetches.</p>
+  </div>
+  <div class="footerPad"></div>
+</section>
+
+<!-- ==== SHEET: BACKGROUNDS ==== -->
+<section id="sheet-backgrounds" class="sheet" aria-hidden="true">
+  <div class="handle"></div>
+  <div class="section">
+    <h3>Upload de Background</h3>
+    <div class="row">
+      <label class="btn ok" for="bgInput">Selecionar imagem</label>
+      <input id="bgInput" type="file" accept="image/*" multiple>
+      <button class="btn" id="addPresetNeb">Preset Nebula</button>
+      <button class="btn" id="applyLastBg">Usar último</button>
+    </div>
+  </div>
+  <div class="section">
+    <h3>Seus Backgrounds</h3>
+    <div id="bgGrid" class="grid"></div>
+  </div>
+  <div class="footerPad"></div>
+</section>
+
+<!-- ==== SHEET: UPLOADS ==== -->
+<section id="sheet-uploads" class="sheet" aria-hidden="true">
+  <div class="handle"></div>
+  <div class="section">
+    <h3>Navigator Icons</h3>
+    <div class="row">
+      <label class="btn ok" for="iconInput">Enviar ícones</label>
+      <input id="iconInput" type="file" accept="image/*" multiple>
+    </div>
+    <div id="iconGrid" class="grid"></div>
+  </div>
+  <div class="section">
+    <h3>Upload de HTMLs</h3>
+    <div class="row">
+      <label class="btn ok" for="htmlInput">Selecionar HTMLs</label>
+      <input id="htmlInput" type="file" accept=".html,.htm" multiple>
+    </div>
+    <div id="htmlList" class="section">
+      <div class="kv"><div>Arquivos:</div><div id="htmlCount">0</div></div>
+    </div>
+  </div>
+  <div class="footerPad"></div>
+</section>
+
+<script>
+/* ========= Utilities: tiny IndexedDB wrapper ========= */
+const idb = {
+  db: null,
+  open(){
+    return new Promise((resolve,reject)=>{
+      const req = indexedDB.open('dualstore', 1);
+      req.onupgradeneeded = (e)=>{
+        const db = e.target.result;
+        if(!db.objectStoreNames.contains('assets')){
+          const os = db.createObjectStore('assets',{keyPath:'id', autoIncrement:true});
+          os.createIndex('type','type',{unique:false});
+        }
+        if(!db.objectStoreNames.contains('kv')){
+          db.createObjectStore('kv',{keyPath:'key'});
+        }
+      };
+      req.onsuccess = (e)=>{ idb.db = e.target.result; resolve(idb.db); };
+      req.onerror = (e)=>reject(e.target.error);
+    });
+  },
+  put(store, val){
+    return new Promise((resolve,reject)=>{
+      const tx = idb.db.transaction(store,'readwrite');
+      tx.objectStore(store).put(val).onsuccess = (e)=>resolve(e.target.result);
+      tx.onerror = (e)=>reject(e.target.error);
+    });
+  },
+  getAllBy(store, indexName, query=null){
+    return new Promise((resolve,reject)=>{
+      const tx = idb.db.transaction(store,'readonly');
+      const storeObj = tx.objectStore(store);
+      const src = indexName ? storeObj.index(indexName) : storeObj;
+      const req = query ? src.getAll(query) : src.getAll();
+      req.onsuccess = ()=>resolve(req.result||[]);
+      req.onerror = (e)=>reject(e.target.error);
+    });
+  },
+  delete(store, id){
+    return new Promise((resolve,reject)=>{
+      const tx = idb.db.transaction(store,'readwrite');
+      tx.objectStore(store).delete(id).onsuccess = ()=>resolve(true);
+      tx.onerror = (e)=>reject(e.target.error);
+    });
+  }
+};
+
+/* ========= State ========= */
+const qs = sel => document.querySelector(sel);
+const qsa = sel => [...document.querySelectorAll(sel)];
+const body = document.body;
+
+const state = {
+  packs: new Set(JSON.parse(localStorage.getItem('packs')||'[]')),
+  bgApplied: null
+};
+
+/* ========= Sheet toggling ========= */
+qsa('.dot').forEach(d=>{
+  d.addEventListener('click', ()=>{
+    const target = d.dataset.sheet;
+    openSheet(target);
+  });
+});
+function openSheet(name){
+  qsa('.sheet').forEach(s=>s.classList.remove('open'));
+  const el = qs('#sheet-'+name);
+  if(el){ el.classList.add('open'); }
+}
+qsa('.sheet .handle').forEach(h=>{
+  h.addEventListener('click', e=> e.currentTarget.closest('.sheet').classList.toggle('open'));
+});
+
+/* ========= Packs ========= */
+qsa('[data-pack]').forEach(btn=>{
+  const key = btn.dataset.pack;
+  if(state.packs.has(key)) btn.classList.add('ok');
+  btn.addEventListener('click', ()=>{
+    if(state.packs.has(key)){
+      state.packs.delete(key);
+      btn.classList.remove('ok');
+    }else{
+      state.packs.add(key);
+      btn.classList.add('ok');
+    }
+  });
+});
+qs('#saveLocal').addEventListener('click', ()=>{
+  localStorage.setItem('packs', JSON.stringify([...state.packs]));
+  toast('Packs salvos no localStorage');
+});
+qs('#saveIDB').addEventListener('click', async ()=>{
+  await idb.open();
+  await idb.put('kv', {key:'packs', value:[...state.packs]});
+  toast('Packs salvos no IndexedDB');
+});
+qs('#loadIDB').addEventListener('click', async ()=>{
+  await idb.open();
+  const rows = await idb.getAllBy('kv');
+  const found = rows.find(r=>r.key==='packs');
+  if(found){
+    state.packs = new Set(found.value||[]);
+    qsa('[data-pack]').forEach(b=>{
+      b.classList.toggle('ok', state.packs.has(b.dataset.pack));
+    });
+    toast('Packs carregados do IndexedDB');
+  } else {
+    toast('Nenhum pack salvo no IndexedDB');
+  }
+});
+qs('#clearAll').addEventListener('click', async ()=>{
+  localStorage.clear();
+  await idb.open();
+  // simplistic clear: new db version not used; user may refresh to fully clear
+  toast('Local limpo. (IndexedDB mantém assets até você deletar itens).');
+});
+
+/* ========= Backgrounds ========= */
+const bgGrid = qs('#bgGrid');
+qs('#bgInput').addEventListener('change', e=>{
+  const files = [...e.target.files];
+  files.forEach(saveAsset('bg'));
+});
+qs('#addPresetNeb').addEventListener('click', async ()=>{
+  // gera um gradient PNG pequeno e salva como bg
+  const canvas = document.createElement('canvas');
+  canvas.width = 600; canvas.height = 600;
+  const ctx = canvas.getContext('2d');
+  const grd = ctx.createRadialGradient(180,180,60, 400,420,520);
+  grd.addColorStop(0,'#00ffff');
+  grd.addColorStop(1,'#ff00ff');
+  ctx.fillStyle = grd; ctx.fillRect(0,0,600,600);
+  canvas.toBlob(async blob=>{
+    await persistAsset({type:'bg', name:'Nebula Preset', blob});
+    await refreshAssets();
+    toast('Preset Nebula salvo');
+  }, 'image/png', .9);
+});
+qs('#applyLastBg').addEventListener('click', async ()=>{
+  await refreshAssets();
+  const bgs = window.assets.filter(a=>a.type==='bg');
+  if(bgs.length){ applyBackground(bgs[bgs.length-1]); }
+});
+
+function card(asset){
+  const el = document.createElement('div');
+  el.className = 'card';
+  const img = document.createElement('img');
+  img.loading = 'lazy';
+  img.alt = asset.name||'img';
+  const url = URL.createObjectURL(asset.blob);
+  img.src = url;
+  el.appendChild(img);
+  const mini = document.createElement('div');
+  mini.className='mini';
+  const use = document.createElement('button'); use.className='btn ok'; use.textContent='Usar';
+  const del = document.createElement('button'); del.className='btn err'; del.textContent='Del';
+  use.onclick = ()=>applyBackground(asset);
+  del.onclick = async ()=>{ await idb.delete('assets', asset.id); await refreshAssets(); toast('Deletado'); };
+  mini.appendChild(use); mini.appendChild(del);
+  el.appendChild(mini);
+  return el;
+}
+function applyBackground(asset){
+  const url = URL.createObjectURL(asset.blob);
+  body.style.background = `radial-gradient(1400px 900px at 20% 8%, rgba(255,0,255,.18), transparent 60%), radial-gradient(1200px 800px at 82% 88%, rgba(0,255,255,.18), transparent 60%), url('${url}') center/cover fixed no-repeat, #070a11`;
+  state.bgApplied = asset.id;
+  toast('Background aplicado');
+}
+
+/* ========= Icons / HTMLs ========= */
+const iconGrid = qs('#iconGrid');
+qs('#iconInput').addEventListener('change', e=>{
+  [...e.target.files].forEach(saveAsset('icon'));
+});
+
+const htmlCount = qs('#htmlCount');
+qs('#htmlInput').addEventListener('change', e=>{
+  [...e.target.files].forEach(saveAsset('html'));
+});
+
+/* ========= Persist helpers ========= */
+function saveAsset(type){
+  return async (file)=>{
+    const blob = await fileToBlob(file);
+    await persistAsset({type, name:file.name, blob});
+    await refreshAssets();
+  };
+}
+async function persistAsset(rec){
+  await idb.open();
+  await idb.put('assets', {
+    id: rec.id || undefined,
+    type: rec.type,
+    name: rec.name || (rec.type + ' ' + Date.now()),
+    blob: rec.blob,
+    createdAt: Date.now()
+  });
+}
+function fileToBlob(file){
+  return new Promise(res=>{
+    // Already a Blob; clone to preserve type
+    const reader = new FileReader();
+    reader.onload = ()=> res(new Blob([reader.result], {type:file.type || 'application/octet-stream'}));
+    reader.readAsArrayBuffer(file);
+  });
+}
+window.assets = [];
+async function refreshAssets(){
+  await idb.open();
+  const all = await idb.getAllBy('assets');
+  // IDB stores Blobs; keep as-is
+  window.assets = all;
+  // Render
+  bgGrid.innerHTML = '';
+  iconGrid.innerHTML = '';
+  let htmls = 0;
+  all.forEach(a=>{
+    if(a.type==='bg'){ bgGrid.appendChild(card(a)); }
+    if(a.type==='icon'){
+      const el = document.createElement('div'); el.className='card';
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(a.blob); el.appendChild(img);
+      const mini = document.createElement('div'); mini.className='mini';
+      const del = document.createElement('button'); del.className='btn err'; del.textContent='Del';
+      del.onclick = async ()=>{ await idb.delete('assets', a.id); await refreshAssets(); };
+      mini.appendChild(del); el.appendChild(mini);
+      iconGrid.appendChild(el);
+    }
+    if(a.type==='html'){ htmls++; }
+  });
+  htmlCount.textContent = String(htmls);
+}
+refreshAssets();
+
+/* ========= Toast ========= */
+let toastEl;
+function toast(msg){
+  if(!toastEl){
+    toastEl = document.createElement('div');
+    Object.assign(toastEl.style,{
+      position:'fixed', left:'50%', bottom:'calc(env(safe-area-inset-bottom) + 18px)',
+      transform:'translateX(-50%)', background:'rgba(0,0,0,.6)', color:'#eaf6ff',
+      border:'1px solid rgba(255,255,255,.2)', padding:'10px 14px', borderRadius:'12px',
+      boxShadow:'0 8px 30px rgba(0,0,0,.5)', zIndex:9999, backdropFilter:'blur(8px)', fontSize:'.92rem'
+    });
+    document.body.appendChild(toastEl);
+  }
+  toastEl.textContent = msg;
+  toastEl.style.opacity = '1';
+  clearTimeout(toastEl._t);
+  toastEl._t = setTimeout(()=>toastEl.style.opacity='0', 1800);
+}
+
+/* ========= Pull-to-close (iOS-friendly) ========= */
+qsa('.sheet').forEach(sh=>{
+  let startY=0, curY=0, dragging=false;
+  sh.addEventListener('touchstart', (e)=>{
+    if(e.touches.length!==1) return;
+    startY = e.touches[0].clientY; dragging = true;
+  },{passive:true});
+  sh.addEventListener('touchmove', (e)=>{
+    if(!dragging) return;
+    curY = e.touches[0].clientY;
+    const dy = curY-startY;
+    if(dy>0){ sh.style.transform = `translateY(${dy}px)`; }
+  },{passive:true});
+  sh.addEventListener('touchend', ()=>{
+    dragging=false;
+    const dy = curY-startY;
+    sh.style.transform='';
+    if(dy>120) sh.classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>

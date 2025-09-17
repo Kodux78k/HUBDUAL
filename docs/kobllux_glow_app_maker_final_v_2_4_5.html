@@ -12,7 +12,8 @@
       --bg:#0c0f14; --text:#d7d7d7; --grad_a:#00d8d8; --grad_b:#d800d8;
       --accent:#39FFB6; --ok:#00ffff; --warn:#FFC857; --err:#FF5C8A;
       --radius:20px; --blur:24px; --shadow:0 8px 32px rgba(0,255,255,.25);
-      --z-ui: 40; --z-overlay: 60; --z-toast: 80; --touch: 48px;
+      /* Increased --z-ui to ensure menu appears above overlay */
+      --z-ui: 80; --z-overlay: 60; --z-toast: 80; --touch: 48px;
     }
     html,body{height:100%;}
     body{margin:0; font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif; color:var(--text); background:#0b0e13 center/cover fixed no-repeat;}
@@ -194,8 +195,6 @@
     <label class="btn icon" data-icon="video" for="uploadVideo" title="Vídeo"><span class="sr-only">Upload Vídeo</span></label>
     <button class="btn icon" data-icon="shuffle" id="quickBg" title="BG Aleatório"><span class="sr-only">BG Aleatório</span></button>
     <button class="btn icon" data-icon="eye" id="quickHide" title="Ocultar UI"><span class="sr-only">Ocultar UI</span></button>
-      <!-- Tile to open the local fractal app. Uses sparkles icon and opens the fractal viewer in the iframe -->
-      <button class="btn icon" data-icon="sparkles" id="openFractal" title="Fractal Local GPU"><span class="sr-only">Fractal Local GPU</span></button>
   </div>
 </div>
 
@@ -323,12 +322,6 @@ $('#btnKOBLLUX').dataset.icon='asterisk';
 $('#btnKOBLLUX').onclick=()=> $('#fabMenu').classList.toggle('show');
 overlay.onclick=()=>{ sidebar.classList.remove('show'); drawer.classList.remove('show'); overlay.classList.remove('show'); closeOverlay(); };
 window.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ sidebar.classList.remove('show'); drawer.classList.remove('show'); overlay.classList.remove('show'); closeOverlay(); $('#fabMenu').classList.remove('show'); }});
-
-// Abrir o aplicativo fractal (GPU local) quando o usuário toca no tile do menu
-$('#openFractal').onclick = () => {
-  // utiliza o iframe viewer já existente para carregar a aplicação de fractal
-  openIframe('apps/fractal/index.html');
-};
 
 /* ===================== IFrame Viewer ===================== */
 const ifrWrap = $('#ifrWrap');
@@ -467,43 +460,6 @@ $('#runTests').onclick=runStorageTests;
   updateStorageBadge();
   await refreshFiles();
 })();
-
-/* ==============================================================
-   Receber capturas de tela do aplicativo fractal
-
-   A aplicação /apps/fractal/index.html envia screenshots via
-   window.postMessage() usando o formato {type:'saveScreenshot', data:DATAURL, name:'fractal'}.
-   Este listener trata a mensagem, converte o DataURL em um HTML simples
-   contendo a imagem e o salva no store como um arquivo HTML. Em seguida,
-   o grid de arquivos é atualizado para que o usuário possa acessar o
-   screenshot imediatamente em Atlas/Assets.
-*/
-window.addEventListener('message', async (evt) => {
-  const msg = evt.data || {};
-  if (msg.type !== 'saveScreenshot' || !msg.data) return;
-  // aguarda store existir
-  if (typeof store === 'undefined' || !store) {
-    console.warn('Store ainda não está pronto. Screenshot ignorado.');
-    return;
-  }
-  try {
-    const dataURL = msg.data;
-    const name = msg.name || 'screenshot';
-    const htmlText = `<html><meta charset='utf-8'><body style='margin:0;background:#000'>` +
-      `<img src="${dataURL}" style="width:100%;height:100%;object-fit:contain"></body></html>`;
-    await store.put({
-      id: 'atlas_' + Date.now(),
-      type: 'html',
-      name: name + '.html',
-      htmlText,
-      updated: Date.now(),
-      size: htmlText.length
-    });
-    await refreshFiles();
-  } catch (err) {
-    console.error('Erro ao salvar screenshot:', err);
-  }
-});
 </script>
 </body>
 </html>
