@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="tesseract">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>KOBLLUX InfoDose — Glow · AppMaker v2.4.8 (Mobile‑First + Safe Storage)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0c0f14; --text:#d7d7d7; --grad_a:#00d8d8; --grad_b:#d800d8;
+      --accent:#39FFB6; --ok:#00ffff; --warn:#FFC857; --err:#FF5C8A;
+      --radius:20px; --blur:24px; --shadow:0 8px 32px rgba(0,255,255,.25);
+      --z-ui: 40; --z-overlay: 60; --z-toast: 80; --touch: 48px;
+    }
+    html,body{height:100%;}
+    body{margin:0; font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif; color:var(--text); background:#0b0e13 center/cover fixed no-repeat;}
+    .app{min-height:100%;}
+    .ellip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .sr-only{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+
+    /* Glow base */
+    .gradient{background:linear-gradient(135deg,var(--grad_a),var(--grad_b));}
+    .glass{backdrop-filter: blur(var(--blur)); background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); box-shadow:var(--shadow); border-radius:var(--radius);}    
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px; padding:10px; border-radius:16px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.06); cursor:pointer; user-select:none; transition:transform .15s ease, background .2s ease, opacity .2s ease; min-width:var(--touch); min-height:var(--touch)}
+    .btn:active{transform:scale(.98)}
+    .btn.icon{padding:10px; width:var(--touch); height:var(--touch)}
+    .btn[aria-pressed="true"], .btn.primary{background:linear-gradient(135deg, rgba(0,216,216,.25), rgba(216,0,216,.25));}
+    .pill{font-size:11px; padding:4px 8px; border-radius:50px; border:1px solid rgba(255,255,255,.12)}
+
+    /* Topbar — compacto no mobile */
+    .topbar{position:sticky; top: env(safe-area-inset-top,0); z-index:var(--z-ui); display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:0 0 var(--radius) var(--radius)}
+    .title{font-weight:800; letter-spacing:.3px; font-size:14px}
+    .spacer{flex:1}
+
+    /* Sidebar mobile-first: off-canvas por padrão */
+    .sidebar{position:fixed; inset:0 auto 0 0; width:min(88vw,320px); padding:12px; overflow:auto; z-index:var(--z-ui); transform:translateX(-104%); transition:transform .25s ease;}
+    .sidebar.show{transform:translateX(0)}
+    .sidebar .section{margin:12px 0;}
+    .sidebar h3{margin:0 0 8px 0; font-size:12px; text-transform:uppercase; opacity:.85; letter-spacing:.08em}
+
+    /* Drawer de propriedades (direita) */
+    .drawer{position:fixed; inset:0 0 0 auto; width:min(90vw,360px); padding:14px; overflow:auto; z-index:var(--z-ui); transform:translateX(104%); transition:transform .25s ease;}
+    .drawer.show{transform:translateX(0)}
+
+    /* Grid de arquivos enxuto */
+    .grid{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px}
+    .card{padding:10px; border-radius:14px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.04); display:flex; flex-direction:column; gap:8px}
+    .thumb{aspect-ratio:16/10; border-radius:10px; border:1px dashed rgba(255,255,255,.15); display:grid; place-items:center; font-size:11px; opacity:.85}
+    .row{display:flex; gap:8px; align-items:center}
+    .stack{display:flex; flex-direction:column; gap:10px}
+
+    /* Overlay (usado por sidebar/drawer/iframe no mobile) */
+    .overlay{position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter: blur(3px); display:none; z-index:var(--z-overlay)}
+    .overlay.show{display:block}
+
+    /* IFrame viewer */
+    .ifr-wrap{position:fixed; inset:6vh 4vw; border-radius:18px; overflow:hidden; display:none; z-index:var(--z-overlay)}
+    .ifr-wrap.show{display:flex; flex-direction:column}
+    .ifr-head{display:flex; align-items:center; gap:8px; padding:8px}
+    .ifr-body{flex:1; background:#0b0e13}
+    .ifr{width:100%; height:100%; border:0; background:#fff}
+    .badge-reopen{position:fixed; right:16px; bottom:90px; z-index:var(--z-ui)}
+
+    /* FAB (Botão Único) */
+    #btnKOBLLUX{position:fixed; right:16px; bottom:16px; z-index:var(--z-ui)}
+    .fab{width:64px; height:64px; border-radius:50%; border:1px solid rgba(255,255,255,.1); background:linear-gradient(135deg, rgba(0,216,216,.25), rgba(216,0,216,.25)); display:grid; place-items:center}
+    .fab-menu{position:fixed; right:16px; bottom:92px; display:none; flex-direction:column; gap:8px}
+    .fab-menu.show{display:flex}
+
+    /* Hide-UI (foco total em background) */
+    .ui-hidden .sidebar, .ui-hidden .drawer, .ui-hidden .topbar, .ui-hidden .badge-reopen, .ui-hidden .fab-menu{display:none !important}
+
+    /* ≥768px: amplia grid e mostra sidebar fixa */
+    @media (min-width: 768px){ .grid{grid-template-columns:repeat(3,minmax(0,1fr))} .sidebar{transform:translateX(0)} }
+    @media (min-width: 1024px){ .grid{grid-template-columns:repeat(4,minmax(0,1fr))} }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="topbar glass">
+    <div class="row" style="gap:10px; align-items:center; width:100%">
+      <button class="btn icon" id="toggleSidebar" data-icon="sidebar" title="Menu"><span class="sr-only">Menu</span></button>
+      <img id="logoImg" alt="logo" style="height:24px; width:auto; display:none"/>
+      <span class="title ellip">KOBLLUX InfoDose — Glow</span>
+      <span class="pill" id="versionBadge">v2.4.8</span>
+      <span class="pill" id="storageBadge" title="Modo de armazenamento">…</span>
+      <div class="spacer"></div>
+      <button class="btn icon" id="toggleDrawer" data-icon="wand" title="Marca"><span class="sr-only">Marca</span></button>
+      <button class="btn icon" id="hideUIBtn" data-icon="eye" title="Foco"><span class="sr-only">Foco</span></button>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar glass" id="sidebar">
+    <div class="section">
+      <h3>Uploads</h3>
+      <div class="row" style="gap:6px">
+        <label class="btn icon" data-icon="filecode" for="uploadHtml" title="HTML"><span class="sr-only">Upload HTML</span></label>
+        <input id="uploadHtml" type="file" accept="text/html,.html" />
+        <label class="btn icon" data-icon="video" for="uploadVideo" title="Vídeo"><span class="sr-only">Upload Vídeo</span></label>
+        <input id="uploadVideo" type="file" accept="video/*" />
+        <button class="btn icon" data-icon="folderPlus" id="newFolder" title="Pasta"><span class="sr-only">Nova pasta</span></button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Arquivos</h3>
+      <div id="filesGrid" class="grid"></div>
+    </div>
+
+    <div class="section">
+      <h3>Snippets</h3>
+      <div class="stack">
+        <button class="btn icon" id="btnArteASC" data-icon="sparkles" title="ArteASC"><span class="sr-only">ArteASC</span></button>
+        <pre id="arteOutput" class="glass" style="padding:10px; margin:0; font-size:12px; overflow:auto"></pre>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Drawer -->
+  <aside class="drawer glass" id="drawer">
+    <div class="section">
+      <h3>Marca</h3>
+      <div class="stack">
+        <div class="row">
+          <label class="btn icon" data-icon="image" for="uploadLogo" title="Logo"><span class="sr-only">Upload Logo</span></label>
+          <input id="uploadLogo" type="file" accept="image/*"/>
+          <button class="btn" id="toggleLogo">Logo on/off</button>
+        </div>
+        <div class="row" style="align-items:center">
+          <label style="width:110px">Tamanho Ícone</label>
+          <input id="iconSize" type="range" min="16" max="40" value="22"/>
+        </div>
+        <div class="row" style="align-items:center">
+          <label style="width:110px">Estilo Ícone</label>
+          <div class="row">
+            <button class="btn pill" data-iconstyle="outline">Outline</button>
+            <button class="btn pill" data-iconstyle="filled">Filled</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Background</h3>
+      <div class="stack">
+        <div class="row">
+          <label class="btn icon" data-icon="image" for="uploadBg" title="Background"><span class="sr-only">Upload Background</span></label>
+          <input id="uploadBg" type="file" accept="image/*"/>
+          <button class="btn" id="clearBg">Limpar</button>
+        </div>
+        <div class="grid" id="bgPresets"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Temas</h3>
+      <div class="row" style="flex-wrap:wrap; gap:8px" id="themes"></div>
+    </div>
+
+    <div class="section">
+      <h3>Diagnóstico</h3>
+      <div class="stack">
+        <button class="btn" id="runTests">Rodar testes de armazenamento</button>
+        <pre id="testLog" class="glass" style="padding:10px; margin:0; font-size:12px; max-height:160px; overflow:auto"></pre>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Overlay compartilhado -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Iframe Modal -->
+  <div class="ifr-wrap glass" id="ifrWrap">
+    <div class="ifr-head row">
+      <button class="btn icon" id="ifrMin" data-icon="min" title="Minimizar"><span class="sr-only">Minimizar</span></button>
+      <button class="btn icon" id="ifrMax" data-icon="max" title="Maximizar"><span class="sr-only">Maximizar</span></button>
+      <button class="btn icon" id="ifrPop" data-icon="popout" title="Abrir em aba"><span class="sr-only">Abrir em aba</span></button>
+      <div class="spacer"></div>
+      <button class="btn icon" id="ifrClose" data-icon="close" title="Fechar"><span class="sr-only">Fechar</span></button>
+    </div>
+    <div class="ifr-body"><iframe id="viewer" class="ifr" title="viewer"></iframe></div>
+  </div>
+
+  <!-- Reopen badge -->
+  <button class="btn" id="reopenBtn" style="display:none; position:fixed; right:16px; bottom:154px; z-index:var(--z-ui)">Reabrir</button>
+
+  <!-- FAB + menu -->
+  <div id="btnKOBLLUX" class="fab gradient"><!-- ícone injetado via JS --></div>
+  <div class="fab-menu" id="fabMenu">
+    <label class="btn icon" data-icon="filecode" for="uploadHtml" title="HTML"><span class="sr-only">Upload HTML</span></label>
+    <label class="btn icon" data-icon="video" for="uploadVideo" title="Vídeo"><span class="sr-only">Upload Vídeo</span></label>
+    <button class="btn icon" data-icon="shuffle" id="quickBg" title="BG Aleatório"><span class="sr-only">BG Aleatório</span></button>
+    <button class="btn icon" data-icon="eye" id="quickHide" title="Ocultar UI"><span class="sr-only">Ocultar UI</span></button>
+  </div>
+</div>
+
+<script>
+/* ===================== ICONS ===================== */
+let ICON_STYLE = 'outline';
+let ICON_SIZE = 22;
+function icon(name, size){
+  const sz = size || ICON_SIZE;
+  const common = `width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`;
+  const filled = (d)=>`<svg ${common} fill="currentColor" stroke="none"><path d="${d}"/></svg>`;
+  const outline = (d)=>`<svg ${common}><path d="${d}"/></svg>`;
+  const P = {
+    sidebar: 'M3 6h18M3 12h18M3 18h18',
+    wand: 'M15 4l-3 3 3 3M4 20l6-6',
+    eye: 'M1 12s5-9 11-9 11 9 11 9-5 9-11 9S1 12 1 12zm11 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6',
+    filecode: 'M14 2H6a2 2 0 0 0-2 2v16l4-4h8a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z',
+    video: 'M23 7l-7 5 7 5V7zM1 5h14v14H1z',
+    folderPlus: 'M3 7h6l2 2h10v10H3z M8 13h4 M10 11v4',
+    sparkles: 'M5 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5z M19 3l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z',
+    image: 'M4 4h16v16H4z M6 16l4-5 4 5H6z M14 8a2 2 0 1 0 4 0 2 2 0 0 0-4 0',
+    min: 'M5 19h14', max: 'M5 5h14v14H5z', popout: 'M8 8h8v8M8 16l8-8', close: 'M6 6l12 12M18 6L6 18',
+    asterisk: 'M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07',
+    shuffle: 'M16 3h5v5M4 20l5-5M20 8l-7 7-4-4-5 5',
+  };
+  const map = (d)=> ICON_STYLE==='filled' ? filled(d) : outline(d);
+  return map(P[name]||P['asterisk']);
+}
+function injectIcons(){
+  document.querySelectorAll('.btn.icon, #btnKOBLLUX').forEach(btn=>{
+    const name = btn.dataset.icon || (btn.id==='btnKOBLLUX' ? 'asterisk' : 'asterisk');
+    btn.innerHTML = icon(name);
+  });
+}
+
+/* ===== ArteASC ===== */
+window.ArteASC={render:(n,v={})=>({ portal369:`╔═══🌌═══╗\n ✪ (°ロ°)☝\n 🧭 ${v.tri||'KOBLLUX'}`, seal_trinity_v2:`⟐ Trinity v2\n⚡ Pulso:${v.pulso||'∞'}`}[n]||'[ArteASC]')};
+
+/* ===================== Storage Abstraction (IDB -> localStorage -> memória) ===================== */
+const DB_NAME='kobllux_glow_db_v2';
+const STORE='files';
+let store; // adapter com .init() .put(item) .all() .delete(id)
+
+function safeHasIndexedDB(){ try { return typeof indexedDB !== 'undefined' && !!indexedDB; } catch(e){ return false; } }
+function safeHasLocalStorage(){ try { const k='__test__'; localStorage.setItem(k,'1'); localStorage.removeItem(k); return true; } catch(e){ return false; } }
+
+function idbAdapter(){
+  let db; 
+  return {
+    mode:'indexedDB',
+    async init(){
+      await new Promise((res,rej)=>{
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = ()=>{ const d=req.result; if(!d.objectStoreNames.contains(STORE)){ d.createObjectStore(STORE,{keyPath:'id'});} };
+        req.onsuccess = ()=>{ db=req.result; res(); };
+        req.onerror = ()=> rej(req.error);
+      });
+    },
+    async put(item){
+      // Para HTML: se houver htmlText, salvamos também (melhor reabrir depois)
+      return new Promise((res,rej)=>{ const tx=db.transaction(STORE,'readwrite'); tx.objectStore(STORE).put(item); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); });
+    },
+    async all(){ return new Promise((res,rej)=>{ const tx=db.transaction(STORE,'readonly'); const req=tx.objectStore(STORE).getAll(); req.onsuccess=()=>res(req.result||[]); req.onerror=()=>rej(req.error); }); },
+    async delete(id){ return new Promise((res,rej)=>{ const tx=db.transaction(STORE,'readwrite'); tx.objectStore(STORE).delete(id); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); },
+  }
+}
+
+function lsAdapter(){
+  const KEY='kobllux_files_v1';
+  const read=()=>{ try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }catch{ return [] } };
+  const write=(arr)=>{ try{ localStorage.setItem(KEY, JSON.stringify(arr)); }catch(e){ console.warn('localStorage write fail', e); } };
+  return {
+    mode:'localStorage',
+    async init(){ if(!localStorage.getItem(KEY)) write([]); },
+    async put(item){
+      const arr = read().filter(x=>x.id!==item.id);
+      // Se for HTML e houver htmlText, persistimos; se só tiver url (blob), não persiste entre sessões
+      arr.push(item);
+      write(arr);
+    },
+    async all(){ return read(); },
+    async delete(id){ write(read().filter(x=>x.id!==id)); },
+  }
+}
+
+function memoryAdapter(){
+  const arr=[]; 
+  return {
+    mode:'memory',
+    async init(){}, async put(item){ const i=arr.findIndex(x=>x.id===item.id); if(i>=0) arr[i]=item; else arr.push(item); },
+    async all(){ return arr.slice(); }, async delete(id){ const i=arr.findIndex(x=>x.id===id); if(i>=0) arr.splice(i,1); },
+  }
+}
+
+async function createStore(){
+  if(safeHasIndexedDB()) { const a=idbAdapter(); await a.init(); return a; }
+  if(safeHasLocalStorage()) { const a=lsAdapter(); await a.init(); return a; }
+  const a=memoryAdapter(); await a.init(); return a;
+}
+
+function updateStorageBadge(){
+  const el = document.getElementById('storageBadge');
+  const mode = store?.mode || '…';
+  const label = mode==='indexedDB' ? 'IDB' : mode==='localStorage' ? 'LS' : 'MEM';
+  el.textContent = label;
+  el.style.borderColor = mode==='indexedDB' ? 'rgba(0,255,255,.6)' : mode==='localStorage' ? 'rgba(255,200,87,.6)' : 'rgba(255,92,138,.6)';
+}
+
+/* ===================== Estado & Helpers ===================== */
+const state = { files: [] };
+const $ = (q,root=document)=>root.querySelector(q);
+const $$ = (q,root=document)=>Array.from(root.querySelectorAll(q));
+function uid(){return 'f_'+Math.random().toString(36).slice(2)}
+function humanSize(bytes){ if(bytes==null) return ''; const s=['B','KB','MB','GB']; let i=0; while(bytes>=1024&&i<s.length-1){bytes/=1024;i++} return bytes.toFixed(1)+s[i] }
+
+/* ===================== UI: toggles, overlay compartilhado ===================== */
+const overlay = $('#overlay');
+const sidebar = $('#sidebar');
+const drawer = $('#drawer');
+$('#toggleSidebar').onclick=()=>{ sidebar.classList.toggle('show'); overlay.classList.toggle('show', sidebar.classList.contains('show')); }
+$('#toggleDrawer').onclick=()=>{ drawer.classList.toggle('show'); overlay.classList.toggle('show', drawer.classList.contains('show')); }
+$('#hideUIBtn').onclick=()=> document.body.classList.toggle('ui-hidden');
+$('#quickHide').onclick=()=> document.body.classList.toggle('ui-hidden');
+$('#btnKOBLLUX').dataset.icon='asterisk';
+$('#btnKOBLLUX').onclick=()=> $('#fabMenu').classList.toggle('show');
+overlay.onclick=()=>{ sidebar.classList.remove('show'); drawer.classList.remove('show'); overlay.classList.remove('show'); closeOverlay(); };
+window.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ sidebar.classList.remove('show'); drawer.classList.remove('show'); overlay.classList.remove('show'); closeOverlay(); $('#fabMenu').classList.remove('show'); }});
+
+/* ===================== IFrame Viewer ===================== */
+const ifrWrap = $('#ifrWrap');
+const viewer = $('#viewer');
+function openIframe(url){ overlay.classList.add('show'); ifrWrap.classList.add('show'); viewer.src=url; $('#reopenBtn').style.display='none'; }
+function closeOverlay(){ ifrWrap.classList.remove('show'); if(viewer.src) viewer.src='about:blank'; $('#reopenBtn').style.display='block'; }
+$('#reopenBtn').onclick=()=>{ overlay.classList.add('show'); ifrWrap.classList.add('show'); $('#reopenBtn').style.display='none'; };
+$('#ifrClose').onclick=()=>{ closeOverlay(); overlay.classList.remove('show'); };
+$('#ifrMin').onclick=()=>{ ifrWrap.style.inset='auto 12px 12px 12px'; ifrWrap.style.width='auto'; ifrWrap.style.height='280px'; };
+$('#ifrMax').onclick=()=>{ ifrWrap.style.inset='6vh 4vw'; ifrWrap.style.width=''; ifrWrap.style.height=''; };
+$('#ifrPop').onclick=()=>{ if(viewer.src && viewer.src!=='about:blank') window.open(viewer.src,'_blank'); };
+
+/* ===================== Arquivos (render) ===================== */
+async function refreshFiles(){
+  state.files = (await store.all()).sort((a,b)=> (b.updated||0)-(a.updated||0));
+  const grid = $('#filesGrid'); grid.innerHTML='';
+  for(const f of state.files){ grid.appendChild(renderFileCard(f)); }
+}
+
+function renderFileCard(f){
+  const el = document.createElement('div'); el.className='card';
+  const thumb = document.createElement('div'); thumb.className='thumb'; thumb.innerHTML = `<span>${(f.type||'file').toUpperCase()}</span>`;
+  const name = document.createElement('div'); name.className='ellip'; name.textContent = f.name || '(sem nome)';
+  const meta = document.createElement('div'); meta.style.fontSize='11px'; meta.style.opacity='.75'; meta.textContent = (f.size? humanSize(f.size)+' · ': '') + new Date(f.updated||Date.now()).toLocaleString();
+  const row = document.createElement('div'); row.className='row';
+  const openBtn = document.createElement('button'); openBtn.className='btn icon'; openBtn.title='Abrir'; openBtn.dataset.icon='popout';
+  const delBtn = document.createElement('button'); delBtn.className='btn icon'; delBtn.title='Excluir'; delBtn.dataset.icon='close';
+  openBtn.onclick=()=> openItem(f);
+  delBtn.onclick=async()=>{ if(confirm('Excluir?')){ await store.delete(f.id); await refreshFiles(); } }
+  row.append(openBtn, delBtn);
+  el.append(thumb, name, meta, row);
+  // injetar ícones nestes dois botões
+  setTimeout(()=>{ openBtn.innerHTML = icon('popout'); delBtn.innerHTML = icon('close'); },0);
+  return el;
+}
+
+function openItem(f){
+  if(f.type==='html'){
+    let url = f.url;
+    if(!url && f.htmlText){
+      const blob = new Blob([f.htmlText], {type:'text/html'});
+      url = URL.createObjectURL(blob);
+    }
+    if(url){ openIframe(url); }
+    else { alert('Arquivo HTML sem conteúdo nesta sessão. Reenvie o arquivo.'); }
+  } else if(f.type==='video'){
+    if(f.url){
+      const html = `<video src="${f.url}" style="width:100%;height:100%" controls autoplay playsinline></video>`;
+      const blob = new Blob([`<html><meta name='viewport' content='width=device-width,initial-scale=1'><meta charset='utf-8'><body style='margin:0;background:#000'>${html}</body></html>`],{type:'text/html'});
+      const url = URL.createObjectURL(blob); openIframe(url);
+    } else {
+      alert('Vídeo não está persistido. Ele só fica disponível na sessão em que foi enviado.');
+    }
+  } else {
+    alert('Tipo não suportado: '+(f.type||'desconhecido'));
+  }
+}
+
+/* ===================== Uploads ===================== */
+$('#uploadHtml').addEventListener('change', async (e)=>{
+  const file = e.target.files[0]; if(!file) return; const text = await file.text();
+  const id = uid();
+  // criamos um blob/URL para abrir imediatamente, mas também guardamos o texto (para persistência real no LS/IDB)
+  const blob = new Blob([text], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const item = {id, type:'html', name:file.name, url, htmlText:text, size:file.size, updated:Date.now()};
+  await store.put(item); await refreshFiles(); e.target.value='';
+});
+
+$('#uploadVideo').addEventListener('change', async (e)=>{
+  const file = e.target.files[0]; if(!file) return; const url = URL.createObjectURL(file);
+  const id = uid();
+  // Por padrão evitamos persistir blobs grandes; mantemos sessão atual.
+  const item = {id, type:'video', name:file.name, url, size:file.size, updated:Date.now(), sessionOnly:true};
+  await store.put(item); await refreshFiles(); e.target.value='';
+});
+
+$('#newFolder').onclick=async()=>{ const name = prompt('Nome da pasta:','Nova Pasta'); if(!name) return; const id=uid(); const item={id,type:'folder',name,updated:Date.now()}; await store.put(item); await refreshFiles(); };
+
+/* ===================== Branding ===================== */
+$('#uploadLogo').addEventListener('change', (e)=>{ const f=e.target.files[0]; if(!f) return; const url=URL.createObjectURL(f); const img=$('#logoImg'); img.src=url; img.style.display='block'; });
+$('#toggleLogo').onclick=()=>{ const img=$('#logoImg'); img.style.display = (img.style.display==='none')?'block':'none'; }
+
+/* ===================== Backgrounds ===================== */
+const PRESETS = [
+  'https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?q=80&w=1200&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1520975922203-bc2f1e8e7b1f?q=80&w=1200&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?q=80&w=1200&auto=format&fit=crop'
+];
+function loadBg(url){ document.body.style.backgroundImage = `url(${url})`; }
+$('#uploadBg').addEventListener('change', (e)=>{ const f=e.target.files[0]; if(!f) return; const url=URL.createObjectURL(f); loadBg(url)});
+$('#clearBg').onclick=()=>{ document.body.style.backgroundImage='none' }
+$('#quickBg').onclick=()=>{ const url = PRESETS[Math.floor(Math.random()*PRESETS.length)]; loadBg(url); }
+
+const bgPresets = $('#bgPresets'); PRESETS.forEach(u=>{ const c=document.createElement('button'); c.className='card'; c.style.padding='6px'; c.innerHTML=`<div class='thumb' style="background:url('${u}') center/cover; border:none"></div>`; c.onclick=()=>loadBg(u); bgPresets.appendChild(c)});
+
+/* ===================== Temas & Ícones dinâmicos ===================== */
+const THEMES = ['nebula','matrix','cyberpunk','tesseract','turbo'];
+const themesRow = $('#themes');
+THEMES.forEach(t=>{ const b=document.createElement('button'); b.className='btn pill'; b.textContent=t; b.onclick=()=>document.documentElement.setAttribute('data-theme',t); themesRow.appendChild(b)});
+
+$('#iconSize').addEventListener('input', (e)=>{ ICON_SIZE = +e.target.value; injectIcons(); });
+$$('[data-iconstyle]').forEach(b=> b.onclick=()=>{ ICON_STYLE = b.dataset.iconstyle; injectIcons(); });
+
+/* ===================== Diagnóstico ("test cases") ===================== */
+function logTest(msg){ const el=$('#testLog'); el.textContent += msg + '\n'; el.scrollTop = el.scrollHeight; }
+async function runStorageTests(){
+  $('#testLog').textContent='';
+  logTest('Iniciando testes…');
+  logTest(`Modo: ${store.mode}`);
+  // 1) put + all
+  const idT = 'test_'+Date.now();
+  const sampleHtml = '<!doctype html><meta charset="utf-8"><title>TEST</title><h1>OK</h1>';
+  await store.put({id:idT, type:'html', name:'test.html', htmlText:sampleHtml, updated:Date.now(), size:sampleHtml.length});
+  const all1 = await store.all();
+  const found = !!all1.find(x=>x.id===idT);
+  console.assert(found, 'Item deve existir após put');
+  logTest('Teste 1 (put/all): ' + (found ? 'PASS' : 'FAIL'));
+  // 2) abrir item (gera blob a partir de htmlText)
+  try { openItem({id:idT, type:'html', name:'test.html', htmlText:sampleHtml}); logTest('Teste 2 (open html): PASS'); }
+  catch(e){ logTest('Teste 2 (open html): FAIL -> '+e.message); }
+  // 3) delete
+  await store.delete(idT);
+  const all2 = await store.all();
+  const gone = !all2.find(x=>x.id===idT);
+  console.assert(gone, 'Item deve sumir após delete');
+  logTest('Teste 3 (delete): ' + (gone ? 'PASS' : 'FAIL'));
+}
+$('#runTests').onclick=runStorageTests;
+
+/* ===================== Boot ===================== */
+(async function(){
+  injectIcons();
+  store = await createStore();
+  updateStorageBadge();
+  await refreshFiles();
+})();
+</script>
+</body>
+</html>
