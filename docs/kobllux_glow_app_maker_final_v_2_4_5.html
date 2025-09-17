@@ -194,7 +194,7 @@
     <label class="btn icon" data-icon="video" for="uploadVideo" title="Vídeo"><span class="sr-only">Upload Vídeo</span></label>
     <button class="btn icon" data-icon="shuffle" id="quickBg" title="BG Aleatório"><span class="sr-only">BG Aleatório</span></button>
     <button class="btn icon" data-icon="eye" id="quickHide" title="Ocultar UI"><span class="sr-only">Ocultar UI</span></button>
-      <!-- Tile to open the local fractal app -->
+      <!-- Tile to open the local fractal app. Uses sparkles icon and opens the fractal viewer in the iframe -->
       <button class="btn icon" data-icon="sparkles" id="openFractal" title="Fractal Local GPU"><span class="sr-only">Fractal Local GPU</span></button>
   </div>
 </div>
@@ -326,6 +326,7 @@ window.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ sidebar.classLis
 
 // Abrir o aplicativo fractal (GPU local) quando o usuário toca no tile do menu
 $('#openFractal').onclick = () => {
+  // utiliza o iframe viewer já existente para carregar a aplicação de fractal
   openIframe('apps/fractal/index.html');
 };
 
@@ -469,10 +470,18 @@ $('#runTests').onclick=runStorageTests;
 
 /* ==============================================================
    Receber capturas de tela do aplicativo fractal
-   Veja comentário correspondente em v_2_4_5. */
+
+   A aplicação /apps/fractal/index.html envia screenshots via
+   window.postMessage() usando o formato {type:'saveScreenshot', data:DATAURL, name:'fractal'}.
+   Este listener trata a mensagem, converte o DataURL em um HTML simples
+   contendo a imagem e o salva no store como um arquivo HTML. Em seguida,
+   o grid de arquivos é atualizado para que o usuário possa acessar o
+   screenshot imediatamente em Atlas/Assets.
+*/
 window.addEventListener('message', async (evt) => {
   const msg = evt.data || {};
   if (msg.type !== 'saveScreenshot' || !msg.data) return;
+  // aguarda store existir
   if (typeof store === 'undefined' || !store) {
     console.warn('Store ainda não está pronto. Screenshot ignorado.');
     return;
