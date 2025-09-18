@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="nebula">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>DUAL • UNO Hub Monolito v1 — Glow</title>
+  <meta name="theme-color" content="#0b0f17" />
+  <style>
+    /* =====================
+       DUAL • UNO Hub Monolito v1
+       - Mobile-first
+       - Botão Único (FAB)
+       - iFrame com fechar por ESC/backdrop
+       - ArteASC embutido
+       - Mini FileHub + UNO Dots + Usage Gauge
+       ===================== */
+    :root{
+      --bg:#0b0f17;--panel:#0f1522;--glass:rgba(255,255,255,.06);--line:rgba(255,255,255,.14);
+      --ink:#e9f6ff;--muted:#97b1c6;--accent:#29d3ff;--accent2:#ff5af4;--ok:#39ffb6;--warn:#ffb74d;--err:#ff5a6e;
+      --rad:18px;--pad:14px;--blur:24px;--shadow:0 12px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
+      --z-ui:90; --z-overlay:80; --touch:56px;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--ink);
+      background:
+        radial-gradient(1200px 800px at 20% -10%, rgba(41,211,255,.14), transparent 60%),
+        radial-gradient(900px 600px at 110% 20%, rgba(255,90,244,.10), transparent 60%),
+        linear-gradient(0deg, #0a0d14, #0b0f17);
+      font:500 15px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Inter, ui-sans-serif, sans-serif;
+      max-width:100vw; overflow-x:hidden;
+    }
+    .app{position:fixed; inset:0; display:grid; grid-template-rows:auto 1fr auto; min-width:0}
+    .glass{backdrop-filter:blur(var(--blur)); background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid var(--line); border-radius:var(--rad); box-shadow:var(--shadow)}
+    .row{display:flex; gap:10px; align-items:center; min-width:0; flex-wrap:wrap}
+    .grow{flex:1 1 auto; min-width:0}
+    .btn{appearance:none; border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--ink);
+      padding:10px 12px; border-radius:14px; font-weight:700; letter-spacing:.3px; display:inline-flex; align-items:center; gap:8px;
+      box-shadow:var(--shadow); cursor:pointer; user-select:none; transition:opacity .18s ease, transform .18s ease}
+    .btn:active{transform:translateY(1px); opacity:.9}
+    .chip{font-size:12px;border-radius:999px;border:1px solid var(--line);padding:6px 10px;background:rgba(255,255,255,.06);color:var(--muted)}
+    .pill{display:inline-flex; gap:6px; align-items:center; padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:rgba(255,255,255,.06)}
+    .muted{color:var(--muted)}
+    header{display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:10px env(safe-area-inset-right) 8px env(safe-area-inset-left)}
+    .logo{width:30px;height:30px;border-radius:50%;background:conic-gradient(from 0deg, var(--accent), var(--accent2), var(--accent));
+      box-shadow:0 0 20px rgba(41,211,255,.4); animation:spin 9s linear infinite}
+    @keyframes spin{to{transform:rotate(1turn)}}
+    .title{font-weight:800; letter-spacing:.4px}
+    .water{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+    .badge{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); background:rgba(255,255,255,.04);
+      padding:6px 8px; border-radius:10px; font-size:11px; color:var(--muted); white-space:nowrap}
+
+    /* ===== UNO • Centro vivo ===== */
+    .center{position:relative; display:grid; place-items:center; padding:6px}
+    .circle{position:relative; width:min(78vw,560px); aspect-ratio:1/1; border-radius:50%; overflow:hidden;
+      border:1px solid var(--line); background:radial-gradient(60% 60% at 50% 50%, rgba(41,211,255,.1), rgba(255,255,255,.02)); box-shadow:var(--shadow)}
+    .circle iframe{position:absolute; inset:0; width:100%; height:100%; border:0; background:transparent}
+    .switcher{position:absolute; top:10px; left:50%; transform:translateX(-50%); display:flex; gap:6px; align-items:center;
+      background:rgba(11,15,23,.7); border:1px solid var(--line); border-radius:999px; padding:6px 10px; backdrop-filter:blur(8px)}
+    .switcher select{appearance:none; background:rgba(255,255,255,.06); color:var(--ink); border:1px solid var(--line); border-radius:999px; padding:6px 10px}
+    .dotlogo{position:absolute; top:12px; right:12px; width:18px; height:18px; border-radius:50%;
+      background: conic-gradient(#29d3ff, #ff5af4, #29d3ff); box-shadow:0 0 18px color-mix(in srgb, #29d3ff 60%, transparent)}
+    #fadeCover{position:absolute; inset:0; background:#0b0f17; opacity:0; pointer-events:none; transition: opacity .28s ease}
+    #fadeCover.show{opacity:1}
+
+    /* ===== UNO • Bolinhas (Packs/Apps) ===== */
+    .dots{display:grid; grid-template-rows: 1fr auto; place-items:center; gap:18px; margin:12px 0}
+    .dot{position:relative; width:120px; height:120px; border-radius:50%; display:grid; place-items:center; cursor:pointer;
+      background:rgba(255,255,255,.02); border:none; box-shadow:0 0 40px rgba(0,255,255,.1), 0 0 80px rgba(255,0,255,.08);
+      transition: transform .25s ease, box-shadow .25s ease}
+    .dot::before{content:''; position:absolute; inset:-18px; border-radius:50%; background:linear-gradient(135deg, rgba(0,255,255,.35), rgba(255,0,255,.25)); filter:blur(40px); opacity:.6; z-index:-1}
+    .dot::after{content:''; position:absolute; inset:4px; border-radius:50%; border:1px solid rgba(255,255,255,.2); box-shadow:0 0 10px rgba(255,255,255,.18)}
+    .dot:hover{transform:scale(1.05)}
+    .dot svg{width:42px; height:42px; stroke:var(--ink); stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; fill:none; pointer-events:none}
+    .hidden{display:none}
+
+    /* ===== Sheets (bottom drawers) ===== */
+    .sheet{position:fixed; inset:auto 0 0 0; transform:translateY(100%); background: rgba(15,18,28,.93); backdrop-filter: blur(20px) saturate(1.2);
+      box-shadow:0 -20px 60px rgba(0,0,0,.6); border-top:1px solid var(--line); border-radius:24px 24px 0 0; transition: transform .35s cubic-bezier(.2,.9,.2,1);
+      max-height:76svh; overflow:auto; padding:16px 14px 24px 14px; z-index:var(--z-ui)}
+    .sheet.open{transform:translateY(0)}
+    .sheet .handle{width:56px; height:6px; border-radius:999px; background:rgba(255,255,255,.18); margin:6px auto 10px}
+    .section{background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); border:1px solid var(--line); border-radius:16px; padding:14px; margin:10px 0; box-shadow:var(--shadow)}
+
+    /* ===== FileHub (mini) ===== */
+    .grid{display:grid; gap:10px}
+    @media(min-width:760px){ .grid.cols-2{grid-template-columns:1fr 1fr} }
+    .card{padding:12px; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.04)}
+    .filegrid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
+    @media(min-width:860px){ .filegrid{grid-template-columns:repeat(3,minmax(0,1fr))} }
+    .thumb{aspect-ratio:16/10; border-radius:10px; border:1px dashed rgba(255,255,255,.15); display:grid; place-items:center; font-size:11px; opacity:.85}
+    .rowline{display:flex; gap:8px; align-items:center}
+
+    /* ===== Overlay + IFrame Viewer ===== */
+    .overlay{position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter: blur(3px); display:none; z-index:var(--z-overlay)}
+    .overlay.show{display:block}
+    .ifr-wrap{position:fixed; inset:6vh 4vw; border-radius:18px; overflow:hidden; display:none; z-index:var(--z-overlay)}
+    .ifr-wrap.show{display:flex; flex-direction:column}
+    .ifr-head{display:flex; align-items:center; gap:8px; padding:8px; background:rgba(0,0,0,.25)}
+    .ifr-body{flex:1; background:#0b0e13}
+    .ifr{width:100%; height:100%; border:0; background:#fff}
+
+    /* ===== Usage Gauge (compact) ===== */
+    .kpis{display:grid; gap:10px}
+    .kpi{display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border:1px solid var(--line); border-radius:14px; background:rgba(0,0,0,.22)}
+
+    /* ===== FAB (Botão Único) ===== */
+    #btnUNICO{position:fixed; right:16px; bottom:16px; z-index:var(--z-ui); width:64px; height:64px; border-radius:50%; display:grid; place-items:center;
+      border:1px solid rgba(255,255,255,.18); background:radial-gradient(circle at 30% 30%, #5ed0ff88, #a77cff66); box-shadow:0 10px 30px rgba(0,0,0,.3)}
+    #fabMenu{position:fixed; right:16px; bottom:96px; display:none; flex-direction:column; gap:8px; z-index:var(--z-ui)}
+    #fabMenu.show{display:flex}
+
+    /* ===== Toast ===== */
+    #toast{position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom) + 18px); transform:translateX(-50%); background:rgba(0,0,0,.7); color:#eaf6ff;
+      border:1px solid rgba(255,255,255,.2); padding:10px 14px; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,.5); z-index:9999; backdrop-filter:blur(8px);
+      font-size:.92rem; display:none}
+
+    /* ===== Safe ellipsis ===== */
+    .ellip{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- ===== Topbar ===== -->
+  <header class="glass">
+    <div class="logo"></div>
+    <div>
+      <div class="title">DUAL • UNO Hub Monolito <span class="chip">v1</span></div>
+      <div class="muted" style="font-size:12px">Um botão, múltiplos planos — Glow</div>
+    </div>
+    <div class="grow"></div>
+    <div class="water">
+      <span class="badge">FPS <b id="fps">~</b></span>
+      <span class="badge">LAT <b id="lat">~</b>ms</span>
+      <span class="badge">CLS <b id="cls">0.00</b></span>
+    </div>
+    <button class="btn" id="btnPlay">▶︎ Áudio</button>
+  </header>
+
+  <!-- ===== Main: Centro vivo + Dots ===== -->
+  <main style="padding:10px">
+    <section class="center glass" style="padding:12px">
+      <div class="circle" id="coreCircle">
+        <div id="fadeCover"></div>
+        <div class="dotlogo" title="arquétipo ativo"></div>
+        <div class="switcher">
+          <button class="btn" id="prevArch" title="Anterior">◀</button>
+          <select id="archSelect" title="Escolher arquétipo"></select>
+          <button class="btn" id="nextArch" title="Próximo">▶</button>
+        </div>
+        <iframe id="coreFrame" title="Archetype Core" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
+      </div>
+    </section>
+
+    <section class="dots">
+      <div class="dot" id="dotPacks" title="Packs / Config">
+        <svg viewBox="0 0 24 24"><path d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>
+      </div>
+      <div class="dot" id="dotApps" title="Apps & Assets">
+        <svg viewBox="0 0 24 24"><path d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
+      </div>
+    </section>
+
+    <!-- ===== Sheets ===== -->
+    <section id="sheet-packs" class="sheet" aria-hidden="true">
+      <div class="handle"></div>
+      <div class="section">
+        <h3>Ativar Packs</h3>
+        <div class="row">
+          <button class="btn pill" data-pack="fetch">Fetch</button>
+          <button class="btn pill" data-pack="training">Training</button>
+          <button class="btn pill" data-pack="design">Design</button>
+          <button class="btn pill" data-pack="robosystem">RoboSystem</button>
+          <button class="btn pill" data-pack="injections">Injections</button>
+        </div>
+      </div>
+      <div class="section grid cols-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px">Diagnóstico</h3>
+          <div class="row" style="flex-wrap:wrap">
+            <span class="pill">Storage: <b id="storageMode">…</b></span>
+            <span class="pill">IndexedDB: <b id="hasIDB">?</b></span>
+            <span class="pill">PWA: <b id="isPWA">?</b></span>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn" id="saveLocal">Salvar packs (localStorage)</button>
+            <button class="btn" id="clearLocal">Limpar</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px">Uso diário</h3>
+          <div class="kpis">
+            <div class="kpi"><span>💸 Custo acumulado</span><b id="usd">US$ 0,00</b></div>
+            <div class="kpi"><span>🌊 Água invisível (ml)</span><b id="water">0 ml</b></div>
+            <div class="kpi"><span>📈 UC hoje</span><b><span id="uc">0</span> <small class="muted">/ <span id="uclimit">3000</span></small></b></div>
+            <div class="row" style="flex-wrap:wrap; gap:8px">
+              <span class="pill">Reset: <span id="resetTime" class="muted" style="margin-left:6px"></span></span>
+              <button class="btn" id="btnReset">Zerar</button>
+              <button class="btn" id="btnDemo">Demo +10 img 768</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sheet-apps" class="sheet" aria-hidden="true">
+      <div class="handle"></div>
+      <div class="section">
+        <h3>Upload Rápido</h3>
+        <div class="row">
+          <label class="btn" for="uploadHtml">HTML</label>
+          <input id="uploadHtml" type="file" accept="text/html,.html"/>
+          <label class="btn" for="uploadVideo">Vídeo</label>
+          <input id="uploadVideo" type="file" accept="video/*"/>
+          <button class="btn" id="newFolder">+ Pasta</button>
+        </div>
+      </div>
+      <div class="section">
+        <h3>Seus Arquivos</h3>
+        <div id="filesGrid" class="filegrid"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer style="padding:8px; text-align:center; opacity:.75">Sempre único, sempre seu. · ArteASC pronto</footer>
+
+  <!-- Overlay + IFrame Viewer compartilhado -->
+  <div class="overlay" id="overlay"></div>
+  <div class="ifr-wrap glass" id="ifrWrap">
+    <div class="ifr-head row">
+      <button class="btn" id="ifrMin">Min</button>
+      <button class="btn" id="ifrMax">Max</button>
+      <button class="btn" id="ifrPop">Popout</button>
+      <div class="grow"></div>
+      <button class="btn" id="ifrClose">Fechar</button>
+    </div>
+    <div class="ifr-body"><iframe id="viewer" class="ifr" title="viewer"></iframe></div>
+  </div>
+
+  <!-- FAB + menu -->
+  <button id="btnUNICO" title="Ação Única ⚡">⚡</button>
+  <div id="fabMenu">
+    <button class="btn" id="quickPacks">Packs</button>
+    <button class="btn" id="quickApps">Arquivos</button>
+    <button class="btn" id="quickHide">Ocultar UI</button>
+    <button class="btn" id="btnArteASC">ArteASC</button>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script>
+/* ===================== ICONS LITE (inline SVG via template) ===================== */
+// (Mantemos leve: usamos texto em botões e SVGs diretos nas bolinhas)
+
+/* ===================== ArteASC ===================== */
+window.ArteASC={render:(n,v={})=>({ portal369:`╔═══🌌═══╗\n ✪ (°ロ°)☝\n 🧭 ${v.tri||'UNO'}`, seal_trinity_v2:`⟐ Trinity v2\n⚡ Pulso:${v.pulso||'∞'}`}[n]||'[ArteASC]')};
+
+/* ===================== Perf HUD ===================== */
+const fpsEl=document.getElementById('fps'), latEl=document.getElementById('lat'), clsEl=document.getElementById('cls');
+let t0=performance.now(), rafCount=0, lastFpsT=performance.now();
+function hud(now){ const dt=now-t0; t0=now; latEl.textContent=Math.max(1,Math.round(dt)); rafCount++; if(now-lastFpsT>1000){ fpsEl.textContent=rafCount; rafCount=0; lastFpsT=now; } requestAnimationFrame(hud); }
+requestAnimationFrame(hud);
+if('PerformanceObserver' in window){ try{ let cls=0; new PerformanceObserver(list=>{ for(const e of list.getEntries()){ if(!e.hadRecentInput) cls+=e.value; } clsEl.textContent=cls.toFixed(3); }).observe({type:'layout-shift', buffered:true}); }catch(e){} }
+
+/* ===================== Toast ===================== */
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(t._t); t._t=setTimeout(()=>t.style.display='none', 1100); }
+
+/* ===================== FAB & UI toggles ===================== */
+const fab=document.getElementById('btnUNICO'); const menu=document.getElementById('fabMenu');
+fab.onclick=()=> menu.classList.toggle('show');
+document.getElementById('quickHide').onclick=()=> document.body.classList.toggle('ui-hidden');
+
+/* ===================== Overlay + IFrame Viewer ===================== */
+const overlay=document.getElementById('overlay'); const ifrWrap=document.getElementById('ifrWrap'); const viewer=document.getElementById('viewer');
+function openIframe(url){ overlay.classList.add('show'); ifrWrap.classList.add('show'); viewer.src=url; }
+function closeOverlay(){ ifrWrap.classList.remove('show'); if(viewer.src) viewer.src='about:blank'; }
+document.getElementById('ifrClose').onclick=()=>{ closeOverlay(); overlay.classList.remove('show'); }
+document.getElementById('ifrMin').onclick=()=>{ ifrWrap.style.inset='auto 12px 12px 12px'; ifrWrap.style.width='auto'; ifrWrap.style.height='280px'; };
+document.getElementById('ifrMax').onclick=()=>{ ifrWrap.style.inset='6vh 4vw'; ifrWrap.style.width=''; ifrWrap.style.height=''; };
+document.getElementById('ifrPop').onclick=()=>{ if(viewer.src && viewer.src!=='about:blank') window.open(viewer.src,'_blank'); };
+overlay.onclick=()=>{ closeOverlay(); overlay.classList.remove('show'); };
+window.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ closeOverlay(); overlay.classList.remove('show'); menu.classList.remove('show'); }});
+
+/* ===================== UNO Sheets (Packs/Apps) ===================== */
+const sheetPacks=document.getElementById('sheet-packs'); const sheetApps=document.getElementById('sheet-apps');
+function openSheet(el){ document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('open')); el.classList.add('open'); }
+function toggleSheet(el){ el.classList.toggle('open'); }
+document.getElementById('dotPacks').onclick=()=> openSheet(sheetPacks);
+document.getElementById('dotApps').onclick=()=> openSheet(sheetApps);
+document.getElementById('quickPacks').onclick=()=> openSheet(sheetPacks);
+document.getElementById('quickApps').onclick=()=> openSheet(sheetApps);
+Array.from(document.querySelectorAll('.sheet .handle')).forEach(h=> h.addEventListener('click', e=> e.currentTarget.closest('.sheet').classList.toggle('open')));
+
+/* ===================== Storage Abstraction (IDB->LS->MEM) ===================== */
+const DB_NAME='dual_uno_monolito_db_v1'; const STORE='files';
+function hasIDB(){ try{return !!indexedDB}catch(e){return false} }
+function hasLS(){ try{const k='__t'; localStorage.setItem(k,'1'); localStorage.removeItem(k); return true;}catch(e){return false} }
+let store;
+function idbAdapter(){ let db; return { mode:'IDB', async init(){ await new Promise((res,rej)=>{ const req=indexedDB.open(DB_NAME,1); req.onupgradeneeded=()=>{ const d=req.result; if(!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE,{keyPath:'id'}); }; req.onsuccess=()=>{db=req.result; res()}; req.onerror=()=>rej(req.error)}); }, async put(item){ return new Promise((res,rej)=>{ const tx=db.transaction(STORE,'readwrite'); tx.objectStore(STORE).put(item); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }, async all(){ return new Promise((res,rej)=>{ const tx=db.transaction(STORE,'readonly'); const rq=tx.objectStore(STORE).getAll(); rq.onsuccess=()=>res(rq.result||[]); rq.onerror=()=>rej(rq.error); }); }, async delete(id){ return new Promise((res,rej)=>{ const tx=db.transaction(STORE,'readwrite'); tx.objectStore(STORE).delete(id); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); } } }
+function lsAdapter(){ const KEY='dual_uno_files_v1'; const read=()=>{ try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch{return[]} }; const write=(arr)=>{ try{localStorage.setItem(KEY, JSON.stringify(arr))}catch(e){} }; return { mode:'LS', async init(){ if(!localStorage.getItem(KEY)) write([]); }, async put(item){ const arr=read().filter(x=>x.id!==item.id); arr.push(item); write(arr); }, async all(){ return read(); }, async delete(id){ write(read().filter(x=>x.id!==id)); } } }
+function memAdapter(){ const arr=[]; return { mode:'MEM', async init(){}, async put(item){ const i=arr.findIndex(x=>x.id===item.id); if(i>=0) arr[i]=item; else arr.push(item); }, async all(){ return arr.slice(); }, async delete(id){ const i=arr.findIndex(x=>x.id===id); if(i>=0) arr.splice(i,1); } } }
+async function createStore(){ if(hasIDB()){ const a=idbAdapter(); await a.init(); return a } if(hasLS()){ const a=lsAdapter(); await a.init(); return a } const a=memAdapter(); await a.init(); return a }
+
+/* ===================== FileHub ===================== */
+const state={files:[]};
+function uid(){return 'f_'+Math.random().toString(36).slice(2)}
+function humanSize(bytes){ if(bytes==null) return ''; const s=['B','KB','MB','GB']; let i=0; while(bytes>=1024&&i<s.length-1){bytes/=1024;i++} return bytes.toFixed(1)+s[i] }
+async function refreshFiles(){ state.files=(await store.all()).sort((a,b)=> (b.updated||0)-(a.updated||0)); const grid=document.getElementById('filesGrid'); grid.innerHTML=''; for(const f of state.files){ grid.appendChild(renderFileCard(f)); } }
+function renderFileCard(f){ const el=document.createElement('div'); el.className='card'; const th=document.createElement('div'); th.className='thumb'; th.innerHTML=`<span>${(f.type||'file').toUpperCase()}</span>`; const name=document.createElement('div'); name.className='ellip'; name.textContent=f.name||'(sem nome)'; const meta=document.createElement('div'); meta.style.fontSize='11px'; meta.style.opacity='.75'; meta.textContent=(f.size? humanSize(f.size)+' · ' : '') + new Date(f.updated||Date.now()).toLocaleString(); const row=document.createElement('div'); row.className='rowline'; const openBtn=document.createElement('button'); openBtn.className='btn'; openBtn.textContent='Abrir'; const delBtn=document.createElement('button'); delBtn.className='btn'; delBtn.textContent='Excluir'; openBtn.onclick=()=> openItem(f); delBtn.onclick=async()=>{ if(confirm('Excluir?')){ await store.delete(f.id); await refreshFiles(); } }; el.append(th,name,meta,row); row.append(openBtn,delBtn); return el; }
+function openItem(f){ if(f.type==='html'){ let url=f.url; if(!url && f.htmlText){ const blob=new Blob([f.htmlText],{type:'text/html'}); url=URL.createObjectURL(blob); } if(url){ openIframe(url); } else { alert('HTML sem conteúdo. Reenvie.'); } } else if(f.type==='video'){ if(f.url){ const html=`<video src="${f.url}" style="width:100%;height:100%" controls autoplay playsinline></video>`; const blob=new Blob([`<html><meta name='viewport' content='width=device-width,initial-scale=1'><meta charset='utf-8'><body style='margin:0;background:#000'>${html}</body></html>`],{type:'text/html'}); const url=URL.createObjectURL(blob); openIframe(url); } else { alert('Vídeo só disponível nesta sessão.'); } } else { alert('Tipo não suportado: '+(f.type||'desconhecido')); } }
+// Uploads
+const uploadHtml=document.getElementById('uploadHtml'); const uploadVideo=document.getElementById('uploadVideo');
+uploadHtml.addEventListener('change', async(e)=>{ const file=e.target.files[0]; if(!file) return; const text=await file.text(); const id=uid(); const blob=new Blob([text],{type:'text/html'}); const url=URL.createObjectURL(blob); const item={id,type:'html',name:file.name,url,htmlText:text,size:file.size,updated:Date.now()}; await store.put(item); await refreshFiles(); e.target.value=''; });
+uploadVideo.addEventListener('change', async(e)=>{ const file=e.target.files[0]; if(!file) return; const url=URL.createObjectURL(file); const id=uid(); const item={id,type:'video',name:file.name,url,size:file.size,updated:Date.now(),sessionOnly:true}; await store.put(item); await refreshFiles(); e.target.value=''; });
+document.getElementById('newFolder').onclick=async()=>{ const name=prompt('Nome da pasta:','Nova Pasta'); if(!name) return; const id=uid(); const item={id,type:'folder',name,updated:Date.now()}; await store.put(item); await refreshFiles(); };
+
+/* ===================== Mini Usage (adaptado) ===================== */
+const U={ KEY:'dual_usage_widget_v1', R:{ usdPerKTokens:0.006, usdImg:{512:0.017,768:0.019,1024:0.050}, usdTTSperMin:0.024, usdSTTperMin:0.008, kwhPerKTokens:0.0002, kwhImg:{512:0.0002,768:0.0003,1024:0.0004}, kwhTTSperMin:0.00005, kwhSTTperMin:0.00003, mlPerKWh:500 } };
+function tKey(resetHour){ const [H,M]=(resetHour||'00:00').split(':').map(x=>parseInt(x,10)||0); const now=new Date(); const anchor=new Date(now.getFullYear(),now.getMonth(),now.getDate(),H,M,0,0); return (now>=anchor?anchor:new Date(anchor.getTime()-86400000)).toDateString()+`@${String(H).padStart(2,'0')}:${String(M).padStart(2,'0')}` }
+function loadUsage(){ const saved=JSON.parse(localStorage.getItem(U.KEY)||'{}'); const def={ uc:0, usd:0, kwh:0, ml:0, limitUC:3000, resetHour:'00:00' }; return Object.assign(def, saved) }
+const usage=loadUsage(); function persistUsage(){ localStorage.setItem(U.KEY, JSON.stringify(usage)) }
+function ensureDay(){ const cur=tKey(usage.resetHour); if(usage.dateKey!==cur){ usage.dateKey=cur; usage.uc=usage.usd=usage.kwh=usage.ml=0; persistUsage(); } }
+function addUC(x){ usage.uc+=x } function addUSD(x){ usage.usd+=x } function addKWh(x){ usage.kwh+=x; usage.ml=usage.kwh*U.R.mlPerKWh }
+function addUsage(ev){ ensureDay(); if(ev.type==='image'){ const sz=ev.size||768, qty=Math.max(1,ev.qty||1); const ucPer=(sz===512?15:sz===768?30:60); addUC(qty*ucPer); addUSD(qty*(U.R.usdImg[sz]||U.R.usdImg[768])); addKWh(qty*(U.R.kwhImg[sz]||U.R.kwhImg[768])); } if(ev.type==='text'){ const k=(ev.tokens||0)/1000; addUC(k*1); addUSD(k*(usage.usdPerKTokens||U.R.usdPerKTokens)); addKWh(k*U.R.kwhPerKTokens);} if(ev.type==='tts'){ const m=Math.max(0, ev.minutes||0); addUC(m*2); addUSD(m*U.R.usdTTSperMin); addKWh(m*U.R.kwhTTSperMin);} if(ev.type==='stt'){ const m=Math.max(0, ev.minutes||0); addUC(m*.8); addUSD(m*U.R.usdSTTperMin); addKWh(m*U.R.kwhSTTperMin);} persistUsage(); renderUsage(); }
+function renderUsage(){ ensureDay(); document.getElementById('usd').textContent=`US$ ${usage.usd.toFixed(2)}`; document.getElementById('water').textContent=`${Math.round(usage.ml)} ml`; document.getElementById('uc').textContent=Math.round(usage.uc); document.getElementById('uclimit').textContent=usage.limitUC; document.getElementById('resetTime').textContent=usage.dateKey.split('@')[1]+' (local)'; }
+document.getElementById('btnDemo').onclick=()=> addUsage({type:'image', size:768, qty:10}); document.getElementById('btnReset').onclick=()=>{ usage.uc=usage.usd=usage.kwh=usage.ml=0; usage.dateKey=tKey(usage.resetHour); persistUsage(); renderUsage(); };
+
+/* ===================== Packs state ===================== */
+const packs=new Set(JSON.parse(localStorage.getItem('packs')||'[]'));
+Array.from(document.querySelectorAll('[data-pack]')).forEach(btn=>{ const key=btn.dataset.pack; if(packs.has(key)) btn.classList.add('pill--on'); btn.addEventListener('click',()=>{ if(packs.has(key)){ packs.delete(key); btn.classList.remove('pill--on'); } else { packs.add(key); btn.classList.add('pill--on'); } }); });
+document.getElementById('saveLocal').onclick=()=>{ localStorage.setItem('packs', JSON.stringify([...packs])); toast('Packs salvos!') };
+document.getElementById('clearLocal').onclick=()=>{ localStorage.clear(); toast('Local limpo.'); };
+
+/* ===================== Archetypes (selector + fade) ===================== */
+const archList=["luxara.html","rhea.html","aion.html","atlas.html","nova.html","genus.html","lumine.html","kaion.html","kaos.html","horus.html","elysha.html"];
+(function(){ const sel=document.getElementById('archSelect'); const frame=document.getElementById('coreFrame'); const fade=document.getElementById('fadeCover'); function populate(){ sel.innerHTML=''; archList.forEach(name=>{ const o=document.createElement('option'); o.value=name; o.textContent=name; sel.appendChild(o); }); }
+  function setSrcByIndex(idx){ if(!archList.length) return; const n=(idx+archList.length)%archList.length; sel.selectedIndex=n; frame.src='./archetypes/'+archList[n]; }
+  populate(); let current=0; if(archList.length){ setSrcByIndex(0); }
+  document.getElementById('prevArch').addEventListener('click', ()=>{ current=(current-1+archList.length)%archList.length; fade.classList.add('show'); setTimeout(()=>{ setSrcByIndex(current); setTimeout(()=>fade.classList.remove('show'), 200); }, 140); });
+  document.getElementById('nextArch').addEventListener('click', ()=>{ current=(current+1)%archList.length; fade.classList.add('show'); setTimeout(()=>{ setSrcByIndex(current); setTimeout(()=>fade.classList.remove('show'), 200); }, 140); });
+  sel.addEventListener('change', ()=>{ current=sel.selectedIndex; fade.classList.add('show'); setTimeout(()=>{ setSrcByIndex(current); setTimeout(()=>fade.classList.remove('show'), 200); }, 140); }); })();
+
+/* ===================== Áudio simples (tap accent) ===================== */
+let actx, work, gain; document.getElementById('btnPlay').onclick=async()=>{ if(actx) { try{ if(actx.state==='suspended') await actx.resume(); }catch{} accent(); return; } actx=new (window.AudioContext||window.webkitAudioContext)(); const code=`class B extends AudioWorkletProcessor{static get parameterDescriptors(){return[{name:'on',defaultValue:0},{name:'freq',defaultValue:220}]}process(i,o,p){const out=o[0];const on=p.on[0],f=p.freq[0];for(let ch=0;ch<out.length;ch++){const b=out[ch];for(let n=0;n<b.length;n++){let s=0;if(on>0.5){s=(Math.random()*2-1)*0.18+Math.sin(2*Math.PI*(currentFrame+n)/sampleRate*f)*0.22;}b[n]=s;}}return true}}registerProcessor('b',B);`; await actx.audioWorklet.addModule(URL.createObjectURL(new Blob([code],{type:'text/javascript'}))); work=new AudioWorkletNode(actx,'b'); gain=actx.createGain(); gain.gain.value=0.0; work.connect(gain).connect(actx.destination); toast('Áudio pronto'); accent(); };
+function accent(){ if(!actx||!work||!gain) return; work.parameters.get('freq').setValueAtTime(260, actx.currentTime); work.parameters.get('on').setValueAtTime(1, actx.currentTime); gain.gain.cancelScheduledValues(actx.currentTime); gain.gain.linearRampToValueAtTime(0.9, actx.currentTime+0.01); gain.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime+0.35); setTimeout(()=> work.parameters.get('on').setValueAtTime(0, actx.currentTime), 120); }
+
+/* ===================== Boot ===================== */
+(async function boot(){ store=await createStore(); document.getElementById('storageMode').textContent=store.mode; document.getElementById('hasIDB').textContent=hasIDB()?'ok':'no'; document.getElementById('isPWA').textContent=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone?'yes':'no'; await refreshFiles(); renderUsage(); })();
+</script>
+</body>
+</html>

@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <title>HUB UNO — Unified Minimal Glow (v3.3)</title>
+  <meta name="theme-color" content="#0b0f14" />
+  <style>
+    :root {
+      /* Paleta e tokens */
+      --grad-a: #ff52e5;
+      --grad-b: #00c5e5;
+      --fg: #f5f7ff;
+      --mut: rgba(245, 247, 255, .68);
+      --surface: rgba(15, 17, 32, .50);
+      --surface-strong: rgba(15, 17, 32, .88);
+      --bd: 1px solid rgba(255, 255, 255, .12);
+      --ok: #39ffb6;
+      --warn: #ffb86b;
+      --err: #ff6b6b;
+      --r: 18px;
+      --r2: 22px;
+      --shadow: 0 14px 40px rgba(0, 0, 0, .45);
+      --tabsH: 74px;
+      --hdrH: 74px;
+      --blur: 18px;
+      --ease: cubic-bezier(.22, .61, .36, 1);
+    }
+
+    * { box-sizing: border-box }
+    html, body { height:100vh}
+
+    body {
+      margin: 9;
+      color: var(--fg);
+      background: linear-gradient(42deg, var(--grad-a), var(--grad-b)) fixed;
+      font: 14px/1.45 Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overflow: hidden;
+    }
+
+    /* ===== Micro-interações base ===== */
+    .fx-trans { transition: transform .16s var(--ease), background .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease), color .25s var(--ease), opacity .25s var(--ease) }
+    .fx-lift:hover { transform: translateY(-1px) }
+    .fx-press:active { transform: translateY(0) scale(.98) }
+    .ring:focus-visible { outline: 0; box-shadow: 0 0 0 4px rgba(255,255,255,.14) }
+    @media (prefers-reduced-motion: reduce) { .fx-trans { transition: none } }
+
+    /* ===== Botões ===== */
+    button, .btn, .ib { background: var(--surface); border: var(--bd); color: var(--fg); font-weight: 800; border-radius: 12px; cursor: pointer }
+    .btn { padding: .58rem .9rem; background: linear-gradient(180deg, #11162a, #0b1122) }
+    .btn.prime { background: linear-gradient(90deg, #a66fff, #6db4ff); color: #0b0f14; border-color: transparent }
+    .btn:hover { box-shadow: 0 8px 26px rgba(0,0,0,.36), 0 0 0 1px rgba(255,255,255,.10) inset }
+    .btn.prime:hover { box-shadow: 0 10px 30px rgba(166,111,255,.26), 0 0 0 1px rgba(255,255,255,.18) inset }
+    .btn:active { filter: saturate(1.02) brightness(.98) }
+    .btn[disabled] { opacity: .55; pointer-events: none }
+
+    /* Ripple (instanciado via JS) */
+    .ripple { position: absolute; inset: 0; overflow: hidden; border-radius: inherit }
+    .ripple > i { position: absolute; border-radius: 999px; pointer-events: none; transform: translate(-50%, -50%); background: radial-gradient(closest-side, rgba(255,255,255,.35), rgba(255,255,255,0) 70%); animation: ripple .6s var(--ease) forwards }
+    @keyframes ripple { from { opacity: .55; width: 0; height: 0 } to { opacity: 0; width: 260px; height: 260px } }
+
+    /* ===== Header ===== */
+    header.mast { position: relative; inset: 0 0 auto 0; height: var(--hdrH); z-index: 100; display: flex; align-items: center; gap: 10px; padding: 0 12px; backdrop-filter: blur(var(--blur)) saturate(130%) }
+    .ib { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; box-shadow: var(--shadow) }
+    .ib.fx-trans:hover { box-shadow: 0 10px 28px rgba(0,0,0,.5), 0 0 0 2px rgba(255,255,255,.10) inset }
+    .title { flex: 1; text-align: center; line-height: 1 }
+    .title h1 { margin: 0; font-size: 20px; letter-spacing: .06em; font-weight: 900 }
+    .title small { display: block; color: var(--mut); letter-spacing: .1em }
+
+    /* ===== Layout ===== */
+    main { position: relative; height: 100%; padding-top: calc(var(--hdrH) + env(safe-area-inset-top)) + 18px; padding-bottom: calc(var(--tabsH) + env(safe-area-inset-bottom)); overflow: hidden }
+    .view { position: absolute; inset: 0; padding: 12px 14px; overflow: auto; display: none }
+    .view.active { display: block; animation: fade .18s var(--ease) }
+    @keyframes fade { from { opacity: 0; transform: translateY(6px) } }
+
+    /* ===== Cards / grids ===== */
+    .grid { display: grid; gap: 12px; max-width: 720px; margin: 0 auto }
+    .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px }
+    @media (max-width: 620px) { .cards { grid-template-columns: 1fr } }
+    .card { background: var(--surface); border: var(--bd); border-radius: var(--r2); box-shadow: var(--shadow); padding: 12px; display: flex; gap: 10px; align-items: center; position: relative }
+    .card.fx-trans:hover { box-shadow: 0 16px 40px rgba(0,0,0,.5) }
+    .ico { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: rgba(255,255,255,.06); border: var(--bd) }
+    .mut { color: var(--mut); font-size: 12px }
+    .input, select, textarea { width: 100%; background: #0f1426; color: var(--fg); border: var(--bd); border-radius: 12px; padding: 10px }
+
+    /* ===== Apps ===== */
+    .apps-wrap { display: grid; gap: 12px }
+    .app-card { display: flex; gap: 12px; align-items: center; background: var(--surface); border: var(--bd); border-radius: var(--r); padding: 12px }
+    .app-card:hover { box-shadow: 0 12px 34px rgba(0,0,0,.46) }
+    .app-icon { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: #0f1528; border: var(--bd); overflow: hidden }
+    .app-title { font-weight: 800 }
+
+    /* ===== Viewer (Stack) ===== */
+    .session { background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); border: var(--bd); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden }
+    .session .hdr { display: flex; align-items: center; gap: 8px; padding: 10px; background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); border-bottom: 1px solid #ffffff18 }
+    .session .title { font-weight: 850; max-width: 56vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+    .session .tools { margin-left: auto; display: flex; gap: 6px }
+    .session .tools .btn:hover { box-shadow: 0 0 0 1px rgba(255,255,255,.18) inset, 0 8px 22px rgba(0,0,0,.35) }
+    .session iframe { display: block; width: 100%; height: 60vh; border: 0; background: #000 }
+    .session.min iframe { display: none }
+
+    /* ===== Dock + Tabs ===== */
+    .dock { position: fixed; left: 10px; right: 10px; bottom: calc(var(--tabsH) + 8px + env(safe-area-inset-bottom)); display: flex; gap: 8px; flex-wrap: wrap; z-index: 80 }
+    .badge { display: inline-flex; gap: 6px; align-items: center; padding: .38rem .65rem; border: 1px solid #ffffff18; background: #0f1428; border-radius: 999px; font-weight: 800; position: relative }
+    .badge.fx-trans:hover { box-shadow: 0 10px 24px rgba(0,0,0,.5) }
+    nav.tabbar { position: fixed; left: 0; right: 0; bottom: env(safe-area-inset-bottom, 0); height: var(--tabsH); z-index: 90; display: flex; justify-content: center; padding: 6px 14px }
+    .tabbar .inner { width: 100%; max-width: 720px; display: flex; justify-content: space-around; align-items: center; background: var(--surface); border: var(--bd); border-radius: 22px; box-shadow: var(--shadow); padding: 10px 14px }
+    .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--mut); font-size: 11px; font-weight: 800; padding: 8px; border-radius: 14px; cursor: pointer; position: relative }
+    .tab.fx-trans:hover { background: rgba(255,255,255,.06) }
+    .tab.active { color: var(--fg); background: rgba(255,255,255,.10); box-shadow: 0 0 0 2px rgba(255,255,255,.10) }
+
+    /* ===== Help modal ===== */
+    .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 120; background: rgba(0,0,0,.45); backdrop-filter: blur(6px) }
+    .modal.open { display: flex }
+    .modal .panel { width: min(720px, 92vw); background: var(--surface-strong); border: var(--bd); border-radius: 16px; box-shadow: var(--shadow); padding: 16px }
+    .kbd { border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 6px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px }
+
+    /* ===== Utility toast container injected via JS ===== */
+  </style>
+</head>
+<body>
+  <!-- ===== Header ===== -->
+  <header class="mast">
+    <button class="ib fx-trans fx-press ring" id="btnBack" title="Voltar" aria-label="Voltar">⟵<span class="ripple"></span></button>
+    <div class="title">
+      <h1>HUB UNO</h1>
+      <small>Dual · Trinity · Minimal</small>
+    </div>
+    <button class="ib fx-trans fx-press ring" id="btnDownload" title="Baixar HTML">⬇️<span class="ripple"></span></button>
+    <button class="ib fx-trans fx-press ring" id="btnHelp" title="Ajuda / Atalhos">❓<span class="ripple"></span></button>
+    <button class="ib fx-trans fx-press ring" id="btnBrain" title="Brain">🧠<span class="ripple"></span></button>
+  </header>
+
+  <!-- ===== Views ===== -->
+  <main>
+    <!-- HOME -->
+    <section id="v-home" class="view active">
+      <div class="grid">
+        <div class="card fx-trans fx-lift">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%">
+            <div>
+              <div style="font-weight:900;letter-spacing:.08em">UNO • SÜMBÜS</div>
+              <div class="mut">AppsDual</div>
+            </div>
+            <div class="ico">⚡</div>
+          </div>
+        </div>
+        <div class="cards">
+          <button class="card fx-trans fx-press ring" data-nav="apps">
+            <div class="ico">🗂</div>
+            <div>
+              <div style="font-weight:800">Apps</div>
+              <div class="mut">Catálogo + Locais</div>
+            </div>
+            <span class="ripple"></span>
+          </button>
+          <button class="card fx-trans fx-press ring" data-nav="stack">
+            <div class="ico">⬛</div>
+            <div>
+              <div style="font-weight:800">Stack</div>
+              <div class="mut">Sessões abertas</div>
+            </div>
+            <span class="ripple"></span>
+          </button>
+          <button class="card fx-trans fx-press ring" data-nav="brain">
+            <div class="ico">🧠</div>
+            <div>
+              <div style="font-weight:800">Brain</div>
+              <div class="mut">Nome, SK, Tema</div>
+            </div>
+            <span class="ripple"></span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- APPS -->
+    <section id="v-apps" class="view">
+      <div class="grid">
+        <div class="card fx-trans fx-lift" style="display:block">
+          <div class="grid" style="gap:8px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <input id="appSearch" class="input ring" placeholder="Buscar…" />
+              <select id="appSort" class="input ring" style="max-width:150px">
+                <option value="az">A–Z</option>
+                <option value="za">Z–A</option>
+              </select>
+              <label class="mut" style="display:inline-flex;gap:6px;align-items:center">
+                <input id="openInside" type="checkbox" checked /> abrir dentro
+              </label>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <input id="fileLocal" type="file" accept=".html,.htm,.txt" multiple class="input ring" />
+              <button id="btnImport" class="btn fx-trans fx-press ring">Adicionar Locais<span class="ripple"></span></button>
+              <button id="btnExport" class="btn fx-trans fx-press ring">Exportar Locais<span class="ripple"></span></button>
+              <button id="btnClear" class="btn fx-trans fx-press ring">Limpar Locais<span class="ripple"></span></button>
+              <button id="btnOpenAppsJson" class="btn fx-trans fx-press ring">Carregar apps.json<span class="ripple"></span></button>
+            </div>
+            <div id="appsCount" class="mut">—</div>
+          </div>
+        </div>
+        <div id="appsWrap" class="apps-wrap"></div>
+      </div>
+    </section>
+
+    <!-- STACK -->
+    <section id="v-stack" class="view">
+      <div class="grid">
+        <div class="card fx-trans fx-lift" style="display:block">
+          <div style="font-weight:800; display:flex; align-items:center; gap:8px">
+            Sessões
+            <button id="btnCloseAll" class="btn fx-trans fx-press ring" title="Fechar todas">Fechar todas<span class="ripple"></span></button>
+          </div>
+          <div class="mut">Reabra rápido pelo dock abaixo.</div>
+        </div>
+        <div id="stackWrap" class="grid"></div>
+      </div>
+    </section>
+
+    <!-- BRAIN -->
+    <section id="v-brain" class="view">
+      <div class="grid">
+        <div class="card fx-trans fx-lift" style="display:block">
+          <div style="font-weight:800">Usuário</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+            <input id="userName" class="input ring" placeholder="Seu nome" />
+            <button id="saveName" class="btn prime fx-trans fx-press ring">Salvar<span class="ripple"></span></button>
+          </div>
+        </div>
+        <div class="card fx-trans fx-lift" style="display:block">
+          <div style="font-weight:800">OpenRouter</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">
+            <select id="model" class="input ring" style="max-width:260px"></select>
+            <input id="sk" class="input ring" placeholder="sk-or-v1-…" />
+            <button id="saveSK" class="btn fx-trans fx-press ring">Salvar<span class="ripple"></span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- DOCK & TABS -->
+  <div id="dock" class="dock"></div>
+  <nav class="tabbar">
+    <div class="inner">
+      <button class="tab fx-trans fx-press ring active" data-nav="home">⌂<span style="display:none">Home</span><span class="ripple"></span></button>
+      <button class="tab fx-trans fx-press ring" data-nav="apps">🗂<span style="display:none">Apps</span><span class="ripple"></span></button>
+      <button class="tab fx-trans fx-press ring" data-nav="stack">⬛<span style="display:none">Stack</span><span class="ripple"></span></button>
+      <button class="tab fx-trans fx-press ring" data-nav="brain">🧠<span style="display:none">Brain</span><span class="ripple"></span></button>
+    </div>
+  </nav>
+
+  <!-- HELP MODAL -->
+  <div id="modalHelp" class="modal" aria-hidden="true">
+    <div class="panel">
+      <div style="display:flex;align-items:center;gap:10px;justify-content:space-between">
+        <h3 style="margin:0">Ajuda & Atalhos</h3>
+        <button id="closeHelp" class="btn fx-trans fx-press ring">Fechar<span class="ripple"></span></button>
+      </div>
+      <div class="mut" style="margin-top:8px">Navegue mais rápido:</div>
+      <ul>
+        <li><span class="kbd">g</span> then <span class="kbd">h</span> → Home</li>
+        <li><span class="kbd">g</span> then <span class="kbd">a</span> → Apps</li>
+        <li><span class="kbd">g</span> then <span class="kbd">s</span> → Stack</li>
+        <li><span class="kbd">g</span> then <span class="kbd">b</span> → Brain</li>
+        <li><span class="kbd">Ctrl / Cmd</span> + <span class="kbd">K</span> → Busca focada</li>
+        <li><span class="kbd">Ctrl / Cmd</span> + <span class="kbd">S</span> → Baixar este HTML</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    /* ===================== Helpers ===================== */
+    const $ = (q, r = document) => r.querySelector(q);
+    const $$ = (q, r = document) => Array.from(r.querySelectorAll(q));
+    const LS = {
+      get: (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d } catch (e) { return d } },
+      set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch (e) {} },
+      raw: (k) => localStorage.getItem(k) || ''
+    };
+
+    /* Ripple */
+    function addRipple(el) {
+      if (!el) return;
+      if (!el.querySelector('.ripple')) {
+        const slot = document.createElement('span');
+        slot.className = 'ripple';
+        el.appendChild(slot);
+      }
+      el.addEventListener('pointerdown', (ev) => {
+        const host = el.querySelector('.ripple');
+        if (!host) return;
+        const dot = document.createElement('i');
+        const rect = el.getBoundingClientRect();
+        const x = ev.clientX - rect.left; const y = ev.clientY - rect.top;
+        dot.style.left = x + 'px'; dot.style.top = y + 'px';
+        host.appendChild(dot);
+        setTimeout(() => dot.remove(), 650);
+      }, { passive: true });
+    }
+
+    /* Toast */
+    const toastBox = document.createElement('div');
+    toastBox.style.cssText = 'position:fixed;right:14px;bottom:calc(var(--tabsH) + 16px);display:grid;gap:8px;z-index:120';
+    document.body.appendChild(toastBox);
+    function toast(msg, type = 'ok') {
+      const el = document.createElement('div');
+      el.className = 'fx-trans';
+      const bg = type === 'ok' ? 'linear-gradient(90deg,#1b2a2a,#123c2e)' : (type === 'warn' ? 'linear-gradient(90deg,#2f261b,#3c2d12)' : 'linear-gradient(90deg,#2f1b1b,#3c1212)');
+      el.style.cssText = `background:${bg}; color:var(--fg); border:${getComputedStyle(document.documentElement).getPropertyValue('--bd')}; padding:.6rem .8rem; border-radius:12px; box-shadow:var(--shadow)`;
+      el.textContent = msg;
+      toastBox.appendChild(el);
+      setTimeout(() => { el.style.opacity = .0; el.style.transform = 'translateY(6px)'; setTimeout(() => el.remove(), 220); }, 1600);
+    }
+
+    /* Apply ripple to all buttons and future nodes */
+    $$('button').forEach(addRipple);
+    const obs = new MutationObserver((muts) => {
+      muts.forEach(m => m.addedNodes && m.addedNodes.forEach(n => {
+        if (n.nodeType === 1) {
+          if (n.matches?.('button')) addRipple(n);
+          n.querySelectorAll?.('button').forEach(addRipple);
+        }
+      }))
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+
+    /* ===================== Navegação + Estado ===================== */
+    function nav(key) {
+      const tabs = ['home', 'apps', 'stack', 'brain'];
+      tabs.forEach(k => {
+        $('#v-' + k).classList.toggle('active', k === key);
+        $(`.tab[data-nav="${k}"]`).classList.toggle('active', k === key);
+      });
+      LS.set('uno:lastTab', key);
+    }
+    $$('.tab,[data-nav]').forEach(b => b.addEventListener('click', () => nav(b.dataset.nav || 'home')));
+    $('#btnBack').onclick = () => { try { history.length > 1 && history.back() } catch { } };
+    $('#btnBrain').onclick = () => nav('brain');
+
+    // Restaurar última aba
+    const last = LS.get('uno:lastTab', 'home');
+    nav(last);
+
+    /* Atalhos de teclado (g + key) */
+    let gPressed = false;
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault(); downloadSelf(); return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault(); $('#appSearch')?.focus(); return;
+      }
+      if (e.key.toLowerCase() === 'g') { gPressed = true; setTimeout(() => gPressed = false, 600); return; }
+      if (!gPressed) return;
+      const k = e.key.toLowerCase();
+      if (k === 'h') nav('home');
+      if (k === 'a') nav('apps');
+      if (k === 's') nav('stack');
+      if (k === 'b') nav('brain');
+      gPressed = false;
+    });
+
+    /* Ajuda modal */
+    const modalHelp = $('#modalHelp');
+    $('#btnHelp').onclick = () => { modalHelp.classList.add('open'); modalHelp.setAttribute('aria-hidden', 'false'); };
+    $('#closeHelp').onclick = () => { modalHelp.classList.remove('open'); modalHelp.setAttribute('aria-hidden', 'true'); };
+    modalHelp.addEventListener('click', (e) => { if (e.target === modalHelp) $('#closeHelp').click(); });
+
+    /* Baixar o próprio HTML */
+    function downloadSelf() {
+      try {
+        const clone = document.documentElement.cloneNode(true);
+        const html = '<!doctype html>\n' + clone.outerHTML;
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'HUB-UNO-Glow-v3.3.html';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 500);
+        toast('HTML exportado', 'ok');
+      } catch (e) {
+        alert('Falha ao exportar: ' + e.message);
+      }
+    }
+    $('#btnDownload').onclick = downloadSelf;
+
+    /* ===================== Brain ===================== */
+    const MODELS = [
+      'openrouter/auto',
+      'anthropic/claude-3.5-sonnet',
+      'openai/gpt-4.1-mini',
+      'google/gemini-1.5-pro',
+      'meta/llama-3.1-405b-instruct',
+      'mistral/mistral-large-latest'
+    ];
+    (function initBrain() {
+      const sel = $('#model');
+      sel.innerHTML = '';
+      MODELS.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; sel.appendChild(o) });
+      sel.value = LS.get('dual.openrouter.model', MODELS[0]);
+      $('#sk').value = LS.raw('dual.keys.openrouter');
+      $('#saveSK').onclick = () => {
+        LS.set('dual.openrouter.model', sel.value);
+        localStorage.setItem('dual.keys.openrouter', $('#sk').value || '');
+        toast('Configurações salvas', 'ok');
+      };
+      $('#saveName').onclick = () => { localStorage.setItem('infodose:userName', ($('#userName').value || '').trim()); toast('Nome salvo', 'ok'); };
+    })();
+
+    /* ===================== Apps (JSON + Locais) ===================== */
+    const RAW = { apps: [] };
+    const appsWrap = $('#appsWrap'), appsCount = $('#appsCount');
+
+    function normalize(list) {
+      return (list || []).map(x => ({
+        key: x.key || x.url || x.title || Math.random().toString(36).slice(2),
+        title: x.title || x.key || 'App',
+        desc: x.desc || '',
+        url: String(x.url || ''),
+        icon: x.icon || '',
+        tags: Array.isArray(x.tags) ? x.tags : []
+      }))
+    }
+    function locals() {
+      let arr = [];
+      try { arr = JSON.parse(LS.raw('infodose:locals:v1') || '[]') } catch {}
+      return arr.map(l => ({ key: 'local:' + l.id, title: l.name || 'Local', desc: 'HTML local', url: 'local:' + l.id, icon: '', tags: ['local'] }))
+    }
+    function getLocal(id) {
+      let arr = [];
+      try { arr = JSON.parse(LS.raw('infodose:locals:v1') || '[]') } catch {}
+      return arr.find(x => x.id === id) || null
+    }
+    function blobURL(local) {
+      const blob = new Blob([local.html || ''], { type: 'text/html;charset=utf-8' });
+      return URL.createObjectURL(blob)
+    }
+
+    function cardApp(a) {
+      const el = document.createElement('div');
+      el.className = 'app-card fx-trans fx-lift';
+      const ic = document.createElement('div'); ic.className = 'app-icon'; ic.textContent = '🧩';
+      if (a.icon) { try { ic.innerHTML = '<img src="' + a.icon + '" alt="" style="width:100%;height:100%;object-fit:cover">' } catch {} }
+      const meta = document.createElement('div'); meta.style.flex = '1';
+      const t = document.createElement('div'); t.className = 'app-title'; t.textContent = a.title;
+      const d = document.createElement('div'); d.className = 'mut'; d.textContent = a.desc || a.url;
+      const open = document.createElement('button'); open.className = 'btn fx-trans fx-press ring'; open.textContent = 'Abrir';
+      const rip = document.createElement('span'); rip.className = 'ripple'; open.appendChild(rip); addRipple(open);
+      open.onclick = () => openApp(a);
+      meta.appendChild(t); meta.appendChild(d); meta.appendChild(open);
+      el.appendChild(ic); el.appendChild(meta);
+      return el
+    }
+
+    function renderApps() {
+      const q = ($('#appSearch').value || '').toLowerCase();
+      const mode = $('#appSort').value;
+      let L = normalize(RAW.apps).concat(locals());
+      if (q) L = L.filter(a => (a.title + ' ' + a.desc + ' ' + a.key + ' ' + a.url + ' ' + (a.tags || []).join(' ')).toLowerCase().includes(q));
+      L.sort((a, b) => (mode === 'za' ? -1 : 1) * String(a.title || '').localeCompare(b.title || ''));
+      appsWrap.innerHTML = '';
+      L.forEach(a => appsWrap.appendChild(cardApp(a)));
+      appsCount.textContent = L.length + ' apps'
+    }
+
+    async function loadApps() {
+      try {
+        const res = await fetch('./apps/apps.json', { cache: 'no-store' });
+        const data = await res.json();
+        RAW.apps = Array.isArray(data.apps) ? data.apps : (Array.isArray(data) ? data : []);
+        renderApps();
+      } catch {
+        RAW.apps = [];
+        renderApps();
+      }
+    }
+
+    $('#appSearch').oninput = renderApps;
+    $('#appSort').onchange = renderApps;
+    loadApps();
+
+    // Locais
+    $('#btnImport').onclick = async () => {
+      const fs = Array.from($('#fileLocal').files || []);
+      if (!fs.length) return;
+      const tasks = fs.map(f => new Promise(res => { const r = new FileReader(); r.onload = () => res({ id: 'l_' + Math.random().toString(36).slice(2), name: f.name.replace(/\.(html?|txt)$/i, ''), html: String(r.result || ''), ts: Date.now() }); r.readAsText(f) }));
+      const list = await Promise.all(tasks);
+      const cur = JSON.parse(LS.raw('infodose:locals:v1') || '[]');
+      list.forEach(x => cur.unshift(x));
+      localStorage.setItem('infodose:locals:v1', JSON.stringify(cur));
+      renderApps();
+      toast('HTMLs locais adicionados', 'ok');
+    };
+
+    $('#btnExport').onclick = () => {
+      const data = { v: 1, when: Date.now(), items: JSON.parse(LS.raw('infodose:locals:v1') || '[]') };
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+      a.download = 'locals_pack.json';
+      a.click();
+    };
+
+    $('#btnClear').onclick = () => {
+      if (confirm('Limpar HTMLs locais salvos?')) {
+        localStorage.removeItem('infodose:locals:v1');
+        renderApps();
+        toast('Locais limpos', 'warn');
+      }
+    };
+
+    // Abrir apps.json manualmente
+    $('#btnOpenAppsJson').onclick = () => {
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = '.json,application/json';
+      inp.onchange = async () => {
+        const f = inp.files?.[0]; if (!f) return;
+        try {
+          const text = await f.text();
+          const json = JSON.parse(text);
+          RAW.apps = Array.isArray(json.apps) ? json.apps : (Array.isArray(json) ? json : []);
+          renderApps();
+          toast('apps.json carregado', 'ok');
+        } catch (e) { alert('apps.json inválido: ' + e.message) }
+      };
+      inp.click();
+    };
+
+    /* ===================== Stack ===================== */
+    const stackWrap = $('#stackWrap'), dock = $('#dock');
+
+    function badge(item) {
+      const b = document.createElement('button');
+      b.className = 'badge fx-trans fx-press ring';
+      b.textContent = item.title || 'App';
+      b.title = 'Reabrir ' + (item.title || 'App');
+      const rp = document.createElement('span'); rp.className = 'ripple'; b.appendChild(rp); addRipple(b);
+      b.onclick = () => { const s = document.querySelector('[data-sid="' + item.sid + '"]'); if (s) { s.scrollIntoView({ behavior: 'smooth' }); s.classList.remove('min'); } };
+      return b
+    }
+
+    function updateDock() {
+      dock.innerHTML = '';
+      $$('.session').forEach(s => { const meta = JSON.parse(s.dataset.meta || '{}'); dock.appendChild(badge({ title: meta.title, sid: s.dataset.sid })) })
+    }
+
+    function openApp(a) {
+      const sid = 's_' + Math.random().toString(36).slice(2);
+      const isLocal = String(a.url || '').startsWith('local:');
+      const lr = isLocal ? getLocal(String(a.url).slice(6)) : null;
+      const url = lr ? blobURL(lr) : a.url;
+      const card = document.createElement('div');
+      card.className = 'session fx-trans fx-lift';
+      card.dataset.sid = sid;
+      card.dataset.meta = JSON.stringify({ title: a.title || 'App', url: a.url || '' });
+      card.innerHTML = `
+        <div class="hdr">
+          <div class="title">${(a.title || 'App')}</div>
+          <div class="tools">
+            <button class="btn ring fx-trans fx-press" data-act="min">—<span class="ripple"></span></button>
+            <button class="btn ring fx-trans fx-press" data-act="ref">↻<span class="ripple"></span></button>
+            <button class="btn ring fx-trans fx-press" data-act="close">✕<span class="ripple"></span></button>
+          </div>
+        </div>
+        <iframe src="${url || 'about:blank'}" allow="autoplay; clipboard-read; clipboard-write; picture-in-picture; fullscreen"></iframe>
+      `;
+      stackWrap.prepend(card);
+      card.querySelectorAll('.btn').forEach(addRipple);
+      card.querySelector('[data-act=min]').onclick = () => { card.classList.toggle('min'); updateDock(); };
+      card.querySelector('[data-act=ref]').onclick = () => { const fr = card.querySelector('iframe'); try { fr.contentWindow.location.reload() } catch { fr.src = fr.src } };
+      card.querySelector('[data-act=close]').onclick = () => { card.remove(); updateDock(); };
+      if ($('#openInside').checked) nav('stack');
+      updateDock();
+      toast('App aberto: ' + (a.title || 'App'), 'ok');
+    }
+
+    // Fechar todas as sessões
+    $('#btnCloseAll').onclick = () => {
+      if (!confirm('Fechar todas as sessões abertas?')) return;
+      $$('.session').forEach(s => s.remove());
+      updateDock();
+      toast('Todas as sessões fechadas', 'warn');
+    };
+
+    /* ===================== Init adornos ===================== */
+    // garantir ripples nos elementos já renderizados
+    $$('button').forEach(addRipple);
+
+  </script>
+</body>
+</html>

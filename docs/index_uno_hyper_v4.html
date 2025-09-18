@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>UNO • Hiperbólico • Neon Icons</title>
+<style>
+/*
+ * Variante hiperbólica do layout UNO com fundo digital e ícones neon.
+ * O fundo utiliza a imagem fornecida pelo usuário (grid com símbolos) com uma
+ * sobreposição escura para melhorar o contraste. As esferas têm 80px e
+ * exibem ícones recortados das tabelas de ícones neon fornecidas.
+ */
+:root{
+  --ink:#eaf6ff;
+  --muted:#9fb4c6;
+  --line:rgba(255,255,255,.14);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--ink);
+  /* fundo: imagem hiperbólica com overlay escuro. A imagem é embutida como Data URI para garantir que apareça sem depender de caminho relativo */
+  background:
+    /* sobrepomos um gradiente escuro à imagem para contraste */
+    linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+    url('./img/bg/grid-hyper.jpg');
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+.container{
+  min-height:100svh;
+  display:grid;
+  grid-template-rows:1fr auto 1fr;
+  align-items:center;
+  justify-items:center;
+  gap:28px;
+  padding: clamp(16px, 4vw, 40px);
+}
+
+/* === Esferas (bolinhas) === */
+.dot{
+  position:relative;
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  user-select:none;
+  /* base escura para suporte de transparência da imagem */
+  background-color:rgba(0,0,0,0.6);
+  border:none;
+  box-shadow:
+    0 0 30px rgba(0,255,255,.12),
+    0 0 60px rgba(255,0,255,.08);
+  transition: transform .25s ease, box-shadow .25s ease;
+  overflow:hidden;
+}
+.dot::before{
+  content:'';
+  position:absolute;
+  top:-12px; left:-12px; right:-12px; bottom:-12px;
+  border-radius:50%;
+  background: linear-gradient(135deg, rgba(0,255,255,.5), rgba(255,0,255,.4));
+  filter: blur(24px);
+  opacity:.6;
+  z-index:-1;
+  transition:opacity .3s ease;
+}
+.dot::after{
+  content:'';
+  position:absolute;
+  top:4px; left:4px; right:4px; bottom:4px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.22);
+  box-shadow:0 0 8px rgba(255,255,255,.2);
+}
+
+/* Estilização do texto "UN" na esfera inicial */
+.dot--single .un{
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  background: linear-gradient(45deg, rgba(0,255,255,.9), rgba(255,0,255,.8));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+}
+
+/* Barra de navegação fixa no rodapé */
+.nav-footer{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: rgba(15,18,28,.9);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 4;
+}
+
+/* Itens da navegação */
+.nav-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  flex:1;
+  color: var(--muted);
+  font-size:.7rem;
+  border:none;
+  background:none;
+  padding:8px 0;
+  cursor:pointer;
+}
+.nav-item svg{
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width:1.5;
+}
+.nav-item.active{
+  color: var(--ink);
+}
+
+/* Páginas completas que deslizam do rodapé */
+.page{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  background: rgba(15,18,28,.94);
+  backdrop-filter: blur(20px);
+  transform: translateY(100%);
+  transition: transform .35s cubic-bezier(.2,.9,.2,1);
+  overflow:auto;
+  padding: 16px 14px 80px 14px; /* bottom padding for nav */
+  color: var(--ink);
+  z-index: 3;
+}
+.page.open{
+  transform: translateY(0);
+}
+.page .section{
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  margin: 10px 0;
+  box-shadow: 0 6px 20px rgba(0,0,0,.5);
+}
+.page h3{
+  margin: 3px 0 10px;
+  font-size: 1rem;
+  letter-spacing:.02em;
+  color: var(--ink);
+}
+.page .row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.dot:hover{
+  transform:scale(1.05);
+  box-shadow:
+    0 0 40px rgba(0,255,255,.2),
+    0 0 100px rgba(255,0,255,.15);
+}
+
+/* Classe utilitária para esconder */
+.hidden{display:none;}
+
+/* Personalização das esferas para exibir os ícones neon recortados */
+.dot--top{
+  /* Double diamond símbolo (linha 2, coluna 2) da imagem 8C70518D...*/
+  background-image: url('./8C70518D-2858-4EB9-9E4F-8EC0974336FB.png');
+  background-size:400% 400%;
+  background-position:25% 25%;
+  background-repeat:no-repeat;
+}
+.dot--mid{
+  /* Símbolo psi / swirl (linha 2, coluna 1) da imagem 434C14C7...*/
+  background-image: url('./434C14C7-3CA1-46EE-9BCA-06647CB1EC04.png');
+  background-size:400% 400%;
+  background-position:0% 25%;
+  background-repeat:no-repeat;
+}
+.dot--single{
+  /* Ícone play preservado (fallback) via SVG atrás do background image está vazio para única esfera */
+}
+
+/* Modal Sheet permanece parecido ao tema escuro original para contraste */
+.sheet{
+  position:fixed;
+  inset:auto 0 0 0;
+  transform:translateY(100%);
+  background:rgba(15,18,28,.94);
+  backdrop-filter:blur(20px);
+  box-shadow:0 -20px 80px rgba(0,0,0,.7);
+  border-top:1px solid var(--line);
+  border-radius:24px 24px 0 0;
+  transition: transform .35s cubic-bezier(.2,.9,.2,1);
+  max-height:76svh;
+  overflow:auto;
+  padding:16px 14px 24px 14px;
+  color:var(--ink);
+}
+.sheet.open{transform:translateY(0)}
+.sheet .handle{
+  width:56px;height:6px;border-radius:999px;
+  background:rgba(255,255,255,.2);
+  margin:6px auto 10px;
+}
+.section{
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:14px;
+  margin:10px 0;
+  box-shadow:0 6px 20px rgba(0,0,0,.5);
+}
+.section h3{margin:3px 0 10px;font-size:1rem;letter-spacing:.02em;color:var(--ink);} 
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{
+  --bgbtn:rgba(255,255,255,.06);
+  background:var(--bgbtn);
+  color:var(--ink);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px 12px;
+  font-size:.92rem;
+  transition:background .2s ease;
+}
+.btn:active{transform:translateY(1px)}
+.btn.ok{--bgbtn:rgba(0,255,255,.08);border-color:rgba(0,255,255,.25)}
+.btn.warn{--bgbtn:rgba(255,208,0,.06);border-color:rgba(255,208,0,.24)}
+.btn.err{--bgbtn:rgba(255,0,85,.06);border-color:rgba(255,0,85,.24)}
+input[type="file"]{display:none}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  margin-top:8px;
+}
+.card{
+  aspect-ratio:1/1;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  position:relative;
+  background:rgba(255,255,255,.03);
+}
+.card img{width:100%;height:100%;object-fit:cover;display:block}
+.card .mini{position:absolute; right:6px; bottom:6px; display:flex; gap:6px;}
+.mini .btn{padding:6px 8px;font-size:.78rem}
+.notice{font-size:.9rem;color:var(--muted)}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:10px;font-size:.92rem;color:var(--ink);}
+.footerPad{height: env(safe-area-inset-bottom);}
+</style>
+</head>
+<body>
+<main class="container">
+  <!-- Estado inicial: uma única esfera com a marca UN -->
+  <div class="dot dot--single" id="singleStart">
+    <span class="un">UN</span>
+  </div>
+  <!-- Esfera superior (Packs) -->
+  <div class="dot dot--top hidden" data-sheet="packs"></div>
+  <!-- Esfera central (Apps) -->
+  <div class="dot dot--mid hidden" data-sheet="apps"></div>
+</main>
+
+ <!-- Navegação principal -->
+ <nav class="nav-footer">
+   <button class="nav-item" data-page="html" type="button">
+     <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+       <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+     </svg>
+     <span>HTML</span>
+   </button>
+   <button class="nav-item" data-page="apps" type="button">
+     <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+       <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+     </svg>
+     <span>Apps</span>
+   </button>
+   <button class="nav-item" data-page="user" type="button">
+     <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+       <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+     </svg>
+     <span>Usuário</span>
+   </button>
+ </nav>
+
+<!-- ==== SHEET: PACKS ==== -->
+<section id="sheet-packs" class="sheet" aria-hidden="true">
+  <div class="handle"></div>
+  <div class="section">
+    <h3>Ativar Packs</h3>
+    <div class="row">
+      <button class="btn" data-pack="fetch">Fetch</button>
+      <button class="btn" data-pack="a">A</button>
+      <button class="btn" data-pack="training">Training</button>
+      <button class="btn" data-pack="robosystem">RoboSystem</button>
+      <button class="btn" data-pack="design">Design</button>
+      <button class="btn" data-pack="injections">Injections</button>
+    </div>
+  </div>
+  <div class="section">
+    <h3>Salvar Configuração</h3>
+    <div class="row">
+      <button class="btn ok" id="saveLocal">Salvar (localStorage)</button>
+      <button class="btn ok" id="saveIDB">Salvar (IndexedDB)</button>
+      <button class="btn warn" id="loadIDB">Carregar (IndexedDB)</button>
+      <button class="btn err" id="clearAll">Limpar tudo</button>
+    </div>
+    <p class="notice">As escolhas de packs ficam salvas. Você pode combinar com Injections e Design Fetches.</p>
+  </div>
+  <div class="footerPad"></div>
+</section>
+
+<!-- ==== PAGE: Upload HTML ==== -->
+<section id="page-html" class="page" aria-hidden="true">
+  <div class="section">
+    <h3>Upload HTML local</h3>
+    <div class="row">
+      <label class="btn ok" for="htmlInput">Selecionar HTMLs</label>
+      <input id="htmlInput" type="file" accept=".html,.htm" multiple>
+    </div>
+    <div class="kv"><div>Arquivos:</div><div id="htmlCount">0</div></div>
+  </div>
+  <div class="footerPad"></div>
+</section>
+
+<!-- ==== PAGE: Apps ==== -->
+<section id="page-apps" class="page" aria-hidden="true">
+  <div class="section">
+    <h3>Seus Apps</h3>
+    <div id="appsGrid" class="grid"></div>
+  </div>
+  <div class="footerPad"></div>
+</section>
+
+<!-- ==== PAGE: Usuário ==== -->
+<section id="page-user" class="page" aria-hidden="true">
+  <div class="section">
+    <h3>Usuário</h3>
+    <p>Nenhum detalhe definido.</p>
+  </div>
+  <div class="footerPad"></div>
+</section>
+
+<!-- ==== SHEET: APPS & ASSETS ==== -->
+<section id="sheet-apps" class="sheet" aria-hidden="true">
+  <div class="handle"></div>
+  <div class="section">
+    <h3>Upload de BG / Assets</h3>
+    <div class="row">
+      <label class="btn ok" for="bgInput">Selecionar imagem</label>
+      <input id="bgInput" type="file" accept="image/*" multiple>
+      <button class="btn" id="addPresetNeb">Preset Nebula</button>
+      <button class="btn" id="applyLastBg">Usar último</button>
+    </div>
+  </div>
+  <div class="section">
+    <h3>Seus BG & Assets</h3>
+    <div id="bgGrid" class="grid"></div>
+  </div>
+  <div class="section">
+    <h3>Navigator Icons</h3>
+    <div class="row">
+      <label class="btn ok" for="iconInput">Enviar ícones</label>
+      <input id="iconInput" type="file" accept="image/*" multiple>
+    </div>
+    <div id="iconGrid" class="grid"></div>
+  </div>
+  <div class="footerPad"></div>
+</section>
+
+<script>
+/* ========= Utilitários IndexedDB ========= */
+const idb = {
+  db: null,
+  open(){
+    return new Promise((resolve,reject)=>{
+      const req = indexedDB.open('dualstore', 1);
+      req.onupgradeneeded = (e)=>{
+        const db = e.target.result;
+        if(!db.objectStoreNames.contains('assets')){
+          const os = db.createObjectStore('assets',{keyPath:'id', autoIncrement:true});
+          os.createIndex('type','type',{unique:false});
+        }
+        if(!db.objectStoreNames.contains('kv')){
+          db.createObjectStore('kv',{keyPath:'key'});
+        }
+      };
+      req.onsuccess = (e)=>{ idb.db = e.target.result; resolve(idb.db); };
+      req.onerror = (e)=>reject(e.target.error);
+    });
+  },
+  put(store, val){
+    return new Promise((resolve,reject)=>{
+      const tx = idb.db.transaction(store,'readwrite');
+      tx.objectStore(store).put(val).onsuccess = (e)=>resolve(e.target.result);
+      tx.onerror = (e)=>reject(e.target.error);
+    });
+  },
+  getAllBy(store, indexName, query=null){
+    return new Promise((resolve,reject)=>{
+      const tx = idb.db.transaction(store,'readonly');
+      const storeObj = tx.objectStore(store);
+      const src = indexName ? storeObj.index(indexName) : storeObj;
+      const req = query ? src.getAll(query) : src.getAll();
+      req.onsuccess = ()=>resolve(req.result||[]);
+      req.onerror = (e)=>reject(e.target.error);
+    });
+  },
+  delete(store, id){
+    return new Promise((resolve,reject)=>{
+      const tx = idb.db.transaction(store,'readwrite');
+      tx.objectStore(store).delete(id).onsuccess = ()=>resolve(true);
+      tx.onerror = (e)=>reject(e.target.error);
+    });
+  }
+};
+
+/* ========= Estado ========= */
+const qs = sel => document.querySelector(sel);
+const qsa = sel => [...document.querySelectorAll(sel)];
+const body = document.body;
+const containerEl = qs('.container');
+
+const state = {
+  packs: new Set(JSON.parse(localStorage.getItem('packs')||'[]')),
+  bgApplied: null
+};
+
+const fallbackAppsData = {
+  apps: [
+    { id:'chat', name:'Chat', path:'./apps/chat/index.html' },
+    { id:'player', name:'Player', path:'./apps/player/index.html' },
+    { id:'editor', name:'Editor', path:'./apps/editor/index.html' }
+  ]
+};
+
+/* ========= Abrir folha ========= */
+qsa('.dot').forEach(d=>{
+  d.addEventListener('click', ()=>{
+    const target = d.dataset.sheet;
+    openSheet(target);
+  });
+});
+function openSheet(name){
+  // Ao abrir uma folha a partir das esferas, fechamos todas as páginas de navegação
+  qsa('.page').forEach(p=>p.classList.remove('open'));
+  // Mostrar o container principal (bolinhas) novamente
+  if(containerEl) containerEl.style.display = '';
+  // Resetar nav items ativos
+  qsa('.nav-item').forEach(item=>item.classList.remove('active'));
+  // Fechar quaisquer folhas abertas
+  qsa('.sheet').forEach(s=>s.classList.remove('open'));
+  const el = qs('#sheet-'+name);
+  if(el){ el.classList.add('open'); }
+}
+qsa('.sheet .handle').forEach(h=>{
+  h.addEventListener('click', e=> e.currentTarget.closest('.sheet').classList.toggle('open'));
+});
+
+/* ========= Packs ========= */
+qsa('[data-pack]').forEach(btn=>{
+  const key = btn.dataset.pack;
+  if(state.packs.has(key)) btn.classList.add('ok');
+  btn.addEventListener('click', ()=>{
+    if(state.packs.has(key)){
+      state.packs.delete(key);
+      btn.classList.remove('ok');
+    }else{
+      state.packs.add(key);
+      btn.classList.add('ok');
+    }
+  });
+});
+qs('#saveLocal').addEventListener('click', ()=>{
+  localStorage.setItem('packs', JSON.stringify([...state.packs]));
+  toast('Packs salvos no localStorage');
+});
+qs('#saveIDB').addEventListener('click', async ()=>{
+  await idb.open();
+  await idb.put('kv', {key:'packs', value:[...state.packs]});
+  toast('Packs salvos no IndexedDB');
+});
+qs('#loadIDB').addEventListener('click', async ()=>{
+  await idb.open();
+  const rows = await idb.getAllBy('kv');
+  const found = rows.find(r=>r.key==='packs');
+  if(found){
+    state.packs = new Set(found.value||[]);
+    qsa('[data-pack]').forEach(b=>{
+      b.classList.toggle('ok', state.packs.has(b.dataset.pack));
+    });
+    toast('Packs carregados do IndexedDB');
+  } else {
+    toast('Nenhum pack salvo no IndexedDB');
+  }
+});
+qs('#clearAll').addEventListener('click', async ()=>{
+  localStorage.clear();
+  await idb.open();
+  toast('Local limpo. (IndexedDB mantém assets até você deletar itens).');
+});
+
+/* ========= Backgrounds / Assets ========= */
+const bgGrid = qs('#bgGrid');
+qs('#bgInput').addEventListener('change', e=>{
+  const files = [...e.target.files];
+  files.forEach(saveAsset('bg'));
+});
+qs('#addPresetNeb').addEventListener('click', async ()=>{
+  const canvas = document.createElement('canvas');
+  canvas.width = 600; canvas.height = 600;
+  const ctx = canvas.getContext('2d');
+  const grd = ctx.createRadialGradient(180,180,60, 400,420,520);
+  grd.addColorStop(0,'#00ffff');
+  grd.addColorStop(1,'#ff00ff');
+  ctx.fillStyle = grd; ctx.fillRect(0,0,600,600);
+  canvas.toBlob(async blob=>{
+    await persistAsset({type:'bg', name:'Nebula Preset', blob});
+    await refreshAssets();
+    toast('Preset Nebula salvo');
+  }, 'image/png', .9);
+});
+qs('#applyLastBg').addEventListener('click', async ()=>{
+  await refreshAssets();
+  const bgs = window.assets.filter(a=>a.type==='bg');
+  if(bgs.length){ applyBackground(bgs[bgs.length-1]); }
+});
+
+function card(asset){
+  const el = document.createElement('div');
+  el.className = 'card';
+  const img = document.createElement('img');
+  img.loading = 'lazy';
+  img.alt = asset.name||'img';
+  const url = URL.createObjectURL(asset.blob);
+  img.src = url;
+  el.appendChild(img);
+  const mini = document.createElement('div');
+  mini.className='mini';
+  const use = document.createElement('button'); use.className='btn ok'; use.textContent='Usar';
+  const del = document.createElement('button'); del.className='btn err'; del.textContent='Del';
+  use.onclick = ()=>applyBackground(asset);
+  del.onclick = async ()=>{ await idb.delete('assets', asset.id); await refreshAssets(); toast('Deletado'); };
+  mini.appendChild(use); mini.appendChild(del);
+  el.appendChild(mini);
+  return el;
+}
+function applyBackground(asset){
+  const url = URL.createObjectURL(asset.blob);
+  body.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${url}') center/cover no-repeat`;
+  state.bgApplied = asset.id;
+  toast('Background aplicado');
+}
+
+/* ========= Icons / HTMLs ========= */
+const iconGrid = qs('#iconGrid');
+qs('#iconInput').addEventListener('change', e=>{
+  [...e.target.files].forEach(saveAsset('icon'));
+});
+const htmlCount = qs('#htmlCount');
+qs('#htmlInput').addEventListener('change', e=>{
+  [...e.target.files].forEach(saveAsset('html'));
+});
+
+/* ========= Persist helpers ========= */
+function saveAsset(type){
+  return async (file)=>{
+    const blob = await fileToBlob(file);
+    await persistAsset({type, name:file.name, blob});
+    await refreshAssets();
+  };
+}
+async function persistAsset(rec){
+  await idb.open();
+  await idb.put('assets', {
+    id: rec.id || undefined,
+    type: rec.type,
+    name: rec.name || (rec.type + ' ' + Date.now()),
+    blob: rec.blob,
+    createdAt: Date.now()
+  });
+}
+function fileToBlob(file){
+  return new Promise(res=>{
+    const reader = new FileReader();
+    reader.onload = ()=> res(new Blob([reader.result], {type:file.type || 'application/octet-stream'}));
+    reader.readAsArrayBuffer(file);
+  });
+}
+window.assets = [];
+async function refreshAssets(){
+  await idb.open();
+  const all = await idb.getAllBy('assets');
+  window.assets = all;
+  bgGrid.innerHTML = '';
+  iconGrid.innerHTML = '';
+  let htmls = 0;
+  all.forEach(a=>{
+    if(a.type==='bg'){ bgGrid.appendChild(card(a)); }
+    if(a.type==='icon'){
+      const el = document.createElement('div'); el.className='card';
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(a.blob); el.appendChild(img);
+      const mini = document.createElement('div'); mini.className='mini';
+      const del = document.createElement('button'); del.className='btn err'; del.textContent='Del';
+      del.onclick = async ()=>{ await idb.delete('assets', a.id); await refreshAssets(); };
+      mini.appendChild(del); el.appendChild(mini);
+      iconGrid.appendChild(el);
+    }
+    if(a.type==='html'){ htmls++; }
+  });
+  htmlCount.textContent = String(htmls);
+}
+refreshAssets();
+
+/* ========= Carregar lista de apps locais ========= */
+async function loadApps(){
+  try {
+    const res = await fetch('apps/apps.json');
+    let apps = [];
+    if(res.ok){
+      try {
+        const data = await res.json();
+        apps = data.apps || [];
+      } catch (e) {
+        apps = fallbackAppsData.apps || [];
+      }
+    } else {
+      apps = fallbackAppsData.apps || [];
+    }
+    const container = qs('#appsGrid');
+    container.innerHTML = '';
+    apps.forEach(app=>{
+      const card = document.createElement('div');
+      card.className = 'card';
+      const inner = document.createElement('div');
+      inner.style.display = 'flex';
+      inner.style.flexDirection = 'column';
+      inner.style.alignItems = 'center';
+      inner.style.justifyContent = 'center';
+      inner.style.padding = '12px';
+      const title = document.createElement('div');
+      title.style.marginBottom = '8px';
+      title.style.fontWeight = '600';
+      title.style.fontSize = '0.92rem';
+      title.style.color = '#eaf6ff';
+      title.textContent = app.name;
+      const openBtn = document.createElement('button');
+      openBtn.className = 'btn ok';
+      openBtn.textContent = 'Abrir';
+      openBtn.onclick = () => { window.location.href = app.path; };
+      inner.appendChild(title);
+      inner.appendChild(openBtn);
+      card.appendChild(inner);
+      container.appendChild(card);
+    });
+  } catch (err) {
+    console.error('Erro ao carregar apps:', err);
+    const apps = fallbackAppsData.apps || [];
+    const container = qs('#appsGrid');
+    container.innerHTML = '';
+    apps.forEach(app=>{
+      const card = document.createElement('div');
+      card.className = 'card';
+      const inner = document.createElement('div');
+      inner.style.display = 'flex';
+      inner.style.flexDirection = 'column';
+      inner.style.alignItems = 'center';
+      inner.style.justifyContent = 'center';
+      inner.style.padding = '12px';
+      const title = document.createElement('div');
+      title.style.marginBottom = '8px';
+      title.style.fontWeight = '600';
+      title.style.fontSize = '0.92rem';
+      title.style.color = '#eaf6ff';
+      title.textContent = app.name;
+      const openBtn = document.createElement('button');
+      openBtn.className = 'btn ok';
+      openBtn.textContent = 'Abrir';
+      openBtn.onclick = () => { window.location.href = app.path; };
+      inner.appendChild(title);
+      inner.appendChild(openBtn);
+      card.appendChild(inner);
+      container.appendChild(card);
+    });
+  }
+}
+
+/* ========= Estado inicial: mostrar uma bolinha que divide-se em duas ========= */
+const singleStart = qs('#singleStart');
+singleStart.addEventListener('click', ()=>{
+  singleStart.style.display = 'none';
+  const topDot = qs('.dot--top');
+  const midDot = qs('.dot--mid');
+  topDot.classList.remove('hidden');
+  midDot.classList.remove('hidden');
+});
+
+// Carregar apps no início
+loadApps();
+
+/* ========= Navegação entre páginas ========= */
+function openPage(page) {
+  // Fechar quaisquer folhas modais (packs, assets)
+  qsa('.sheet').forEach(s => s.classList.remove('open'));
+  // Mostrar ou ocultar o container principal (bolinhas)
+  if(page === 'home') {
+    if(containerEl) containerEl.style.display = '';
+  } else {
+    if(containerEl) containerEl.style.display = 'none';
+  }
+  // Ocultar todas as páginas
+  qsa('.page').forEach(p => p.classList.remove('open'));
+  // Exibir a página solicitada
+  const target = qs('#page-' + page);
+  if(target) {
+    target.classList.add('open');
+  }
+  // Atualizar estado ativo da navegação
+  qsa('.nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.page === page);
+  });
+}
+// Configurar eventos de clique nos itens de navegação
+qsa('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const page = item.dataset.page;
+    openPage(page);
+  });
+});
+
+/* ========= Toast ========= */
+let toastEl;
+function toast(msg){
+  if(!toastEl){
+    toastEl = document.createElement('div');
+    Object.assign(toastEl.style,{
+      position:'fixed', left:'50%', bottom:'calc(env(safe-area-inset-bottom) + 18px)',
+      transform:'translateX(-50%)', background:'rgba(0,0,0,.7)', color:'#eaf6ff',
+      border:'1px solid rgba(255,255,255,.2)', padding:'10px 14px', borderRadius:'12px',
+      boxShadow:'0 8px 30px rgba(0,0,0,.5)', zIndex:9999, backdropFilter:'blur(8px)', fontSize:'.92rem'
+    });
+    document.body.appendChild(toastEl);
+  }
+  toastEl.textContent = msg;
+  toastEl.style.opacity = '1';
+  clearTimeout(toastEl._t);
+  toastEl._t = setTimeout(()=>toastEl.style.opacity='0', 1800);
+}
+
+/* ========= Pull-to-close em dispositivos touch ========= */
+qsa('.sheet').forEach(sh=>{
+  let startY=0, curY=0, dragging=false;
+  sh.addEventListener('touchstart', (e)=>{
+    if(e.touches.length!==1) return;
+    startY = e.touches[0].clientY; dragging = true;
+  },{passive:true});
+  sh.addEventListener('touchmove', (e)=>{
+    if(!dragging) return;
+    curY = e.touches[0].clientY;
+    const dy = curY-startY;
+    if(dy>0){ sh.style.transform = `translateY(${dy}px)`; }
+  },{passive:true});
+  sh.addEventListener('touchend', ()=>{
+    dragging=false;
+    const dy = curY-startY;
+    sh.style.transform='';
+    if(dy>120) sh.classList.remove('open');
+  });
+});
+
+</script>
+</body>
+</html>

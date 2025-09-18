@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="nebula">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>HUB • Botão Único (Glow)</title>
+<style>
+  :root{
+    --bg:#0a0d12; --bg2:#101522; --text:#d7d7d7;
+    --grad-a:#6a62ff; --grad-b:#7b2cff; --accent:#39FFB6;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+    --glass:rgba(255,255,255,.06); --glass-b:#ffffff12; --blur:18px;
+    --radius:22px; --fast:.15s; --med:.35s; --slow:.6s;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--text); font:500 16px/1.35 "Montserrat",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background: radial-gradient(1200px 900px at 80% 10%, #1b2040 0%, var(--bg) 60%) fixed;
+  }
+
+  /* layout base */
+  .app{min-height:100%; display:grid; place-items:center; padding:20px}
+  .phone{
+    width:min(420px,95vw); height:min(780px,85vh);
+    background: linear-gradient(180deg, #20314a 0%, #28284e 100%);
+    border-radius:32px; border:2px solid #131928; box-shadow:var(--shadow);
+    position:relative; overflow:hidden;
+  }
+  .phone::after{ /* brilho leve */
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background: linear-gradient(120deg, #ffffff22 0%, #ffffff05 40%, transparent 60%);
+    mix-blend-mode:overlay;
+  }
+
+  /* botão único (FAB) */
+  .fab{
+    position:absolute; right:18px; bottom:18px; width:58px; height:58px;
+    border-radius:999px; border:1px solid #ffffff22; display:grid; place-items:center;
+    background: linear-gradient(160deg, var(--grad-a), var(--grad-b));
+    color:#fff; font-size:26px; box-shadow: 0 16px 34px #7b2cff3a, 0 6px 16px #0008;
+    transition:transform var(--fast), filter var(--fast);
+    cursor:pointer; user-select:none;
+  }
+  .fab:active{transform:translateY(1px) scale(.98)}
+  .fab .pulse{position:absolute; inset:-6px; border-radius:inherit; pointer-events:none;
+    box-shadow:0 0 0 0 #7b2cff66; animation:pulse 2s infinite;}
+  @keyframes pulse{ 0%{box-shadow:0 0 0 0 #7b2cff55} 70%{box-shadow:0 0 0 24px #7b2cff00} 100%{box-shadow:0 0 0 0 #7b2cff00}}
+
+  /* menu do botão único */
+  .menu{
+    position:absolute; right:18px; bottom:86px; display:flex; flex-direction:column; gap:10px;
+    opacity:0; transform:translateY(10px); pointer-events:none; transition:opacity var(--med), transform var(--med);
+  }
+  .menu.open{opacity:1; transform:translateY(0); pointer-events:auto}
+  .chip{
+    display:flex; align-items:center; gap:10px; min-width:180px; max-width:260px; padding:12px 14px;
+    border-radius:14px; color:#e8ecff; background:linear-gradient(160deg,#2a2f49,#1e2338);
+    border:1px solid #ffffff1f; box-shadow:var(--shadow); cursor:pointer;
+    backdrop-filter: blur(var(--blur));
+  }
+  .chip:hover{filter:brightness(1.05)}
+  .chip .dot{width:9px; height:9px; border-radius:50%; background:var(--accent); box-shadow:0 0 12px var(--accent)}
+  .chip .label{font-size:.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-inline-size:20ch}
+
+  /* overlay + iframe wrapper */
+  .overlay{position:fixed; inset:0; display:none; place-items:center; background:#0008; z-index:1000}
+  .overlay.show{display:grid; animation:fadeIn var(--slow)}
+  @keyframes fadeIn{from{opacity:0} to{opacity:1}}
+  .ifr-wrap{
+    width:min(960px,92vw); height:min(640px,80vh); border-radius:20px; overflow:hidden;
+    background:linear-gradient(180deg,#0f1425,#0b0f1a);
+    border:1px solid #ffffff1f; box-shadow: 0 28px 80px #000c;
+    position:relative; display:flex; flex-direction:column;
+  }
+  .ifr-title{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; background:linear-gradient(180deg,#131b2f,#0f1528);
+    border-bottom:1px solid #ffffff1a;
+  }
+  .title-dot{width:8px; height:8px; border-radius:50%; background:#7b2cff}
+  .title-text{font-weight:600; font-size:.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .ifr-controls{margin-left:auto; display:flex; gap:8px}
+  .ctrl{
+    width:34px; height:34px; display:grid; place-items:center; border-radius:10px; cursor:pointer;
+    background:linear-gradient(160deg,#262b42,#1d2238); border:1px solid #ffffff1a; color:#e3e7ff;
+  }
+  .ctrl:hover{filter:brightness(1.1)}
+  iframe{flex:1; border:0; background:#0a0f1b}
+
+  /* badge reabrir (aparece ao minimizar) */
+  .badge-reopen{
+    position:fixed; right:16px; bottom:90px; display:none; z-index:1001;
+    background:linear-gradient(160deg,#2f3552,#212741); padding:10px 12px; border-radius:14px; border:1px solid #ffffff22;
+    color:#dfe6ff; font-size:.9rem; box-shadow:var(--shadow); cursor:pointer;
+  }
+
+  /* helpers */
+  .hidden{display:none !important}
+  .svg-container{display:inline-flex}
+  .ellip{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+
+  /* tema swap suave */
+  html{transition:filter .6s ease}
+  html.theme-blur{filter:blur(20px)}
+  html.theme-blur.theme-on{filter:blur(0)}
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="phone" id="phone">
+      <!-- Botão Único -->
+      <button id="btnKOBLLUX" class="fab" aria-haspopup="true" aria-expanded="false" title="Ações">
+        <span>+</span><span class="pulse" aria-hidden="true"></span>
+      </button>
+
+      <!-- Menu do Botão Único -->
+      <div class="menu" id="mainMenu" role="menu" aria-label="Menu Principal">
+        <div class="chip" data-action="uno"><span class="dot"></span><span class="label">UNO</span></div>
+        <div class="chip" data-action="dual"><span class="dot"></span><span class="label">DUAL</span></div>
+        <div class="chip" data-action="trinity"><span class="dot"></span><span class="label">TRINITY</span></div>
+        <div class="chip" data-action="uploadHtml"><span class="dot"></span><span class="label ellip" title="Upload HTML (abrir no iFrame)">Upload HTML</span></div>
+        <div class="chip" data-action="uploadReact"><span class="dot"></span><span class="label ellip" title="Upload React (URL)">Upload React</span></div>
+        <div class="chip" data-action="toggleTheme"><span class="dot"></span><span class="label">Trocar Tema</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay & iFrame -->
+  <div class="overlay" id="overlay" aria-hidden="true">
+    <div class="ifr-wrap" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+      <div class="ifr-title">
+        <span class="title-dot"></span>
+        <div class="title-text ellip" id="dlgTitle">Preview</div>
+        <div class="ifr-controls">
+          <button class="ctrl" id="btnMin" title="Minimizar">—</button>
+          <button class="ctrl" id="btnMax" title="Maximizar">▢</button>
+          <button class="ctrl" id="btnPop" title="Popout">↗</button>
+          <button class="ctrl" id="btnClose" title="Fechar">✕</button>
+        </div>
+      </div>
+      <iframe id="preview" srcdoc="<html><body style='margin:0;background:#0a0f1b;color:#cfe3ff;font-family:system-ui,Segoe UI,Roboto,sans-serif;display:grid;place-items:center;height:100vh'><div style='opacity:.7'>Carregue um HTML ou abra um modo (UNO/DUAL/TRINITY)</div></body></html>"></iframe>
+    </div>
+  </div>
+
+  <!-- Badge para reabrir quando minimizado -->
+  <button class="badge-reopen" id="reopen">Reabrir Preview</button>
+
+<script>
+/* ========= ArteASC (placeholder) ========= */
+window.ArteASC = {
+  render:(n,v={})=>({
+    portal369:`╔═══🌌═══╗\n ✪ (°ロ°)☝\n 🧭 ${v.tri||'TRI'} | ${v.hz||432}hz`,
+    seal_trinity_v2:`⟐ Trinity v2\n⚡ Pulso:${v.pulso||'ON'}`
+  }[n]||'[ArteASC]')
+};
+
+/* ========= Helpers ========= */
+const $ = sel => document.querySelector(sel);
+const on = (el,ev,fn) => el.addEventListener(ev,fn);
+
+/* ========= Botão Único ========= */
+const fab = $('#btnKOBLLUX');
+const menu = $('#mainMenu');
+let menuOpen = false;
+
+function toggleMenu(state){
+  menuOpen = state ?? !menuOpen;
+  fab.setAttribute('aria-expanded', menuOpen);
+  menu.classList.toggle('open', menuOpen);
+}
+on(fab,'click',()=>toggleMenu());
+
+/* ========= Overlay / iFrame ========= */
+const overlay = $('#overlay');
+const iframe  = $('#preview');
+const dlgTitle= $('#dlgTitle');
+const btnClose= $('#btnClose');
+const btnMin  = $('#btnMin');
+const btnMax  = $('#btnMax');
+const btnPop  = $('#btnPop');
+const badge   = $('#reopen');
+
+function openOverlay(title, urlOrDoc, isUrl=false){
+  dlgTitle.textContent = title || 'Preview';
+  if(isUrl){ iframe.src = urlOrDoc; }
+  else{ iframe.removeAttribute('src'); iframe.srcdoc = urlOrDoc; }
+  overlay.classList.add('show'); overlay.setAttribute('aria-hidden','false');
+}
+function closeOverlay(){
+  overlay.classList.remove('show'); overlay.setAttribute('aria-hidden','true');
+  // limpa para evitar tocar áudio em bg
+  iframe.src = 'about:blank'; iframe.srcdoc = '';
+}
+function minimizeOverlay(){
+  overlay.classList.remove('show'); badge.style.display = 'block';
+}
+function maximizeOverlay(){
+  // efeito simples de expandir em tela cheia (toggle)
+  const wrap = overlay.querySelector('.ifr-wrap');
+  const isFull = wrap.style.width === '100vw';
+  wrap.style.width  = isFull ? 'min(960px,92vw)' : '100vw';
+  wrap.style.height = isFull ? 'min(640px,80vh)' : '100vh';
+  wrap.style.borderRadius = isFull ? '20px' : '0';
+}
+on(btnClose, 'click', closeOverlay);
+on(btnMin,   'click', minimizeOverlay);
+on(btnMax,   'click', maximizeOverlay);
+on(btnPop,   'click', ()=> { try{ window.open(iframe.src || 'about:blank','_blank'); }catch(e){} });
+on(overlay,  'click', e=>{ if(e.target===overlay) closeOverlay(); });
+on(document, 'keydown', e=>{ if(e.key==='Escape') { if(menuOpen) toggleMenu(false); if(overlay.classList.contains('show')) closeOverlay(); } });
+on(badge,    'click', ()=>{ overlay.classList.add('show'); badge.style.display='none'; });
+
+/* ========= Ações do Menu ========= */
+const htmlTemplate = (title, body) => `
+<!doctype html><html lang='pt-BR'><head>
+<meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
+<title>${title}</title>
+<style>
+  body{margin:0;background:linear-gradient(180deg,#0b1020,#090d19);color:#e5eaff;font:500 16px/1.45 system-ui,Segoe UI,Roboto,sans-serif;display:grid;place-items:center;height:100vh}
+  .card{background:#131a2b;border:1px solid #ffffff22;border-radius:16px;padding:26px 22px;box-shadow:0 14px 40px #0008;max-width:640px}
+  h1{margin:0 0 10px;font:700 1.2rem/1.2 system-ui}
+  p{opacity:.9;margin:0}
+</style></head><body>
+  <div class="card">
+    <h1>${title}</h1>
+    <p>${body}</p>
+  </div>
+</body></html>`;
+
+const handlers = {
+  uno(){
+    const seal = window.ArteASC.render('portal369',{tri:'UNO',hz:528});
+    openOverlay('UNO Mode', htmlTemplate('UNO', 'Modo UNO ativo. '+seal));
+  },
+  dual(){
+    const seal = window.ArteASC.render('portal369',{tri:'DUAL',hz:432});
+    openOverlay('DUAL Mode', htmlTemplate('DUAL', 'Modo DUAL ativo. '+seal));
+  },
+  trinity(){
+    const seal = window.ArteASC.render('seal_trinity_v2',{pulso:'∞'});
+    openOverlay('TRINITY Mode', htmlTemplate('TRINITY', 'Modo TRINITY ativo. '+seal));
+  },
+  uploadHtml(){
+    // abre um file picker e injeta no iframe
+    const input = Object.assign(document.createElement('input'),{type:'file',accept:'.html,text/html'});
+    input.onchange = async () => {
+      const file = input.files?.[0]; if(!file) return;
+      const text = await file.text();
+      openOverlay(file.name, text, false);
+    };
+    input.click();
+  },
+  uploadReact(){
+    // pede uma URL de build (ex: /index.html) e abre em pop-in
+    const url = prompt('Cole a URL do seu build React/SPA:');
+    if(url) openOverlay('React Preview', url, true);
+  },
+  toggleTheme(){
+    // troca data-theme com transição suave
+    const html = document.documentElement;
+    html.classList.add('theme-blur');
+    const themes = ['nebula','matrix','cyberpunk','tesseract','turbo'];
+    const cur = themes.indexOf(html.getAttribute('data-theme'));
+    const next = themes[(cur+1)%themes.length] || 'nebula';
+    html.setAttribute('data-theme', next);
+    requestAnimationFrame(()=>html.classList.add('theme-on'));
+    setTimeout(()=>html.classList.remove('theme-blur','theme-on'), 650);
+  }
+};
+
+menu.querySelectorAll('.chip').forEach(chip=>{
+  on(chip,'click',()=>{
+    const act = chip.dataset.action;
+    toggleMenu(false);
+    handlers[act]?.();
+  });
+});
+
+/* acessibilidade: fecha menu com blur fora do phone */
+on(document,'click',e=>{
+  const inside = e.target.closest('#phone');
+  if(!inside && menuOpen) toggleMenu(false);
+});
+</script>
+</body>
+</html>
