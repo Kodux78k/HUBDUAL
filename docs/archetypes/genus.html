@@ -1,0 +1,28 @@
+<!doctype html><meta charset="utf-8"><title>Ritual Genus</title>
+<style>
+  :root{ --acc:#7cf2ff; --acc2:#b0ffa6; --ok:#ffd27c; --speed:5.2s; }
+  html,body{height:100%}
+  body{margin:0;background:#0a0b13;color:#ecf0ff;font:16px/1.4 system-ui;overflow:hidden}
+  .stage{position:fixed;inset:0;display:grid;place-items:center;contain:paint}
+  .core{width:260px;height:260px;border-radius:50%;position:relative;
+        background:radial-gradient(circle at 30% 30%, var(--ok), var(--acc) 60%, transparent 62%),
+                   conic-gradient(var(--acc), var(--acc2), var(--ok), var(--acc));
+        filter:drop-shadow(0 0 24px var(--acc)) drop-shadow(0 0 42px var(--acc2));
+        animation:spin var(--speed) linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .p{position:absolute; width:8px;height:8px; border-radius:50%; background:var(--ok); opacity:.9}
+  .p:nth-child(odd){ background:var(--acc2) }
+  .label{position:fixed; inset:auto 0 22px; text-align:center; opacity:.75}
+
+  .fx-flare .core{ animation: spin var(--speed) linear infinite, flare 2.5s ease-in-out infinite }
+  @keyframes flare{ 0%{filter:drop-shadow(0 0 18px var(--acc))} 50%{filter:drop-shadow(0 0 36px var(--acc2))} 100%{filter:drop-shadow(0 0 18px var(--acc))} }
+  .fx-iris .core{ box-shadow: inset 0 0 40px #000; background:
+     radial-gradient(circle at 50% 50%, #0006 0% 20%, transparent 20%),
+     conic-gradient(var(--acc), var(--acc2), var(--ok), var(--acc)); }
+  .fx-warp .p{ animation: warp 2.8s ease-in-out infinite }
+  @keyframes warp{0%{transform:translate(0,0) scale(.7)}50%{transform:translate(24px,-24px) scale(1.1)}100%{transform:translate(0,0) scale(.7)}}
+</style>
+<div class="stage fx-warp">
+  <div class="core"></div>
+</div>
+<div class="label">Ritual • Genus</div>
