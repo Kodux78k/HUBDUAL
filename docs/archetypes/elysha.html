@@ -26,3 +26,34 @@
   <div class="core"></div>
 </div>
 <div class="label">Ritual • Elysha</div>
+
+
+<script>
+// Added interactive features: cycle animation effects and speak description.
+(function(){
+  const archetypes = {"luxara": {"desc": "Luxara incentiva você a energizar sua luz interior e harmonizar opostos.", "tips": ["Explore novas perspectivas com curiosidade.", "Use sua luz para iluminar desafios ao seu redor.", "Procure equilíbrio entre ação e reflexão."], "effects": ["fx-flare", "fx-iris", "fx-warp", "fx-fade"]}, "aion": {"desc": "Aion convida à contemplação do tempo, ciclos e ritmos pessoais.", "tips": ["Reserve momentos para refletir sobre suas jornadas.", "Sincronize metas com o ritmo natural do seu corpo.", "Valorize cada segundo – a percepção de tempo é flexível."], "effects": ["fx-iris", "fx-warp", "fx-flare", "fx-fade"]}, "atlas": {"desc": "Atlas inspira planejamento, estrutura e construção de caminhos.", "tips": ["Divida objetivos grandes em ações menores e alcançáveis.", "Mapa mental: desenhe as etapas de sua próxima conquista.", "Reflita sobre o que sustenta suas responsabilidades."], "effects": ["fx-warp", "fx-flare", "fx-iris", "fx-fade"]}, "nova": {"desc": "Nova incentiva a geração de ideias e conexões criativas.", "tips": ["Escreva uma lista de dez ideias sem julgá-las.", "Assista ou leia algo fora da sua área para ter insights.", "Combine conceitos distantes para inovar."], "effects": ["fx-fade", "fx-flare", "fx-iris", "fx-warp"]}, "genus": {"desc": "Genus lembra você de explorar origens, identidade e propósito.", "tips": ["Reflita sobre sua história e como ela molda seus objetivos.", "Converse com alguém sobre heranças culturais.", "Escreva um manifesto pessoal de valores."], "effects": ["fx-iris", "fx-flare", "fx-warp", "fx-fade"]}, "rhea": {"desc": "Rhea destaca o cuidado, a nutrição e a conexão com o coletivo.", "tips": ["Pratique um ato de gentileza hoje.", "Cuidar de si é fundamental para cuidar dos outros.", "Construa redes de apoio mútuo."], "effects": ["fx-fade", "fx-iris", "fx-flare", "fx-warp"]}, "elysha": {"desc": "Elysha desperta intuições e estimula insights criativos.", "tips": ["Medite por cinco minutos em silêncio.", "Faça um desenho livre sem objetivo definido.", "Confie no primeiro pensamento que surgir."], "effects": ["fx-flare", "fx-fade", "fx-iris", "fx-warp"]}, "horus": {"desc": "Horus simboliza visão, proteção e perspectiva ampla.", "tips": ["Observe seu dia de cima, como um pássaro.", "Planeje estratégias levando em conta o longo prazo.", "Proteja seus projetos definindo limites claros."], "effects": ["fx-iris", "fx-flare", "fx-warp", "fx-fade"]}, "kaion": {"desc": "Kaion harmoniza equilíbrio e transformação constante.", "tips": ["Reconheça ciclos em sua vida e abrace mudanças.", "Equilibre obrigações e prazeres de maneira saudável.", "Pratique flexibilidade frente ao inesperado."], "effects": ["fx-warp", "fx-iris", "fx-flare", "fx-fade"]}, "kaos": {"desc": "Kaos incentiva a abraçar a desordem como fonte de criatividade.", "tips": ["Liberte-se de rotinas rígidas por um dia.", "Transforme erros em oportunidades de aprendizado.", "Experimente algo que te tire da zona de conforto."], "effects": ["fx-warp", "fx-flare", "fx-iris", "fx-fade"]}, "ignyra": {"desc": "Ignyra acende paixão, energia e impulso criativo.", "tips": ["Defina uma meta ousada e dê o primeiro passo agora.", "Pratique um exercício físico breve para energizar-se.", "Concentre-se no que te faz vibrar."], "effects": ["fx-flare", "fx-warp", "fx-iris", "fx-fade"]}, "lumine": {"desc": "Lumine traz claridade, otimismo e iluminação pessoal.", "tips": ["Liste três coisas pelas quais você é grato hoje.", "Abra as janelas e deixe a luz entrar.", "Ilumine o caminho de alguém com um elogio sincero."], "effects": ["fx-flare", "fx-fade", "fx-iris", "fx-warp"]}};
+  const name = (document.title.replace(/Ritual\s+/i,'') || '').trim().toLowerCase();
+  const stage = document.querySelector('.stage');
+  const label = document.querySelector('.label');
+  if(!stage || !label) return;
+  const data = archetypes[name] || {desc:'',tips:[],effects:['fx-flare','fx-iris','fx-warp','fx-fade']};
+  const tip = data.tips.length ? data.tips[Math.floor(Math.random()*data.tips.length)] : '';
+  label.textContent = label.textContent + (tip ? ' — '+tip : '');
+  let idx = 0;
+  stage.addEventListener('click',()=>{
+    data.effects.forEach(cls=> stage.classList.remove(cls));
+    idx = (idx + 1) % data.effects.length;
+    stage.classList.add(data.effects[idx]);
+  });
+  label.style.cursor = 'pointer';
+  label.addEventListener('click',()=>{
+    try{
+      const u = new SpeechSynthesisUtterance(data.desc);
+      const voices = speechSynthesis.getVoices().filter(v=>v.lang.startsWith('pt')||v.lang.startsWith('en'));
+      if(voices.length) u.voice = voices[0];
+      speechSynthesis.cancel();
+      speechSynthesis.speak(u);
+    }catch(e){}
+  });
+})();
+</script>
