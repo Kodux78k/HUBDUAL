@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UNO Minimal – Áudio e Temas</title>
+<style>
+  /* Base timing tokens */
+  :root {
+    --duration-fast: .15s;
+    --duration-med: .35s;
+    --duration-slow: .6s;
+    /* Fallback palette */
+    --bg1: #0a0d12;
+    --bg2: #101522;
+    --text: #d7d7d7;
+    --accent: #7b2cff;
+    --accent-rgb: 123, 44, 255;
+    --shadow: 0 10px 30px rgba(0,0,0,.35);
+    --blur: 20px;
+    --radius: 20px;
+  }
+  /* Note: theme definitions removed.  Themes are now defined in JavaScript via the THEMES object.
+     Colours are controlled through CSS variables (--bg1, --bg2, --text, --accent, --accent-rgb).
+     See the <script> section for details. */
+  body {
+    margin: 0;
+    background: radial-gradient(120% 80% at 50% 0%, var(--bg2) 0%, var(--bg1) 100%);
+    color: var(--text);
+    font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  /* Central archetype circle */
+  #circleWrapper {
+    position: relative;
+    width: min(80vw, 500px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.15);
+    overflow: hidden;
+    background: radial-gradient(circle at center, rgba(255,255,255,.05), rgba(255,255,255,.02) 70%);
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .3s ease;
+    /* CSS variable that the audio analyser updates (0–1) */
+    --pulse: 0;
+  }
+  /* Pulsating overlay based on audio */
+  #circleWrapper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at center,
+      rgba(var(--accent-rgb), calc(var(--pulse) * 0.6)) 0%,
+      rgba(var(--accent-rgb), 0) 70%);
+    pointer-events: none;
+    transition: background .1s linear;
+  }
+  #circleWrapper iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    /* Disable pointer events so clicks fall through to the wrapper (opens menu) */
+    pointer-events: none;
+  }
+  /* Dot logo in the circle */
+  #dotLogo {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: conic-gradient(var(--accent), var(--accent) 30%, rgba(255,255,255,.2));
+    box-shadow: 0 0 10px rgba(255,255,255,.4);
+    pointer-events: none;
+  }
+  /* Archetype switch buttons */
+  #archControls {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+  }
+  #archControls button {
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.18);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background var(--duration-fast), transform var(--duration-fast);
+    backdrop-filter: blur(var(--blur));
+  }
+  #archControls button:hover { background: rgba(255,255,255,.12); }
+  #archControls button:active { transform: scale(.95); }
+  /* Removed Floating Action Button (FAB) styles.
+     The central archetype circle now toggles the menu. */
+  /* Menu container now positions itself relative to the archetype circle via JS. */
+  #menu {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    opacity: 0;
+    /* Give menu a slight downward offset so it fades in nicely.  The translate is reset when the menu opens. */
+    transform: translateY(10px);
+    pointer-events: none;
+    transition: opacity var(--duration-med), transform var(--duration-med);
+    z-index: 100;
+  }
+  #menu.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .menu-item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    /* Fix menu width so long labels don't stretch it */
+    width: 230px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.18);
+    color: var(--text);
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(var(--blur));
+    font-size: 14px;
+    font-weight: 600;
+    transition: background var(--duration-fast);
+  }
+  .menu-item:hover {
+    background: rgba(255,255,255,.08);
+  }
+  /* Ensure the text within menu items wraps instead of forcing the container wider */
+  .menu-item span:last-child {
+    flex: 1;
+    white-space: normal;
+    word-break: break-word;
+  }
+  .menu-item .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  /* Icon element preceding menu labels */
+  .menu-item .icon {
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+  }
+  /* Highlight audio-on state */
+  .menu-item.audio-on {
+    background: rgba(255,255,255,.12);
+  }
+  /* Theme group inside menu */
+  #themeItem { display: flex; align-items: center; gap: 10px; }
+  #themeGroup {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    max-width: 220px;
+  }
+  .theme-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.25);
+    cursor: pointer;
+  }
+
+  /* Highlight currently selected theme swatch */
+  .theme-swatch.active {
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.8);
+    border-color: var(--accent);
+  }
+  .swatch-nebula { background: linear-gradient(135deg,#151d38,#3c0d4d); }
+  .swatch-medium { background: linear-gradient(135deg,#2e324a,#57607d); }
+  .swatch-light { background: linear-gradient(135deg,#e2e8f0,#cbd5e1); }
+  /* Additional theme swatches (12 total presets) */
+  .swatch-sunset { background: linear-gradient(135deg,#372322,#9b4d32); }
+  .swatch-ocean { background: linear-gradient(135deg,#002e4d,#007ba7); }
+  .swatch-forest { background: linear-gradient(135deg,#1a2d1a,#2b5537); }
+  .swatch-sunrise { background: linear-gradient(135deg,#fdf2d0,#f6a367); }
+  .swatch-rose { background: linear-gradient(135deg,#362432,#9d4b6c); }
+  .swatch-violet { background: linear-gradient(135deg,#2d2140,#683ca2); }
+  .swatch-cyan { background: linear-gradient(135deg,#00383d,#008ca9); }
+  .swatch-lime { background: linear-gradient(135deg,#213823,#5f7f1a); }
+  .swatch-orange { background: linear-gradient(135deg,#332417,#b55e22); }
+  /* Fractal overlay */
+  #overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    display: none;
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #overlay.show {
+    display: flex;
+    animation: fadeIn var(--duration-slow);
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  #overlayContent {
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: rgba(15,17,32,.75);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+    color: var(--text);
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+    line-height: 1.4;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+  <!-- Central archetype circle and controls -->
+  <div id="circleWrapper">
+    <iframe id="archFrame" srcdoc="<html><body style='margin:0;display:flex;align-items:center;justify-content:center;height:100%;background:transparent;color:#fff;font-family:sans-serif;'><div style='text-align:center;font-size:18px;opacity:.7'>Carregue um arquétipo<br/>ou escolha no menu</div></body></html>"></iframe>
+    <div id="dotLogo"></div>
+    <div id="archControls">
+      <button id="prevArch" title="Anterior">◀</button>
+      <button id="nextArch" title="Próximo">▶</button>
+    </div>
+  </div>
+  <!-- Floating action button to toggle menu -->
+  <!-- Note: Floating action button removed. The central circle toggles the menu. -->
+  <!-- Menu with actions -->
+  <div id="menu">
+    <!-- Core fractal options with icons -->
+    <div class="menu-item" data-action="uno">
+      <span class="icon">①</span>
+      <span class="dot"></span>
+      <span>UNO</span>
+    </div>
+    <div class="menu-item" data-action="dual">
+      <span class="icon">②</span>
+      <span class="dot"></span>
+      <span>DUAL</span>
+    </div>
+    <div class="menu-item" data-action="trinity">
+      <span class="icon">③</span>
+      <span class="dot"></span>
+      <span>TRINITY</span>
+    </div>
+    <!-- Upload actions with icons -->
+    <div class="menu-item" data-action="upload-html">
+      <span class="icon">📄</span>
+      <span class="dot"></span>
+      <span>Upload HTML</span>
+      <input type="file" id="uploadHtmlInput" accept=".html,text/html" style="display:none;" />
+    </div>
+    <div class="menu-item" data-action="upload-bg">
+      <span class="icon">🖼️</span>
+      <span class="dot"></span>
+      <span>Upload Background</span>
+      <input type="file" id="uploadBgInput" accept="image/*" style="display:none;" />
+    </div>
+    <div class="menu-item" data-action="upload-css">
+      <span class="icon">🎨</span>
+      <span class="dot"></span>
+      <span>Upload CSS</span>
+      <input type="file" id="uploadCssInput" accept=".css,text/css" style="display:none;" />
+    </div>
+    <!-- Feature toggle & training with icons -->
+    <div class="menu-item" data-action="activations">
+      <span class="icon">⚙️</span>
+      <span class="dot"></span>
+      <span>Ativações</span>
+    </div>
+    <div class="menu-item" data-action="trainings">
+      <span class="icon">✨</span>
+      <span class="dot"></span>
+      <span>Treinamentos</span>
+    </div>
+    <!-- Reset visual customization -->
+    <div class="menu-item" data-action="reset-visual">
+      <span class="icon">🧹</span>
+      <span class="dot"></span>
+      <span>Resetar Visual</span>
+    </div>
+    <!-- Theme picker -->
+    <div class="menu-item" id="themeItem">
+      <span>Temas:</span>
+      <div id="themeGroup">
+        <div class="theme-swatch swatch-nebula" data-theme="nebula" title="Nebula"></div>
+        <div class="theme-swatch swatch-medium" data-theme="medium" title="Medium"></div>
+        <div class="theme-swatch swatch-light" data-theme="light" title="Light"></div>
+        <div class="theme-swatch swatch-sunset" data-theme="sunset" title="Sunset"></div>
+        <div class="theme-swatch swatch-ocean" data-theme="ocean" title="Ocean"></div>
+        <div class="theme-swatch swatch-forest" data-theme="forest" title="Forest"></div>
+        <div class="theme-swatch swatch-sunrise" data-theme="sunrise" title="Sunrise"></div>
+        <div class="theme-swatch swatch-rose" data-theme="rose" title="Rose"></div>
+        <div class="theme-swatch swatch-violet" data-theme="violet" title="Violet"></div>
+        <div class="theme-swatch swatch-cyan" data-theme="cyan" title="Cyan"></div>
+        <div class="theme-swatch swatch-lime" data-theme="lime" title="Lime"></div>
+        <div class="theme-swatch swatch-orange" data-theme="orange" title="Orange"></div>
+      </div>
+    </div>
+  </div>
+  <!-- Fractal overlay -->
+  <div id="overlay">
+    <div id="overlayContent"></div>
+  </div>
+  <script>
+  (function(){
+    /* Archetypes available (files relative to this HTML) */
+    const ARCH = ['hub_dual_variant_b_truncado.html','unificado_universal.html','unificado_7.html'];
+    let currentArch = 0;
+    const archFrame = document.getElementById('archFrame');
+    const circleWrapper = document.getElementById('circleWrapper');
+    // Floating action button removed; use circleWrapper instead
+    const menu = document.getElementById('menu');
+    const overlay = document.getElementById('overlay');
+    const overlayContent = document.getElementById('overlayContent');
+    let menuOpen = false;
+    let audioMode = false;
+    let audioCtx, analyser, microphone;
+
+    // Reference to any custom style element injected via CSS upload
+    let customStyleElement = null;
+    /* Theme definitions.  Each theme defines a palette used to set CSS variables. */
+    const THEMES = {
+      nebula:  { bg1: '#0a0d12', bg2: '#101522', text: '#d7d7d7', accent: '#7b2cff' },
+      medium:  { bg1: '#1c1e24', bg2: '#282a36', text: '#e5e5e5', accent: '#39ffb6' },
+      light:   { bg1: '#f1f4f8', bg2: '#e5edf5', text: '#2b3050', accent: '#6a62ff' },
+      sunset:  { bg1: '#372322', bg2: '#552e24', text: '#f5e9e6', accent: '#ff6e40' },
+      ocean:   { bg1: '#002e4d', bg2: '#014e78', text: '#d0e8f2', accent: '#00bfff' },
+      forest:  { bg1: '#0d2512', bg2: '#154323', text: '#d6e7d7', accent: '#31a24c' },
+      sunrise: { bg1: '#fff4e5', bg2: '#ffe7c3', text: '#5a3e2a', accent: '#ffa726' },
+      rose:    { bg1: '#362432', bg2: '#50324b', text: '#f3e5ee', accent: '#d64e78' },
+      violet:  { bg1: '#2d2140', bg2: '#432f5e', text: '#eadef5', accent: '#a867e8' },
+      cyan:    { bg1: '#00383d', bg2: '#005b6b', text: '#d0f3f6', accent: '#00bcd4' },
+      lime:    { bg1: '#213823', bg2: '#355c2d', text: '#e1f6d8', accent: '#b6ff00' },
+      orange:  { bg1: '#332417', bg2: '#56351f', text: '#f9e8d5', accent: '#ff874a' }
+    };
+    /* Initialize state from localStorage */
+    function initState(){
+      const savedTheme = localStorage.getItem('unoTheme');
+      // Apply the saved theme or default to nebula so the active swatch highlights correctly
+      setTheme(savedTheme || 'nebula', false);
+      const savedIndex = parseInt(localStorage.getItem('unoArch')||'0',10);
+      if(!isNaN(savedIndex) && savedIndex >= 0 && savedIndex < ARCH.length){ currentArch = savedIndex; }
+      loadArch(currentArch);
+      const savedAudio = localStorage.getItem('unoAudio');
+      if(savedAudio === 'on'){ enableAudio(); }
+    }
+    /* Load an archetype by index */
+    function loadArch(idx){
+      currentArch = (idx + ARCH.length) % ARCH.length;
+      localStorage.setItem('unoArch', String(currentArch));
+      const file = ARCH[currentArch];
+      /* Directly assign the src. When opened via file:// protocol the fetch API may be blocked,
+         so we simply set the iframe's src. If the file cannot be loaded the iframe will show blank. */
+      archFrame.src = file;
+      archFrame.removeAttribute('srcdoc');
+    }
+    document.getElementById('prevArch').addEventListener('click', ()=>loadArch(currentArch - 1));
+    document.getElementById('nextArch').addEventListener('click', ()=>loadArch(currentArch + 1));
+    /* Menu toggle: click on the central circle toggles the menu */
+    circleWrapper.addEventListener('click', (ev)=>{
+      // Ignore clicks on archetype navigation buttons so they don't open the menu
+      if(ev.target.closest('#archControls')) return;
+      toggleMenu();
+    });
+    /* Menu actions handler */
+    menu.addEventListener('click', (ev)=>{
+      const target = ev.target.closest('.menu-item, .theme-swatch');
+      if(!target) return;
+      const action = target.getAttribute('data-action');
+      if(action){
+        if(action === 'uno'){
+          showAscii('UNO');
+          toggleMenu(false);
+        }
+        else if(action === 'dual'){
+          showAscii('DUAL');
+          toggleMenu(false);
+        }
+        else if(action === 'trinity'){
+          showAscii('TRINITY');
+          toggleMenu(false);
+        }
+        else if(action === 'upload-html'){
+          document.getElementById('uploadHtmlInput').click();
+        }
+        else if(action === 'upload-bg'){
+          document.getElementById('uploadBgInput').click();
+        }
+        else if(action === 'upload-css'){
+          document.getElementById('uploadCssInput').click();
+        }
+        else if(action === 'activations'){
+          showActivations();
+        }
+        else if(action === 'trainings'){
+          showTrainings();
+        }
+        else if(action === 'reset-visual'){
+          resetVisual();
+          toggleMenu(false);
+        }
+      } else {
+        const theme = target.getAttribute('data-theme');
+        if(theme){
+          setTheme(theme, true);
+          toggleMenu(false);
+        }
+      }
+    });
+    function toggleMenu(state){
+      menuOpen = (state !== undefined) ? state : !menuOpen;
+      menu.classList.toggle('open', menuOpen);
+
+      // When opening the menu, calculate and set its position relative to the circle
+      if(menuOpen){
+        positionMenu();
+      }
+    }
+
+    /* Position the menu to the right of the circle and vertically centered */
+    function positionMenu(){
+      // Compute bounding rectangle of the circle and menu dimensions
+      const rect = circleWrapper.getBoundingClientRect();
+      const menuHeight = menu.offsetHeight || 0;
+      const menuWidth = menu.offsetWidth || 0;
+      // Position menu horizontally centered relative to the circle and below it
+      const top = rect.bottom + window.scrollY + 20;
+      const left = rect.left + window.scrollX + (rect.width - menuWidth) / 2;
+      menu.style.top = `${top}px`;
+      menu.style.left = `${left}px`;
+    }
+    /* Show ASCII fractal for UNO, DUAL, TRINITY */
+    function showAscii(mode){
+      const art = ascii369(mode);
+      overlayContent.textContent = art;
+      overlay.classList.add('show');
+      // Clicking anywhere hides overlay
+      overlay.addEventListener('click', hideOverlay, { once: true });
+    }
+    function hideOverlay(){ overlay.classList.remove('show'); }
+    /* Show Activations overlay: toggles for features */
+    function showActivations(){
+      // Build simple toggles for features (currently only audio)
+      overlayContent.innerHTML = '';
+      const wrapper = document.createElement('div');
+      wrapper.style.display = 'flex';
+      wrapper.style.flexDirection = 'column';
+      wrapper.style.gap = '12px';
+      wrapper.style.padding = '10px';
+      wrapper.style.maxWidth = '400px';
+      const title = document.createElement('h3');
+      title.textContent = 'Ativações';
+      title.style.margin = '0 0 10px 0';
+      title.style.fontSize = '18px';
+      title.style.color = 'var(--text)';
+      wrapper.appendChild(title);
+      // Audio toggle
+      const audioRow = document.createElement('label');
+      audioRow.style.display = 'flex';
+      audioRow.style.alignItems = 'center';
+      audioRow.style.gap = '10px';
+      audioRow.style.cursor = 'pointer';
+      const audioInput = document.createElement('input');
+      audioInput.type = 'checkbox';
+      audioInput.checked = audioMode;
+      audioInput.addEventListener('change', () => {
+        if(audioInput.checked) enableAudio(); else disableAudio();
+      });
+      const audioText = document.createElement('span');
+      audioText.textContent = 'Áudio';
+      audioRow.appendChild(audioInput);
+      audioRow.appendChild(audioText);
+      wrapper.appendChild(audioRow);
+      overlayContent.appendChild(wrapper);
+      overlay.classList.add('show');
+      overlay.addEventListener('click', hideOverlay, { once: true });
+    }
+    /* Show Trainings overlay: fractal pattern for meditation */
+    function showTrainings(){
+      overlayContent.textContent = ascii369('TRAIN');
+      overlay.classList.add('show');
+      overlay.addEventListener('click', hideOverlay, { once: true });
+    }
+    /* Generate a simple repeating fractal pattern (supports TRAIN type) */
+    function ascii369(type){
+      const base = type === 'DUAL' ? '●○' : type === 'TRINITY' ? '▲▼' : '●';
+      const lines = [];
+      for(let i=0; i<16; i++){
+        let line = '';
+        for(let j=0; j<14; j++){
+          line += base[(i + j) % base.length] + ' ';
+        }
+        lines.push(line.trim());
+      }
+      return lines.join('\n');
+    }
+    /* Theme switching: applies variables from THEMES and persists selection */
+    function setTheme(name, persist){
+      const theme = THEMES[name];
+      if(!theme) return;
+      const root = document.documentElement;
+      root.style.setProperty('--bg1', theme.bg1);
+      root.style.setProperty('--bg2', theme.bg2);
+      root.style.setProperty('--text', theme.text);
+      root.style.setProperty('--accent', theme.accent);
+      // Convert hex accent to rgb for accent-rgb
+      const hex = theme.accent.replace('#','');
+      const r = parseInt(hex.substring(0,2),16);
+      const g = parseInt(hex.substring(2,4),16);
+      const b = parseInt(hex.substring(4,6),16);
+      root.style.setProperty('--accent-rgb', `${r},${g},${b}`);
+      if(persist) localStorage.setItem('unoTheme', name);
+
+      // Update active swatch highlight
+      document.querySelectorAll('.theme-swatch').forEach(s => {
+        if(s.getAttribute('data-theme') === name){
+          s.classList.add('active');
+        } else {
+          s.classList.remove('active');
+        }
+      });
+    }
+
+    /* Reset custom visual modifications: background image, injected CSS and custom archetype */
+    function resetVisual(){
+      // Clear custom background image
+      document.body.style.backgroundImage = '';
+      document.body.style.backgroundSize = '';
+      document.body.style.backgroundPosition = '';
+      document.body.style.backgroundRepeat = '';
+      // Remove injected CSS if present
+      if(customStyleElement && customStyleElement.parentNode){
+        customStyleElement.parentNode.removeChild(customStyleElement);
+        customStyleElement = null;
+      }
+      // If a custom archetype is loaded (index -1), reload the first archetype
+      if(currentArch === -1){
+        loadArch(0);
+      }
+    }
+    /* Audio toggling */
+    function enableAudio(){
+      audioMode = true;
+      localStorage.setItem('unoAudio','on');
+      // Update toggles in activations overlay (if open) via checkbox state
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream=>{
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        microphone = audioCtx.createMediaStreamSource(stream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        microphone.connect(analyser);
+        processAudio();
+      }).catch(err=>{
+        console.warn('Erro ao acessar microfone', err);
+      });
+    }
+    function disableAudio(){
+      audioMode = false;
+      localStorage.setItem('unoAudio','off');
+      // Update toggles in activations overlay (if open)
+      if(analyser){ analyser.disconnect(); analyser = null; }
+      if(microphone){ microphone.disconnect(); microphone = null; }
+      if(audioCtx){ audioCtx.close(); audioCtx = null; }
+      circleWrapper.style.setProperty('--pulse', 0);
+    }
+    function toggleAudio(){
+      if(audioMode){ disableAudio(); }
+      else { enableAudio(); }
+    }
+    function processAudio(){
+      if(!audioMode || !analyser) return;
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      const loop = () => {
+        if(!audioMode) return;
+        analyser.getByteTimeDomainData(dataArray);
+        let sum = 0;
+        for(let i=0; i<dataArray.length; i++){
+          const v = (dataArray[i] - 128) / 128;
+          sum += v * v;
+        }
+        const rms = Math.sqrt(sum / dataArray.length);
+        // Map RMS amplitude to 0–1 scale (scaling factor for visual effect)
+        const pulse = Math.min(Math.max(rms * 3, 0), 1);
+        circleWrapper.style.setProperty('--pulse', pulse.toString());
+        requestAnimationFrame(loop);
+      };
+      requestAnimationFrame(loop);
+    }
+
+    /* File upload handlers */
+    // Handle uploading an HTML file as a new archetype
+    document.getElementById('uploadHtmlInput').addEventListener('change', function(){
+      const file = this.files && this.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const contents = e.target.result;
+        // Load the uploaded HTML directly into the iframe via srcdoc for security
+        archFrame.srcdoc = contents;
+        archFrame.removeAttribute('src');
+        // Mark as custom archetype
+        currentArch = -1;
+        toggleMenu(false);
+      };
+      reader.readAsText(file);
+    });
+    // Handle uploading a background image
+    document.getElementById('uploadBgInput').addEventListener('change', function(){
+      const file = this.files && this.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const dataUrl = e.target.result;
+        document.body.style.backgroundImage = `url('${dataUrl}')`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        document.body.style.backgroundRepeat = 'no-repeat';
+      };
+      reader.readAsDataURL(file);
+      toggleMenu(false);
+    });
+    // Handle uploading CSS injection
+    document.getElementById('uploadCssInput').addEventListener('change', function(){
+      const file = this.files && this.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        // Remove previously injected style if it exists
+        if(customStyleElement && customStyleElement.parentNode){
+          customStyleElement.parentNode.removeChild(customStyleElement);
+        }
+        const style = document.createElement('style');
+        style.textContent = e.target.result;
+        customStyleElement = style;
+        document.head.appendChild(style);
+      };
+      reader.readAsText(file);
+      toggleMenu(false);
+    });
+    /* Initialize on load */
+    initState();
+
+    // Reposition menu on window resize
+    window.addEventListener('resize', () => {
+      if(menuOpen){ positionMenu(); }
+    });
+  })();
+  </script>
+</body>
+</html>

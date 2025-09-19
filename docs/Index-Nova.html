@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="nebula">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Arquétipo • Nova – Criadora</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      /* Paleta Glow / Infodose */
+      --grad-a:#00d8d8; --grad-b:#d800d8; --text:#d7d7d7; --accent:#39FFB6;
+      --ok:#00ffff; --warn:#FFC857; --err:#FF5C8A; --muted:#A8B0C0;
+      --glass: rgba(255,255,255,.06);
+      --glass-bd: rgba(255,255,255,.12);
+      --blur:24px;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--text);
+      font:15px/1.5 'Montserrat',system-ui;
+      background:
+        radial-gradient(60% 60% at 20% 10%, rgba(0,216,216,.25), transparent 60%),
+        radial-gradient(50% 50% at 80% 10%, rgba(216,0,216,.18), transparent 60%),
+        linear-gradient(180deg,#0f1b2a 0%, #0a0b13 100%);
+      overflow:hidden;
+    }
+
+    /* Layout base (home + nav) */
+    #app{position:relative; height:100%; display:flex; flex-direction:column}
+    .page{flex:1; display:none; padding:20px 18px 110px; overflow:auto}
+    .page.active{display:block}
+
+    /* Cards glass */
+    .glass{
+      background:var(--glass);
+      border:1px solid var(--glass-bd);
+      border-radius:20px; backdrop-filter:blur(var(--blur));
+      box-shadow:0 8px 32px rgba(0,255,255,.12);
+    }
+    .card{padding:16px}
+
+    /* Grid */
+    .grid{display:grid; gap:16px}
+    .grid.cols-2{grid-template-columns:repeat(2,1fr)}
+    @media (max-width:640px){ .grid.cols-2{grid-template-columns:1fr 1fr} }
+    @media (max-width:420px){ .grid.cols-2{grid-template-columns:1fr} }
+
+    /* Título */
+    .title{font-size:1.25rem; font-weight:700; margin:0 0 4px}
+    .sub{font-size:.85rem; opacity:.75; margin:0}
+
+    /* Botão Único */
+    .btn{
+      display:inline-flex; align-items:center; gap:.5rem;
+      padding:12px 16px; border:0; border-radius:20px; cursor:pointer;
+      color:#001014; font-weight:700;
+      background:linear-gradient(90deg,var(--grad-a),var(--grad-b));
+      box-shadow:0 8px 22px rgba(0,216,216,.25);
+      transition:transform .12s ease;
+    }
+    .btn:active{transform:translateY(1px)}
+    .btn.ghost{
+      color:var(--text); background:transparent; border:1px solid var(--glass-bd)
+    }
+
+    /* Nav inferior (herdado do hub) */
+    nav{position:fixed; bottom:12px; left:0; right:0; z-index:10; display:flex; justify-content:center; pointer-events:none}
+    .nav-container{
+      pointer-events:auto; display:flex; justify-content:space-between;
+      width:calc(100% - 24px); padding:6px; border-radius:28px;
+      background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+      backdrop-filter:blur(var(--blur));
+    }
+    .nav-item{flex:1; text-align:center; padding:6px 0; font-size:.75rem; opacity:.7; cursor:pointer}
+    .nav-item.active{opacity:1}
+
+    /* Hero Ritual Nova (adaptação do ritual) */
+    .ritual{
+      position:relative; min-height:220px; display:grid; place-items:center; overflow:hidden
+    }
+    .core{
+      width:240px;height:240px;border-radius:50%;
+      background:
+        radial-gradient(circle at 30% 30%, #d7b5ff, #b7ffea 60%, transparent 62%),
+        conic-gradient(#b7ffea,#7fd2ff,#d7b5ff,#b7ffea);
+      filter:drop-shadow(0 0 20px #b7ffea) drop-shadow(0 0 36px #7fd2ff);
+      animation: spin 7s linear infinite, flare 2.6s ease-in-out infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes flare{0%{filter:drop-shadow(0 0 16px #b7ffea)}50%{filter:drop-shadow(0 0 34px #7fd2ff)}100%{filter:drop-shadow(0 0 16px #b7ffea)}}
+
+    /* Ficha + painéis */
+    .pill{display:inline-block; padding:6px 10px; border-radius:999px; border:1px solid var(--glass-bd); background:rgba(255,255,255,.04); font-size:.75rem}
+    .stats{display:flex; gap:8px; flex-wrap:wrap}
+    .value{font-weight:700}
+    .row{display:flex; gap:12px; align-items:center}
+    .row.wrap{flex-wrap:wrap}
+    .stretch{width:100%}
+
+    /* Overlay (Lab) */
+    .overlay{
+      position:fixed; inset:0; display:none; place-items:center; z-index:1000;
+      background:rgba(3,8,15,.55);
+    }
+    .overlay.open{display:grid}
+    .ifr-wrap{
+      width:min(920px,96vw); max-height:84vh; overflow:auto; border-radius:20px;
+      background:var(--glass); border:1px solid var(--glass-bd); backdrop-filter: blur(var(--blur));
+      box-shadow:0 24px 80px rgba(0,0,0,.45);
+      padding:16px;
+    }
+    .overlay .bar{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px}
+    .badge-reopen{position:fixed; bottom:84px; right:18px; z-index:1001}
+
+    /* Inputs */
+    .input, textarea{
+      width:100%; padding:12px 14px; color:var(--text);
+      background:rgba(255,255,255,.05); border:1px solid var(--glass-bd);
+      border-radius:14px; outline:none;
+    }
+    textarea{min-height:96px; resize:vertical}
+
+    /* Util */
+    .ellip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .muted{color:var(--muted)}
+    .right{margin-left:auto}
+    .center{text-align:center}
+    .mb8{margin-bottom:8px} .mb12{margin-bottom:12px} .mb16{margin-bottom:16px} .mb24{margin-bottom:24px}
+    .mt8{margin-top:8px} .mt12{margin-top:12px} .mt16{margin-top:16px}
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- PÁGINA NOVA -->
+    <section id="page-nova" class="page active">
+      <!-- Hero / Ritual -->
+      <div class="glass card ritual mb16">
+        <div class="core"></div>
+        <div style="position:absolute; bottom:16px; text-align:center">
+          <div class="pill">Ritual • Nova</div>
+          <div class="mt8 muted" id="nova-affirmation">“Ideias em órbita. A próxima chega em 3… 2… 1.”</div>
+        </div>
+      </div>
+
+      <!-- Ficha do Arquétipo -->
+      <div class="grid cols-2">
+        <div class="glass card">
+          <h2 class="title ellip">Nova – Criadora</h2>
+          <p class="sub">Missão: desbloquear ideias, remixar referências e acelerar protótipos.</p>
+          <div class="stats mt12">
+            <span class="pill">Elemento: <b>Madeira</b></span>
+            <span class="pill">Forças: <b>imaginação, síntese, humor</b></span>
+            <span class="pill">Vulnerável: <b>excesso de possibilidades</b></span>
+            <span class="pill">Métrica Hoje: <span class="value" id="stat-sparks">0</span> faíscas</span>
+          </div>
+
+          <div class="mt16">
+            <div class="muted mb8">Mensagem dinâmica</div>
+            <div id="dynamic-tip" class="glass card" style="padding:12px">
+              Nova sente seu clima criativo como <b id="mood">nebuloso</b>. Dica: reduza o escopo e gere 3 variações rápidas.
+            </div>
+          </div>
+
+          <div class="row mt16 wrap">
+            <button class="btn" id="btnNovaTTS" title="Ouvir introdução">▶︎ Ouvir Introdução</button>
+            <button class="btn ghost" id="btnSavePrefs" title="Salvar preferências">Salvar Preferências</button>
+            <span class="muted">Voz: 
+              <select id="voiceSel" class="input" style="width:auto;display:inline-block;margin-left:8px">
+                <option value="auto">Automática</option>
+                <option value="female">Feminina</option>
+                <option value="male">Masculina</option>
+                <option value="neutral">Neutra</option>
+              </select>
+            </span>
+          </div>
+        </div>
+
+        <!-- Painel Dinâmico -->
+        <div class="glass card">
+          <h3 class="title">Painel Criativo</h3>
+          <div class="row mt8">
+            <div class="pill">Última sessão: <b id="last-session">—</b></div>
+            <div class="pill right">Progresso: <b id="progress">0%</b></div>
+          </div>
+          <div class="mt12">
+            <label class="muted mb8" for="goal">Meta da sessão</label>
+            <input id="goal" class="input" placeholder="Ex.: rascunhar 10 headlines para a campanha" />
+          </div>
+          <div class="mt12">
+            <label class="muted mb8" for="tags">Tags</label>
+            <input id="tags" class="input" placeholder="ideias rápidas, humor, metáforas" />
+          </div>
+          <div class="row mt16">
+            <button class="btn" id="openLab">Abrir Nova Lab</button>
+            <button class="btn ghost right" id="resetStats">Zerar Painel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cards extras (atalhos/resumos) -->
+      <div class="grid cols-2 mt16">
+        <div class="glass card">
+          <div class="muted">Atalhos</div>
+          <div class="mt8 row wrap">
+            <button class="btn ghost" data-quick="headline">Gerar 5 headlines</button>
+            <button class="btn ghost" data-quick="angles">3 novos ângulos</button>
+            <button class="btn ghost" data-quick="metaforas">5 metáforas</button>
+          </div>
+        </div>
+        <div class="glass card">
+          <div class="muted">Resumos</div>
+          <div id="summary" class="mt8">Sem resumos ainda. Use o Nova Lab para registrar.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Navegação inferior mínima (páginas futuras) -->
+    <nav>
+      <div class="nav-container">
+        <div class="nav-item active">Nova</div>
+        <div class="nav-item" id="to-settings">Ajustes</div>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Overlay: Nova Lab (mini-jogo/brainstorm) -->
+  <div class="overlay" id="labOverlay" aria-hidden="true">
+    <div class="ifr-wrap" role="dialog" aria-modal="true" aria-label="Nova Lab">
+      <div class="bar">
+        <strong>Nova Lab • Sprint de Ideias (60s)</strong>
+        <div class="row">
+          <span class="pill" id="timer">60s</span>
+          <button class="btn ghost" id="closeLab" aria-label="Fechar">Fechar</button>
+        </div>
+      </div>
+      <div class="grid cols-2">
+        <div class="glass card">
+          <div class="muted mb8">Brief (edite antes do sprint)</div>
+          <textarea id="brief">Tema: lançar recurso “Modo Nebula”. Objetivo: headlines ousadas e memoráveis. Público: criadores digitais.</textarea>
+          <div class="row mt12">
+            <button class="btn" id="startSprint">Iniciar Sprint</button>
+            <button class="btn ghost right" id="clearIdeas">Limpar</button>
+          </div>
+          <div class="mt12 muted">Dicas: contraste, humor, surpresa, ritmo. Use a **progressão** e deixe algo em aberto (loop de expectativa).</div>
+        </div>
+        <div class="glass card">
+          <div class="muted mb8">Ideias (digite uma por linha)</div>
+          <textarea id="ideas" placeholder="Escreva rápido, sem julgar…"></textarea>
+          <div class="row mt12">
+            <span class="pill">Faíscas: <b id="sparkCount">0</b></span>
+            <button class="btn right" id="saveSprint">Salvar Sprint</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="btn badge-reopen" id="reopenLab" style="display:none">Reabrir Lab</button>
+  </div>
+
+  <!-- Botão Único flutuante -->
+  <button id="btnKOBLLUX" class="btn" style="position:fixed; right:18px; bottom:18px; z-index:1002">
+    ☼ Botão Único
+  </button>
+
+  <script>
+    /* ===== UTIL / ESTADO ===== */
+    const S = {
+      sparks: Number(localStorage.getItem('nova.sparks')||0),
+      lastSession: localStorage.getItem('nova.last')||'—',
+      progress: Number(localStorage.getItem('nova.progress')||0),
+      goal: localStorage.getItem('nova.goal')||'',
+      tags: localStorage.getItem('nova.tags')||'',
+      voice: localStorage.getItem('nova.voice')||'auto',
+      summary: localStorage.getItem('nova.summary')||'',
+    };
+
+    const $ = sel => document.querySelector(sel);
+
+    /* ===== FICHA / DINÂMICA ===== */
+    const moods = ['nebuloso','elétrico','plácido','incandescente','sublime'];
+    function randomTip(){
+      const mood = moods[Math.floor(Math.random()*moods.length)];
+      $('#mood').textContent = mood;
+      const tips = {
+        nebuloso:'reduza o escopo e gere 3 variações.',
+        elétrico:'capture 7 títulos ruins de propósito, depois refine 2.',
+        plácido:'roube um formato: “como X mas com Y”.',
+        incandescente:'técnica 10x: empurre o exagero e volte 80%.',
+        sublime:'recrie com outra metáfora sensorial (som, textura, cheiro).'
+      };
+      $('#dynamic-tip').innerHTML = `Nova sente seu clima criativo como <b>${mood}</b>. Dica: ${tips[mood]}`;
+    }
+
+    /* ===== TTS / ÁUDIO ===== */
+    async function speakIntro(){
+      const text = "Bem-vindo ao território de Nova. Respire. Agora, solte três ideias por instinto, sem filtro. A forma aparece depois.";
+      if ('speechSynthesis' in window){
+        const u = new SpeechSynthesisUtterance(text);
+        if (S.voice==='female') u.voice = speechSynthesis.getVoices().find(v=>/female|zira|luciana|maria/i.test(v.name)) || null;
+        if (S.voice==='male')   u.voice = speechSynthesis.getVoices().find(v=>/male|daniel|thiago|joao/i.test(v.name)) || null;
+        speechSynthesis.cancel(); speechSynthesis.speak(u);
+      } else {
+        alert(text);
+      }
+    }
+
+    /* ===== PAINEL ===== */
+    function renderPanel(){
+      $('#stat-sparks').textContent = S.sparks;
+      $('#last-session').textContent = S.lastSession;
+      $('#progress').textContent = S.progress + '%';
+      $('#goal').value = S.goal;
+      $('#tags').value = S.tags;
+      $('#voiceSel').value = S.voice;
+      $('#summary').textContent = S.summary || 'Sem resumos ainda. Use o Nova Lab para registrar.';
+    }
+
+    function savePrefs(){
+      S.goal = $('#goal').value.trim();
+      S.tags = $('#tags').value.trim();
+      S.voice = $('#voiceSel').value;
+      localStorage.setItem('nova.goal', S.goal);
+      localStorage.setItem('nova.tags', S.tags);
+      localStorage.setItem('nova.voice', S.voice);
+      localStorage.setItem('nova.last', new Date().toLocaleString());
+      S.lastSession = localStorage.getItem('nova.last');
+      renderPanel();
+    }
+
+    /* ===== LAB (overlay seguro) ===== */
+    const overlay = $('#labOverlay');
+    function openLab(){
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden','false');
+      document.addEventListener('keydown', escClose);
+    }
+    function closeLab(){
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden','true');
+      $('#reopenLab').style.display = 'inline-flex';
+      document.removeEventListener('keydown', escClose);
+    }
+    function escClose(e){ if (e.key === 'Escape') closeLab(); }
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeLab(); });
+
+    // Sprint
+    let timerId=null, t=60, running=false;
+    function tick(){
+      $('#timer').textContent = t+'s';
+      if (t<=0){ stopSprint(); return; }
+      t--; timerId = setTimeout(tick, 1000);
+    }
+    function startSprint(){
+      if (running) return;
+      running = true; t=60; tick();
+      $('#ideas').focus();
+    }
+    function stopSprint(){
+      running=false; clearTimeout(timerId);
+      $('#timer').textContent = '0s';
+    }
+
+    // Contagem de faíscas (linhas não vazias)
+    function countSparks(){
+      const lines = $('#ideas').value.split('\n').map(s=>s.trim()).filter(Boolean);
+      $('#sparkCount').textContent = lines.length;
+      return lines.length;
+    }
+    $('#ideas').addEventListener('input', countSparks);
+
+    // Salva sprint -> agrega resumo e estatísticas
+    function saveSprint(){
+      const n = countSparks();
+      S.sparks += n;
+      S.progress = Math.min(100, S.progress + Math.ceil(Math.min(20, n*2)));
+      localStorage.setItem('nova.sparks', S.sparks);
+      localStorage.setItem('nova.progress', S.progress);
+      localStorage.setItem('nova.last', new Date().toLocaleString());
+      S.lastSession = localStorage.getItem('nova.last');
+
+      const brief = $('#brief').value.trim();
+      const ideas = $('#ideas').value.trim();
+      const chunk = `• ${new Date().toLocaleTimeString()} • ${S.goal||'sem meta'}\nBrief: ${brief}\nIdeias:\n${ideas}\n---\n`;
+      const prev = localStorage.getItem('nova.summary')||'';
+      localStorage.setItem('nova.summary', chunk + prev);
+      S.summary = chunk + prev;
+
+      // limpar editor do sprint
+      $('#ideas').value = ''; countSparks(); stopSprint(); renderPanel();
+      alert('Sprint salvo! Progresso atualizado.');
+    }
+
+    // Quick prompts (headlines, ângulos, metáforas)
+    document.querySelectorAll('[data-quick]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const type = btn.dataset.quick;
+        const seed = $('#goal').value || 'Tema livre';
+        const bank = {
+          headline:[
+            `O ${seed} que ninguém ousou dizer (ainda)`,
+            `${seed}: 7 jeitos de provocar um “uau” em 10s`,
+            `Desbloqueie ${seed} com 3 toques de caos controlado`,
+            `${seed} — guia pocket para criadores apressados`,
+            `Seu ${seed} ficou elétrico: plug and play em 3 atos`
+          ],
+          angles:[
+            `Contraste: o oposto radical do que todos fazem`,
+            `E se for “como X, mas com Y” — híbrido improvável`,
+            `Reduza a distância: micro-compromissos de 30s`,
+            `Troque o meio: vídeo → áudio → texto (mesma ideia)`,
+            `Acelere a recompensa: valor em 5 segundos`
+          ],
+          metaforas:[
+            `Cheiro de chuva antes da tempestade`,
+            `Textura de neon líquido`,
+            `Ritmo de coração em sprint`,
+            `Gosto de prova roubada`,
+            `Som de portais abrindo`
+          ]
+        };
+        const out = bank[type].map(s=>`• ${s}`).join('\n');
+        $('#summary').textContent = out + '\n\n(cole no Lab para lapidar)';
+      });
+    });
+
+    /* ===== HOOKS ===== */
+    $('#btnNovaTTS').addEventListener('click', speakIntro);
+    $('#btnSavePrefs').addEventListener('click', savePrefs);
+    $('#openLab').addEventListener('click', openLab);
+    $('#closeLab').addEventListener('click', closeLab);
+    $('#reopenLab').addEventListener('click', openLab);
+    $('#startSprint').addEventListener('click', startSprint);
+    $('#clearIdeas').addEventListener('click', ()=>{ $('#ideas').value=''; countSparks(); });
+    $('#saveSprint').addEventListener('click', saveSprint);
+
+    // Inicialização
+    randomTip();
+    renderPanel();
+
+    /* ===== Botão Único (demonstração) ===== */
+    const actions = [
+      {name:'Novo Sprint', fn:openLab},
+      {name:'Ouvir Introdução', fn:speakIntro},
+      {name:'Salvar Preferências', fn:savePrefs},
+      {name:'Zerar Painel', fn:()=>{ localStorage.removeItem('nova.sparks'); localStorage.removeItem('nova.progress'); S.sparks=0; S.progress=0; renderPanel(); }}
+    ];
+    const btnMenu = $('#btnKOBLLUX');
+    btnMenu.addEventListener('click', ()=>{
+      // mini menu rápido (sem wrappers novos)
+      const names = actions.map((a,i)=>`${i+1}. ${a.name}`).join('\n');
+      const pick = prompt(`Botão Único — Ações\n${names}\n\nDigite o número:`);
+      const idx = Number(pick)-1;
+      if (actions[idx]) actions[idx].fn();
+    });
+
+    /* ===== Segurança: fechar overlay por ESC/backdrop já implementado acima ===== */
+  </script>
+</body>
+</html>
