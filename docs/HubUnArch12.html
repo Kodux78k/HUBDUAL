@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="nebula">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Infodose • Archetypes (12 em 1)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --grad-a:#00d8d8; --grad-b:#d800d8; --text:#d7d7d7; --accent:#39FFB6;
+      --ok:#00ffff; --warn:#FFC857; --err:#FF5C8A; --muted:#A8B0C0;
+      --glass:rgba(255,255,255,.06); --glass-bd:rgba(255,255,255,.12); --blur:24px;
+      --chip:#101821; --chip-bd:#1e2a38;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--text);
+      font:15px/1.5 'Montserrat',system-ui;
+      background:
+        radial-gradient(60% 60% at 20% 10%, rgba(0,216,216,.25), transparent 60%),
+        radial-gradient(50% 50% at 80% 10%, rgba(216,0,216,.18), transparent 60%),
+        linear-gradient(180deg,#0f1b2a 0%, #0a0b13 100%);
+      overflow:hidden;
+    }
+
+    /* Layout */
+    #app{position:relative;height:100%;display:flex;flex-direction:column}
+    header{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 14px}
+    .brand{font-weight:800;letter-spacing:.5px;display:flex;gap:10px;align-items:center}
+    .brand .pill{margin-left:2px}
+    .brand pre{margin:0;line-height:1}
+    .search{display:flex;gap:8px;align-items:center}
+    .search input{width:260px;max-width:38vw}
+    .menu{display:flex;gap:8px;align-items:center}
+    .menu .kbd{font-size:.75rem;opacity:.75;border:1px solid var(--glass-bd);border-radius:8px;padding:2px 6px}
+
+    /* Chips menu */
+    .chips{
+      display:flex; gap:8px; align-items:center; padding:8px 14px; overflow:auto;
+      scrollbar-width:none; -ms-overflow-style:none;
+    }
+    .chips::-webkit-scrollbar{display:none}
+    .chip{
+      background:var(--chip); border:1px solid var(--chip-bd);
+      color:var(--text); border-radius:999px; padding:8px 12px; cursor:pointer;
+      white-space:nowrap; transition:.15s; user-select:none;
+    }
+    .chip.active{background:linear-gradient(90deg,var(--grad-a),var(--grad-b)); color:#001014; font-weight:700; box-shadow:0 8px 22px rgba(0,216,216,.25)}
+
+    .page{flex:1; display:none; padding:12px 18px 110px; overflow:auto}
+    .page.active{display:block}
+
+    /* Glass / cards */
+    .glass{background:var(--glass); border:1px solid var(--glass-bd); border-radius:20px; backdrop-filter:blur(var(--blur)); box-shadow:0 8px 32px rgba(0,255,255,.12)}
+    .card{padding:16px}
+
+    /* Grid */
+    .grid{display:grid; gap:16px}
+    .grid.cols-2{grid-template-columns:repeat(2,1fr)}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    @media (max-width:900px){ .grid.cols-3{grid-template-columns:repeat(2,1fr)} }
+    @media (max-width:640px){ .grid.cols-2,.grid.cols-3{grid-template-columns:1fr} }
+
+    /* Text & pills */
+    .title{font-size:1.25rem; font-weight:700; margin:0 0 6px}
+    .sub{font-size:.9rem; opacity:.8; margin:0}
+    .muted{color:var(--muted)}
+    .pill{display:inline-block; padding:6px 10px; border-radius:999px; border:1px solid var(--glass-bd); background:rgba(255,255,255,.04); font-size:.75rem}
+
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:12px 16px;border:0;border-radius:20px;cursor:pointer;color:#001014;font-weight:700;background:linear-gradient(90deg,var(--grad-a),var(--grad-b));box-shadow:0 8px 22px rgba(0,216,216,.25);transition:transform .12s ease}
+    .btn:active{transform:translateY(1px)}
+    .btn.ghost{color:var(--text);background:transparent;border:1px solid var(--glass-bd)}
+    .btn.small{padding:8px 12px; font-size:.85rem}
+    #btnKOBLLUX{position:fixed; right:18px; bottom:18px; z-index:1002}
+
+    /* Inputs */
+    .input, textarea, select, input[type="range"]{
+      width:100%; padding:12px 14px; color:var(--text); background:rgba(255,255,255,.05); border:1px solid var(--glass-bd); border-radius:14px; outline:none
+    }
+    textarea{min-height:96px; resize:vertical}
+    input[type="range"]{height:40px}
+
+    /* Hero / Ritual visuals */
+    .hero{position:relative; min-height:220px; overflow:hidden; display:grid; place-items:center}
+    .orbit{position:absolute; inset:0; background:
+      radial-gradient(40% 40% at 50% 40%, rgba(0,255,214,.18), transparent 60%),
+      radial-gradient(50% 50% at 60% 60%, rgba(185,136,255,.20), transparent 60%);
+      animation: drift 12s ease-in-out infinite}
+    @keyframes drift{0%{transform:translateY(-6px)}50%{transform:translateY(6px)}100%{transform:translateY(-6px)}}
+    .seal{width:240px;height:240px;border-radius:24px;border:1px dashed rgba(255,255,255,.22); display:grid;place-items:center; backdrop-filter: blur(10px)}
+    .core{
+      width:240px;height:240px;border-radius:50%;
+      background:
+        radial-gradient(circle at 30% 30%, #d7b5ff, #b7ffea 60%, transparent 62%),
+        conic-gradient(#b7ffea,#7fd2ff,#d7b5ff,#b7ffea);
+      filter:drop-shadow(0 0 20px #b7ffea) drop-shadow(0 0 36px #7fd2ff);
+      animation: spin 7s linear infinite, flare 2.6s ease-in-out infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes flare{0%{filter:drop-shadow(0 0 16px #b7ffea)}50%{filter:drop-shadow(0 0 34px #7fd2ff)}100%{filter:drop-shadow(0 0 16px #b7ffea)}}
+
+    /* Checklist + progress */
+    .task{display:flex; align-items:center; gap:10px; padding:10px; border-radius:12px; background:rgba(255,255,255,.04); border:1px solid var(--glass-bd)}
+    .task input[type="checkbox"]{width:18px;height:18px}
+    .task .name{flex:1; min-width:0}
+    .task .name input{width:100%; background:transparent; border:0; color:var(--text); outline:none}
+    .task.done{opacity:.7; text-decoration:line-through}
+    .progressbar{height:10px; border-radius:999px; background:rgba(255,255,255,.08); overflow:hidden}
+    .progressbar > span{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--grad-a),var(--grad-b))}
+
+    /* Overlay (Labs/Tools) */
+    .overlay{position:fixed; inset:0; display:none; place-items:center; z-index:1000; background:rgba(3,8,15,.55)}
+    .overlay.open{display:grid}
+    .ifr-wrap{width:min(960px,96vw); max-height:84vh; overflow:auto; border-radius:20px; background:var(--glass); border:1px solid var(--glass-bd); backdrop-filter: blur(var(--blur)); box-shadow:0 24px 80px rgba(0,0,0,.45); padding:16px}
+    .overlay .bar{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px}
+    .badge{position:fixed; bottom:84px; right:18px; z-index:1001}
+
+    /* Bottom nav (status) */
+    nav{position:fixed; bottom:12px; left:0; right:0; z-index:10; display:flex; justify-content:center; pointer-events:none}
+    .nav-container{pointer-events:auto; display:flex; justify-content:space-between; width:calc(100% - 24px); padding:6px; border-radius:28px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); backdrop-filter:blur(var(--blur))}
+    .nav-item{flex:1; text-align:center; padding:6px 0; font-size:.75rem; opacity:.7; cursor:pointer}
+    .nav-item.active{opacity:1}
+
+    /* Utils */
+    .row{display:flex; gap:12px; align-items:center} .wrap{flex-wrap:wrap}
+    .ellip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .right{margin-left:auto} .center{text-align:center}
+    .mb8{margin-bottom:8px} .mb12{margin-bottom:12px} .mb16{margin-bottom:16px} .mb24{margin-bottom:24px}
+    .mt8{margin-top:8px} .mt12{margin-top:12px} .mt16{margin-top:16px}
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- HEADER com preset ArtASCIIk3 -->
+    <header>
+      <div class="brand">
+        <div class="pill">KOBLLUX • InfoDose</div>
+        <div id="asciiWrap">
+          <pre id="ascii" aria-hidden="true">╭─ ArtASCIIk3 ─╮
+│  *  *  *   │
+│   \ | /    │
+│ ——— ✪ ——— │
+│   / | \    │
+│  *  *  *   │
+╰────────────╯</pre>
+        </div>
+      </div>
+      <div class="search">
+        <input id="search" class="input" placeholder="Buscar arquétipo (ex.: nova, atlas…)" />
+        <span class="kbd">⌘/Ctrl + K</span>
+      </div>
+      <div class="menu">
+        <span class="pill ellip" id="activeLabel">—</span>
+        <span class="kbd">1–0 / - / =</span>
+      </div>
+    </header>
+
+    <!-- MENU CHIPS -->
+    <div id="chips" class="chips"></div>
+
+    <!-- CONTEÚDO -->
+    <section id="main" class="page active"></section>
+
+    <!-- NAV INFERIOR -->
+    <nav>
+      <div class="nav-container">
+        <div class="nav-item active">Arquétipos</div>
+        <div class="nav-item" id="to-tools">Ferramentas</div>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Overlays compartilhados -->
+  <!-- NOVA LAB -->
+  <div class="overlay" id="novaLab" aria-hidden="true">
+    <div class="ifr-wrap" role="dialog" aria-modal="true" aria-label="Nova Lab">
+      <div class="bar">
+        <strong>Nova Lab • Sprint de Ideias (60s)</strong>
+        <div class="row">
+          <span class="pill" id="nvTimer">60s</span>
+          <button class="btn ghost" id="nvClose">Fechar</button>
+        </div>
+      </div>
+      <div class="grid cols-2">
+        <div class="glass card">
+          <div class="muted mb8">Brief</div>
+          <textarea id="nvBrief">Tema: lançar recurso “Modo Nebula”. Objetivo: headlines ousadas e memoráveis. Público: criadores digitais.</textarea>
+          <div class="row mt12">
+            <button class="btn" id="nvStart">Iniciar Sprint</button>
+            <button class="btn ghost right" id="nvClear">Limpar</button>
+          </div>
+          <div class="mt12 muted">Dicas: contraste, humor, progressão e um gancho em aberto.</div>
+        </div>
+        <div class="glass card">
+          <div class="muted mb8">Ideias (uma por linha)</div>
+          <textarea id="nvIdeas" placeholder="Escreva rápido, sem julgar…"></textarea>
+          <div class="row mt12">
+            <span class="pill">Faíscas: <b id="nvSparks">0</b></span>
+            <button class="btn right" id="nvSave">Salvar Sprint</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ATLAS PLANNER -->
+  <div class="overlay" id="atlasPlanner" aria-hidden="true">
+    <div class="ifr-wrap" role="dialog" aria-modal="true" aria-label="Planner Lab">
+      <div class="bar">
+        <strong>Planner Lab • Micro-entregas</strong>
+        <button class="btn ghost small" id="plClose" aria-label="Fechar">Fechar</button>
+      </div>
+      <div class="grid cols-2">
+        <div class="glass card">
+          <div class="muted mb8">Brief do dia</div>
+          <textarea id="plBrief">Alinhar prioridades para a entrega “Nebula v2”. Criar 3 micro-entregas executáveis.</textarea>
+          <div class="row mt12">
+            <input id="plNew" class="input" placeholder="Nova micro-entrega (Enter)"/>
+            <button class="btn small" id="plAdd">Adicionar</button>
+          </div>
+        </div>
+        <div class="glass card">
+          <div class="muted mb8">Quadro</div>
+          <div class="grid cols-3">
+            <div class="glass card"><h4>Backlog</h4><div id="kBacklog"></div></div>
+            <div class="glass card"><h4>Em Progresso</h4><div id="kDoing"></div></div>
+            <div class="glass card"><h4>Concluído</h4><div id="kDone"></div></div>
+          </div>
+          <div class="row mt12">
+            <button class="btn" id="plSave">Salvar Plano</button>
+            <button class="btn ghost right" id="plClear">Limpar Quadro</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PULSE STUDIO -->
+  <div class="overlay" id="pulseStudio" aria-hidden="true">
+    <div class="ifr-wrap" role="dialog" aria-modal="true" aria-label="Pulse Studio">
+      <div class="bar">
+        <strong>Pulse Studio • Sessão 3 faixas</strong>
+        <button class="btn ghost" id="psClose">Fechar</button>
+      </div>
+      <div class="grid cols-2">
+        <div class="glass card">
+          <div class="muted mb8">URLs (mp3/ogg)</div>
+          <input id="psUrl1" class="input" placeholder="Faixa 1 — aquecimento" />
+          <input id="psUrl2" class="input mt8" placeholder="Faixa 2 — foco" />
+          <input id="psUrl3" class="input mt8" placeholder="Faixa 3 — fechamento" />
+          <div class="row mt12">
+            <button class="btn" id="psPlay">▶️ Tocar</button>
+            <button class="btn ghost right" id="psSave">Salvar sessão</button>
+          </div>
+        </div>
+        <div class="glass card">
+          <div class="muted mb8">Gerador Sonoro (WebAudio)</div>
+          <div class="row">
+            <select id="waWave" class="input" style="width:auto">
+              <option value="sine">sine</option><option value="triangle">triangle</option>
+              <option value="square">square</option><option value="sawtooth">sawtooth</option>
+            </select>
+            <input id="waFreq" type="range" min="60" max="1200" value="432" />
+            <span class="pill">Hz: <b id="waHz">432</b></span>
+          </div>
+          <div class="row mt12">
+            <button class="btn small" id="waStart">Iniciar</button>
+            <button class="btn ghost small" id="waStop">Parar</button>
+            <input id="waGain" type="range" min="0" max="1" step="0.01" value="0.1" />
+          </div>
+        </div>
+      </div>
+      <div class="glass card mt12">
+        <div class="muted mb8">Playlist carregada</div>
+        <textarea id="plList" class="input" style="height:80px"></textarea>
+        <div class="row mt12 wrap">
+          <button class="btn small" id="plLoad">Carregar</button>
+          <button class="btn ghost small" id="plUseSaved">Usar sessão salva</button>
+          <span class="pill right">Faixa: <b id="plNow">0</b>/<b id="plMax">0</b></span>
+        </div>
+        <audio id="audio" controls style="width:100%;margin-top:10px"></audio>
+        <div class="row mt12 wrap">
+          <button class="btn small" id="prev">⟵</button>
+          <button class="btn small" id="next">⟶</button>
+          <button class="btn ghost small right" id="plClear">Limpar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VITALIS LAB -->
+  <div class="overlay" id="vitalisLab" aria-hidden="true">
+    <div class="ifr-wrap" role="dialog" aria-modal="true" aria-label="Vitalis Lab">
+      <div class="bar">
+        <strong>Vitalis Lab • Rotinas Energéticas</strong>
+        <button class="btn ghost" id="vlClose">Fechar</button>
+      </div>
+      <div class="grid cols-3">
+        <div class="glass card">
+          <h4 class="title">Tabata 20/10</h4>
+          <div class="center mt8">
+            <div class="title" id="tbLabel">Ready</div>
+            <div style="font-size:2.6rem;font-weight:700" id="tbTimer">00:20</div>
+          </div>
+          <div class="row mt12 wrap">
+            <button class="btn small" id="tbStart">Start</button>
+            <button class="btn ghost small" id="tbPause">Pause</button>
+            <button class="btn ghost small" id="tbReset">Reset</button>
+            <span class="pill right">Rounds: <b id="tbRounds">0</b>/8</span>
+          </div>
+        </div>
+        <div class="glass card">
+          <h4 class="title">Respiração 4–7–8</h4>
+          <div class="center mt8"><canvas id="breathCanvas" width="280" height="140" class="glass" style="border-radius:12px;"></canvas></div>
+          <div class="row mt12 wrap">
+            <button class="btn small" id="brStart">Guiar</button>
+            <button class="btn ghost small" id="brStop">Parar</button>
+            <span class="pill right">Ciclos: <b id="brCycles">0</b></span>
+          </div>
+        </div>
+        <div class="glass card">
+          <h4 class="title">Hidratação</h4>
+          <div class="muted">Meta diária</div>
+          <div class="row mt8">
+            <input id="waterGoal" class="input" style="width:40%" placeholder="ml (ex.: 2000)" />
+            <button class="btn small" id="waterSet">Definir</button>
+          </div>
+          <div class="row mt12">
+            <input id="waterAdd" class="input" style="width:40%" placeholder="+ml (ex.: 250)" />
+            <button class="btn small" id="waterInc">Adicionar</button>
+          </div>
+          <div class="mt12">
+            <div class="progressbar"><span id="waterBar"></span></div>
+            <div class="row mt8">
+              <span class="pill">Ingerido: <b id="waterNow">0</b> / <b id="waterMax">0</b> ml</span>
+              <button class="btn ghost small right" id="waterReset">Zerar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botão Único -->
+  <button id="btnKOBLLUX" class="btn" title="Ações rápidas">☼ Botão Único</button>
+
+  <!-- Templates injetados -->
+  <div id="templates" hidden></div>
+
+  <script>
+    /***************
+     * ArtASCIIk3  *
+     ***************/
+    (function(){
+      const frames=[
+`╭─ ArtASCIIk3 ─╮
+│  *  .  *   │
+│   \\ | /    │
+│ ——— ✪ ——— │
+│   / | \\    │
+│  *  .  *   │
+╰────────────╯`,
+`╭─ ArtASCIIk3 ─╮
+│ .  *  .   │
+│  \\ | /    │
+│ ——— ✪ ——— │
+│  / | \\    │
+│ .  *  .   │
+╰────────────╯`,
+`╭─ ArtASCIIk3 ─╮
+│  *  *  *   │
+│   \\ | /    │
+│ ——— ✪ ——— │
+│   / | \\    │
+│  *  *  *   │
+╰────────────╯`
+      ];
+      let i=0; const el=document.getElementById('ascii');
+      setInterval(()=>{ el.textContent=frames[i=(i+1)%frames.length]; }, 1400);
+    })();
+
+    /*************
+     * Catálogo  *
+     *************/
+    const ARCHS = [
+      {id:'nova',   name:'Nova – Criadora',      element:'Madeira', role:'Criatividade',    ally:'Inspira',   color:'#B17AFF'},
+      {id:'atlas',  name:'Atlas – Planejador',   element:'Terra/Metal', role:'Planejamento', ally:'Cartesius', color:'#39FFB6'},
+      {id:'pulse',  name:'Pulse – Musical',      element:'Água',   role:'Som/Emoção',       ally:'Resona',    color:'#00d8d8'},
+      {id:'vitalis',name:'Vitalis – Energético', element:'Fogo',   role:'Energia',          ally:'Momentum',  color:'#FFC857'},
+      {id:'artemis',name:'Artemis – Explorador', element:'Madeira',role:'Exploração',       ally:'Naviga',    color:'#7fd2ff'},
+      {id:'serena', name:'Serena – Cuidadora',   element:'Terra',  role:'Acolhimento',      ally:'Ampara',    color:'#ffb4c8'},
+      {id:'kaos',   name:'Kaos – Rebelde',       element:'Fogo',   role:'Disrupção',        ally:'Disruptor', color:'#ff6f6f'},
+      {id:'genus',  name:'Genus – Criador',      element:'Madeira',role:'Prototipagem',     ally:'Fabricus',  color:'#a1ffb2'},
+      {id:'lumine', name:'Lumine – Alegre',      element:'Fogo',   role:'Alegria',          ally:'Brilhare',  color:'#fff27a'},
+      {id:'rhea',   name:'Rhea – Órfão',         element:'Terra',  role:'Raízes/Empatia',   ally:'Raízes',    color:'#e1c099'},
+      {id:'solus',  name:'Solus – Mago',         element:'Metal',  role:'Harmonia',         ally:'Arcana',    color:'#b8b8ff'},
+      {id:'aion',   name:'Aion – Transformador', element:'Água',   role:'Evolução',         ally:'Evolutia',  color:'#98f5ff'},
+    ];
+
+    /***********************
+     * Preload Templates   *
+     ***********************/
+    const TPL = {
+      header:(a)=>`
+        <div class="glass card hero mb16" style="border-color:${a.color}99">
+          <div class="orbit" style="background:
+            radial-gradient(40% 40% at 50% 40%, ${a.color}33, transparent 60%),
+            radial-gradient(50% 50% at 60% 60%, ${a.color}22, transparent 60%);"></div>
+          <div class="seal glass" style="border-color:${a.color}66">
+            <div style="text-align:center">
+              <div class="pill">Ritual • ${a.ally}</div>
+              <h2 class="title mt8">${a.name}</h2>
+              <div class="sub">${a.role} • Elemento ${a.element}</div>
+            </div>
+          </div>
+        </div>`,
+      panelBase:(a)=>`
+        <section class="grid cols-2">
+          <div class="glass card">
+            <h3 class="title">Ficha</h3>
+            <div class="row wrap mt8">
+              <span class="pill">Forças: <b id="${a.id}-strengths">—</b></span>
+              <span class="pill">Vulnerável: <b id="${a.id}-weak">—</b></span>
+              <span class="pill">Métrica: <b id="${a.id}-metric">—</b></span>
+            </div>
+            <div class="mt12">
+              <div class="muted mb8">Insight</div>
+              <div id="${a.id}-tip" class="glass card" style="padding:12px">—</div>
+            </div>
+            <div class="row mt12 wrap">
+              <button class="btn small" data-ritual="${a.id}">▶︎ Ritual ${a.ally}</button>
+              <button class="btn ghost small" data-reset="${a.id}">Zerar painel</button>
+              ${['nova','atlas','pulse','vitalis'].includes(a.id) ? `<button class="btn ghost small right" data-open="${a.id}-lab">Abrir Lab</button>`:''}
+            </div>
+          </div>
+          <div class="glass card">
+            <h3 class="title">Painel</h3>
+            <div class="mt8">
+              <label class="muted mb8" for="${a.id}-goal">Meta do dia</label>
+              <input id="${a.id}-goal" class="input" placeholder="Defina uma meta rápida"/>
+            </div>
+            <div class="mt12">
+              <label class="muted mb8" for="${a.id}-notes">Notas</label>
+              <textarea id="${a.id}-notes" placeholder="Anotações…"></textarea>
+            </div>
+            <div class="row mt12 wrap">
+              <button class="btn small" data-save="${a.id}">Salvar</button>
+              <span class="pill right">Assistente: <b>${a.ally}</b></span>
+            </div>
+            <div class="mt12"><div class="muted mb8">Resumo</div><div id="${a.id}-summary">—</div></div>
+          </div>
+        </section>`,
+      simple:(a)=> TPL.header(a) + TPL.panelBase(a)
+    };
+
+    function preloadTemplates(){
+      const holder=document.getElementById('templates');
+      ARCHS.forEach(a=>{
+        const t=document.createElement('template'); t.id=`archetype-${a.id}`;
+        t.innerHTML = TPL.simple(a);
+        holder.appendChild(t);
+      });
+    }
+
+    /***********************
+     * Render / Switch     *
+     ***********************/
+    function mount(id){
+      const tpl=document.getElementById(`archetype-${id}`);
+      const main=document.getElementById('main');
+      main.innerHTML = tpl ? tpl.innerHTML : `<div class="glass card">Arquétipo não encontrado.</div>`;
+      document.getElementById('activeLabel').textContent = ARCHS.find(x=>x.id===id)?.name || '—';
+      bootCommon(id);
+      // Específicos: ligar botão para abrir respectivos labs
+      const openBtn=document.querySelector(`[data-open="${id}-lab"]`);
+      if(id==='nova' && openBtn) openBtn.onclick=()=>openOverlay('novaLab');
+      if(id==='atlas' && openBtn) openBtn.onclick=()=>openOverlay('atlasPlanner');
+      if(id==='pulse' && openBtn) openBtn.onclick=()=>openOverlay('pulseStudio');
+      if(id==='vitalis' && openBtn) openBtn.onclick=()=>openOverlay('vitalisLab');
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    /***********************
+     * Chips / Search      *
+     ***********************/
+    function buildChips(){
+      const bar=document.getElementById('chips'); bar.innerHTML='';
+      ARCHS.forEach(a=>{
+        const el=document.createElement('div');
+        el.className='chip'; el.textContent=a.name; el.style.borderColor=a.color+'66';
+        el.onclick=()=>{ setActiveChip(a.id); mount(a.id); };
+        el.dataset.id=a.id; bar.appendChild(el);
+      });
+      setActiveChip('nova');
+    }
+    function setActiveChip(id){
+      document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active', c.dataset.id===id));
+    }
+
+    /***********************
+     * Common boot         *
+     ***********************/
+    function tts(text){ if('speechSynthesis' in window){ const u=new SpeechSynthesisUtterance(text); speechSynthesis.cancel(); speechSynthesis.speak(u);} else alert(text); }
+
+    function bootCommon(id){
+      // força/fragilidade sintética
+      const map={
+        nova:['imaginação, síntese, humor','excesso de possibilidades'],
+        atlas:['clareza, constância, execução','rigidez'],
+        pulse:['regulação sonora, emoção','distração'],
+        vitalis:['energia, momentum, disciplina','picos sem recuperação'],
+        artemis:['curiosidade, exploração','dispersão'],
+        serena:['acolhimento, compaixão','auto-esquecimento'],
+        kaos:['ruptura, coragem','caos excessivo'],
+        genus:['prototipagem, craft','perfeccionismo'],
+        lumine:['leveza, conexão','superficialidade'],
+        rhea:['vínculos, propósito','apego'],
+        solus:['harmonia, presença','abstração demais'],
+        aion:['micro-ações, visão','impaciência'],
+      };
+      const pair=map[id]||['—','—'];
+      const a=ARCHS.find(x=>x.id===id);
+      document.getElementById(`${id}-strengths`).textContent=pair[0];
+      document.getElementById(`${id}-weak`).textContent=pair[1];
+      document.getElementById(`${id}-metric`).textContent='1 passo útil';
+      document.getElementById(`${id}-tip`).innerHTML = `Hoje, <b>${a.name}</b> sugere: um passo de 2 minutos agora, com um gancho para a próxima rodada.`;
+
+      const g=document.getElementById(`${id}-goal`);
+      const n=document.getElementById(`${id}-notes`);
+      const s=document.getElementById(`${id}-summary`);
+      g.value = localStorage.getItem(`${id}.goal`)||'';
+      n.value = localStorage.getItem(`${id}.notes`)||'';
+      s.textContent = localStorage.getItem(`${id}.summary`)||'—';
+
+      document.querySelector(`[data-save="${id}"]`).onclick=()=>{
+        localStorage.setItem(`${id}.goal`, g.value.trim());
+        localStorage.setItem(`${id}.notes`, n.value.trim());
+        localStorage.setItem(`${id}.summary`, `• ${new Date().toLocaleTimeString()} — meta: ${g.value}\n---\n`+(localStorage.getItem(`${id}.summary`)||'')); 
+        alert('Salvo!');
+      };
+      document.querySelector(`[data-reset="${id}"]`).onclick=()=>{
+        ['goal','notes','summary'].forEach(k=>localStorage.removeItem(`${id}.${k}`)); mount(id);
+      };
+      document.querySelector(`[data-ritual="${id}"]`).onclick=()=>tts(`${a.name}. Traga a intenção e execute um passo de 2 minutos agora.`);
+    }
+
+    /***********************
+     * Overlays utils      *
+     ***********************/
+    function bindOverlay(id, closeBtnId){
+      const ov=document.getElementById(id);
+      function close(){ ov.classList.remove('open'); ov.setAttribute('aria-hidden','true'); }
+      function open(){ ov.classList.add('open'); ov.setAttribute('aria-hidden','false'); }
+      if(closeBtnId) document.getElementById(closeBtnId).onclick=close;
+      ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
+      return {open,close};
+    }
+    function openOverlay(id){ document.getElementById(id).classList.add('open'); document.getElementById(id).setAttribute('aria-hidden','false'); }
+    function closeOverlay(id){ document.getElementById(id).classList.remove('open'); document.getElementById(id).setAttribute('aria-hidden','true'); }
+
+    /***********************
+     * Labs wiring         *
+     ***********************/
+    // NOVA
+    ;(function(){
+      const {close}=bindOverlay('novaLab','nvClose');
+      let timer=null, secs=60, running=false;
+      function tick(){ document.getElementById('nvTimer').textContent=secs+'s'; if(secs<=0){ running=false; return; } secs--; timer=setTimeout(tick,1000); }
+      document.getElementById('nvStart').onclick=()=>{ if(running) return; running=true; secs=60; tick(); };
+      document.getElementById('nvClear').onclick=()=>{ document.getElementById('nvIdeas').value=''; document.getElementById('nvSparks').textContent='0'; };
+      document.getElementById('nvIdeas').addEventListener('input',()=>{
+        const n=document.getElementById('nvIdeas').value.split('\n').map(s=>s.trim()).filter(Boolean).length;
+        document.getElementById('nvSparks').textContent=n;
+      });
+      document.getElementById('nvSave').onclick=()=>{
+        const lines=document.getElementById('nvIdeas').value.trim();
+        const count=lines?lines.split('\n').filter(Boolean).length:0;
+        const prev=localStorage.getItem('nova.summary')||'';
+        const chunk=`• ${new Date().toLocaleTimeString()} • ${localStorage.getItem('nova.goal')||'sem meta'}\nBrief: ${document.getElementById('nvBrief').value.trim()}\nIdeias:\n${lines}\n---\n`;
+        localStorage.setItem('nova.summary', chunk+prev);
+        const sparks=Number(localStorage.getItem('nova.sparks')||0)+count; localStorage.setItem('nova.sparks', sparks);
+        alert('Sprint salvo!'); close();
+      };
+    })();
+
+    // ATLAS (kanban simples)
+    ;(function(){
+      const {close}=bindOverlay('atlasPlanner','plClose');
+      const KB={
+        backlog: JSON.parse(localStorage.getItem('atlas.kb.backlog')||'[]'),
+        doing: JSON.parse(localStorage.getItem('atlas.kb.doing')||'[]'),
+        done: JSON.parse(localStorage.getItem('atlas.kb.done')||'[]'),
+      };
+      const elB=document.getElementById('kBacklog'),
+            elD=document.getElementById('kDoing'),
+            elC=document.getElementById('kDone');
+
+      function saveKB(){
+        localStorage.setItem('atlas.kb.backlog', JSON.stringify(KB.backlog));
+        localStorage.setItem('atlas.kb.doing', JSON.stringify(KB.doing));
+        localStorage.setItem('atlas.kb.done', JSON.stringify(KB.done));
+      }
+      function mk(arr, el, lane){
+        el.innerHTML='';
+        arr.forEach((t,i)=>{
+          const c=document.createElement('div'); c.className='card'; c.style.border='1px solid var(--glass-bd)';
+          c.innerHTML=`<div>${t}</div>
+            <div class="row mt8">
+              <button class="btn ghost small" data-mv="${lane}:${i}">→</button>
+              <button class="btn ghost small right" data-del="${lane}:${i}">✕</button>
+            </div>`;
+          el.appendChild(c);
+        });
+      }
+      function render(){
+        mk(KB.backlog, elB, 'b'); mk(KB.doing, elD, 'd'); mk(KB.done, elC, 'c');
+        elB.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>{ const i=Number(b.dataset.mv.split(':')[1]); KB.doing.push(KB.backlog.splice(i,1)[0]); saveKB(); render(); });
+        elD.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>{ const i=Number(b.dataset.mv.split(':')[1]); KB.done.push(KB.doing.splice(i,1)[0]); saveKB(); render(); });
+        [elB,elD,elC].forEach((col,ix)=>{
+          col.querySelectorAll('[data-del]').forEach(btn=>btn.onclick=()=>{
+            const [lane,i]=btn.dataset.del.split(':'); const idx=Number(i);
+            if(lane==='b') KB.backlog.splice(idx,1);
+            if(lane==='d') KB.doing.splice(idx,1);
+            if(lane==='c') KB.done.splice(idx,1);
+            saveKB(); render();
+          });
+        });
+      }
+      render();
+      document.getElementById('plAdd').onclick=()=>{ const v=document.getElementById('plNew').value.trim(); if(!v) return; KB.backlog.push(v); document.getElementById('plNew').value=''; saveKB(); render(); };
+      document.getElementById('plNew').onkeydown=e=>{ if(e.key==='Enter') document.getElementById('plAdd').click(); };
+      document.getElementById('plSave').onclick=()=>{
+        const brief=document.getElementById('plBrief').value.trim();
+        const sum=`• Plano salvo ${new Date().toLocaleString()}\nBrief: ${brief}\nBacklog:${KB.backlog.length} • Doing:${KB.doing.length} • Done:${KB.done.length}\n---\n`;
+        const prev=localStorage.getItem('atlas.summary')||''; localStorage.setItem('atlas.summary', sum+prev);
+        alert('Plano salvo!');
+      };
+      document.getElementById('plClear').onclick=()=>{ KB.backlog=[]; KB.doing=[]; KB.done=[]; saveKB(); render(); };
+    })();
+
+    // PULSE (player + WebAudio)
+    ;(function(){
+      const {close}=bindOverlay('pulseStudio','psClose');
+      const ps1=document.getElementById('psUrl1'),
+            ps2=document.getElementById('psUrl2'),
+            ps3=document.getElementById('psUrl3');
+      document.getElementById('psSave').onclick=()=>{
+        const sess=[ps1.value.trim(),ps2.value.trim(),ps3.value.trim()].filter(Boolean);
+        localStorage.setItem('pulse.session', JSON.stringify(sess)); alert('Sessão salva!');
+      };
+      // player
+      const textarea=document.getElementById('plList');
+      const audio=document.getElementById('audio'); let list=[], idx=0;
+      function loadList(arr){ list=[...arr].filter(Boolean); document.getElementById('plMax').textContent=list.length; idx=0; document.getElementById('plNow').textContent=list.length?1:0; audio.src=list[0]||''; }
+      document.getElementById('plLoad').onclick=()=>{ loadList(textarea.value.split('\n').map(s=>s.trim())); };
+      document.getElementById('plUseSaved').onclick=()=>{ const sess=JSON.parse(localStorage.getItem('pulse.session')||'[]'); loadList(sess); };
+      document.getElementById('plClear').onclick=()=>{ textarea.value=''; loadList([]); };
+      document.getElementById('prev').onclick=()=>{ if(!list.length) return; idx=(idx-1+list.length)%list.length; audio.src=list[idx]; audio.play(); document.getElementById('plNow').textContent=idx+1; };
+      document.getElementById('next').onclick=()=>{ if(!list.length) return; idx=(idx+1)%list.length; audio.src=list[idx]; audio.play(); document.getElementById('plNow').textContent=idx+1; };
+      audio.onended=()=>document.getElementById('next').click();
+
+      // WebAudio pad
+      let ctx=null, osc=null, gain=null;
+      const waHz=document.getElementById('waHz'), waWave=document.getElementById('waWave'), waFreq=document.getElementById('waFreq'), waGain=document.getElementById('waGain');
+      function ensureWA(){ if(ctx) return; ctx=new (window.AudioContext||window.webkitAudioContext)(); gain=ctx.createGain(); gain.gain.value=parseFloat(waGain.value); gain.connect(ctx.destination); }
+      document.getElementById('waStart').onclick=()=>{
+        ensureWA(); if(osc) return; osc=ctx.createOscillator(); osc.type=waWave.value; osc.frequency.value=parseFloat(waFreq.value); osc.connect(gain); osc.start();
+      };
+      document.getElementById('waStop').onclick=()=>{ if(osc){ osc.stop(); osc.disconnect(); osc=null; } };
+      waFreq.oninput=()=>{ waHz.textContent=waFreq.value; if(osc) osc.frequency.value=parseFloat(waFreq.value); };
+      waWave.onchange=()=>{ if(osc) osc.type=waWave.value; };
+      waGain.oninput=()=>{ ensureWA(); gain.gain.value=parseFloat(waGain.value); };
+
+      document.getElementById('psPlay').onclick=()=>{
+        const seq=[ps1.value.trim(),ps2.value.trim(),ps3.value.trim()].filter(Boolean);
+        if(!seq.length){ alert('Adicione pelo menos 1 URL.'); return; }
+        textarea.value=seq.join('\n'); document.getElementById('plLoad').click(); audio.play(); close();
+      };
+    })();
+
+    // VITALIS (tabata + respiração + hidratação)
+    ;(function(){
+      const {close}=bindOverlay('vitalisLab','vlClose');
+      // Tabata
+      let tbMode='work', tbRemain=20, tbT=null, tbRun=false, tbRounds=0;
+      function tbPaint(){ document.getElementById('tbLabel').textContent = tbMode==='work'?'Go!':'Rest'; document.getElementById('tbTimer').textContent=(tbRemain<10?'00:0':'00:')+tbRemain; document.getElementById('tbRounds').textContent=tbRounds; }
+      function tbTick(){ tbPaint(); if(tbRemain<=0){ tbSwap(); return; } tbT=setTimeout(()=>{tbRemain--; tbTick();},1000); }
+      function tbSwap(){ clearTimeout(tbT); if(tbMode==='work'){ tbMode='rest'; tbRemain=10; tbRounds++; } else { tbMode='work'; tbRemain=20; if(tbRounds>=8){ tbRun=false; return; } } tbTick(); }
+      document.getElementById('tbStart').onclick=()=>{ if(tbRun) return; tbRun=true; tbMode='work'; tbRemain=20; tbRounds=0; tbTick(); };
+      document.getElementById('tbPause').onclick=()=>{ clearTimeout(tbT); tbRun=false; };
+      document.getElementById('tbReset').onclick=()=>{ clearTimeout(tbT); tbRun=false; tbMode='work'; tbRemain=20; tbRounds=0; tbPaint(); };
+      tbPaint();
+      // Respiração 4-7-8
+      const canvas=document.getElementById('breathCanvas'); const ctx2=canvas.getContext('2d'); let brT=null, brRun=false, brCycles=0;
+      function drawBreath(phase,t,total){ ctx2.clearRect(0,0,canvas.width,canvas.height); const w=canvas.width,h=canvas.height; ctx2.fillStyle='rgba(255,255,255,.05)'; ctx2.fillRect(0,0,w,h); const pct=t/total; const radius=20+pct*100; const x=w/2,y=h/2; ctx2.beginPath(); ctx2.arc(x,y,radius,0,Math.PI*2); ctx2.strokeStyle='rgba(0,216,216,.8)'; ctx2.lineWidth=4; ctx2.stroke(); ctx2.fillStyle='#d7d7d7'; ctx2.font='bold 16px Montserrat'; ctx2.textAlign='center'; ctx2.fillText(phase,x,y); }
+      function startBreathGuide(target=4){
+        if(brRun) return; brRun=true; brCycles=0;
+        const seq=[{name:'Inspire 4',secs:4},{name:'Segure 7',secs:7},{name:'Expire 8',secs:8}];
+        let phase=0,t=0;
+        function step(){
+          const cur=seq[phase]; drawBreath(cur.name,t,cur.secs);
+          if(t>=cur.secs){ phase++; t=0; if(phase>=seq.length){ phase=0; brCycles++; document.getElementById('brCycles').textContent=brCycles; if(brCycles>=target){ brRun=false; return; } } }
+          t++; brT=setTimeout(step,1000);
+        }
+        step();
+      }
+      document.getElementById('brStart').onclick=()=>startBreathGuide(4);
+      document.getElementById('brStop').onclick=()=>{ clearTimeout(brT); brRun=false; };
+      // Água
+      const waterBar=document.getElementById('waterBar'), wNow=document.getElementById('waterNow'), wMax=document.getElementById('waterMax');
+      let V={now:Number(localStorage.getItem('vitalis.waterNow')||0), max:Number(localStorage.getItem('vitalis.waterMax')||2000)};
+      function paintWater(){ wNow.textContent=V.now; wMax.textContent=V.max; waterBar.style.width=(V.max?Math.min(100,Math.round(100*V.now/V.max)):0)+'%'; }
+      document.getElementById('waterSet').onclick=()=>{ const v=Number(document.getElementById('waterGoal').value||0); if(!v) return; V.max=v; localStorage.setItem('vitalis.waterMax',V.max); paintWater(); };
+      document.getElementById('waterInc').onclick=()=>{ const v=Number(document.getElementById('waterAdd').value||0); if(!v) return; V.now=Math.max(0,V.now+v); localStorage.setItem('vitalis.waterNow',V.now); paintWater(); };
+      document.getElementById('waterReset').onclick=()=>{ V.now=0; localStorage.setItem('vitalis.waterNow',V.now); paintWater(); };
+      paintWater();
+    })();
+
+    /***********************
+     * Botão Único         *
+     ***********************/
+    const btn=document.getElementById('btnKOBLLUX');
+    btn.onclick=()=>{
+      const items = ARCHS.map((a,i)=>`${i+1}. ${a.name}`).join('\n');
+      const sys = [
+        'A. Ritual atual (TTS)',
+        'B. Abrir Lab do arquétipo',
+        'C. Resetar painel do arquétipo atual'
+      ].join('\n');
+      const pick=prompt(`☼ Botão Único — Ações\n${items}\n${sys}\n\nDigite número/letra:`);
+      if(!pick) return;
+      const idx=parseInt(pick,10);
+      if(!Number.isNaN(idx) && idx>=1 && idx<=ARCHS.length){ setActiveChip(ARCHS[idx-1].id); mount(ARCHS[idx-1].id); return; }
+      const active = document.getElementById('activeLabel').textContent;
+      const cur = ARCHS.find(a=>a.name===active);
+      if(!cur) return;
+      if(/^[aA]$/.test(pick)){ document.querySelector(`[data-ritual="${cur.id}"]`)?.click(); return; }
+      if(/^[bB]$/.test(pick)){
+        if(cur.id==='nova') openOverlay('novaLab');
+        else if(cur.id==='atlas') openOverlay('atlasPlanner');
+        else if(cur.id==='pulse') openOverlay('pulseStudio');
+        else if(cur.id==='vitalis') openOverlay('vitalisLab');
+        else alert('Lab dedicado disponível para Nova, Atlas, Pulse e Vitalis.');
+        return;
+      }
+      if(/^[cC]$/.test(pick)){ ['goal','notes','summary'].forEach(k=>localStorage.removeItem(`${cur.id}.${k}`)); alert('Painel reiniciado.'); mount(cur.id); }
+    };
+
+    /***********************
+     * Search / Hotkeys    *
+     ***********************/
+    (function(){
+      const input=document.getElementById('search');
+      function focusK(e){ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); input.focus(); } }
+      document.addEventListener('keydown',focusK);
+      input.addEventListener('input',()=>{
+        const q=input.value.toLowerCase().trim();
+        const found=ARCHS.find(a=>a.id.includes(q)||a.name.toLowerCase().includes(q));
+        if(found){ setActiveChip(found.id); mount(found.id); }
+      });
+      // atalhos numéricos
+      document.addEventListener('keydown', (e)=>{
+        const mapIdx={'1':'nova','2':'atlas','3':'pulse','4':'vitalis','5':'artemis','6':'serena','7':'kaos','8':'genus','9':'lumine','0':'rhea','-':'solus','=':'aion'};
+        if(e.ctrlKey||e.metaKey){ const id=mapIdx[e.key]; if(id){ setActiveChip(id); mount(id); } }
+      });
+      document.getElementById('to-tools').onclick=()=>{
+        const active=document.getElementById('activeLabel').textContent;
+        const cur=ARCHS.find(a=>a.name===active); if(!cur) return;
+        const map={nova:'novaLab',atlas:'atlasPlanner',pulse:'pulseStudio',vitalis:'vitalisLab'};
+        if(map[cur.id]) openOverlay(map[cur.id]); else alert('Ferramenta dedicada disponível para Nova, Atlas, Pulse e Vitalis.');
+      };
+    })();
+
+    /***********************
+     * Bootstrap           *
+     ***********************/
+    preloadTemplates();
+    buildChips();
+    mount('nova');
+  </script>
+</body>
+</html>

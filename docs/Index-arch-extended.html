@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="nebula">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Infodose • Archetypes Extended 2 (8 restantes)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--grad-a:#00d8d8;--grad-b:#d800d8;--text:#d7d7d7;--accent:#39FFB6;--ok:#00ffff;--warn:#FFC857;--err:#FF5C8A;--muted:#A8B0C0;--glass:rgba(255,255,255,.06);--glass-bd:rgba(255,255,255,.12);--blur:24px}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent} html,body{height:100%}
+    body{margin:0;color:var(--text);font:15px/1.5 'Montserrat',system-ui;background:
+      radial-gradient(60% 60% at 20% 10%, rgba(0,216,216,.25), transparent 60%),
+      radial-gradient(50% 50% at 80% 10%, rgba(216,0,216,.18), transparent 60%),
+      linear-gradient(180deg,#0f1b2a 0%, #0a0b13 100%);overflow:hidden}
+    #app{position:relative;height:100%;display:flex;flex-direction:column}
+    header{display:flex;align-items:center;gap:12px;padding:12px 16px}
+    .brand{font-weight:800;letter-spacing:.5px}.page{flex:1;display:none;padding:18px 18px 110px;overflow:auto}.page.active{display:block}
+    .glass{background:var(--glass);border:1px solid var(--glass-bd);border-radius:20px;backdrop-filter:blur(var(--blur));box-shadow:0 8px 32px rgba(0,255,255,.12)} .card{padding:16px}
+    .grid{display:grid;gap:16px} .grid.cols-2{grid-template-columns:repeat(2,1fr)} .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    @media (max-width:900px){.grid.cols-3{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:640px){.grid.cols-2,.grid.cols-3{grid-template-columns:1fr}}
+    .title{font-size:1.25rem;font-weight:700;margin:0 0 6px}.sub{font-size:.9rem;opacity:.8;margin:0}.muted{color:var(--muted)}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--glass-bd);background:rgba(255,255,255,.04);font-size:.75rem}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:12px 16px;border:0;border-radius:20px;cursor:pointer;color:#001014;font-weight:700;background:linear-gradient(90deg,var(--grad-a),var(--grad-b));box-shadow:0 8px 22px rgba(0,216,216,.25);transition:transform .12s ease}
+    .btn:active{transform:translateY(1px)} .btn.ghost{color:var(--text);background:transparent;border:1px solid var(--glass-bd)} .btn.small{padding:8px 12px;font-size:.85rem}
+    .input, textarea, select{width:100%;padding:12px 14px;color:var(--text);background:rgba(255,255,255,.05);border:1px solid var(--glass-bd);border-radius:14px;outline:none}
+    textarea{min-height:96px;resize:vertical}
+    .hero{position:relative;min-height:200px;overflow:hidden;display:grid;place-items:center}
+    .seal{width:220px;height:220px;border-radius:24px;border:1px dashed rgba(255,255,255,.22);display:grid;place-items:center;backdrop-filter:blur(10px)}
+    .row{display:flex;gap:12px;align-items:center}.wrap{flex-wrap:wrap}.ellip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.right{margin-left:auto}.center{text-align:center}
+    nav{position:fixed;bottom:12px;left:0;right:0;z-index:10;display:flex;justify-content:center;pointer-events:none}
+    .nav-container{pointer-events:auto;display:flex;justify-content:space-between;width:calc(100% - 24px);padding:6px;border-radius:28px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(var(--blur))}
+    .nav-item{flex:1;text-align:center;padding:6px 0;font-size:.75rem;opacity:.7;cursor:pointer}.nav-item.active{opacity:1}
+    .overlay{position:fixed;inset:0;display:none;place-items:center;z-index:1000;background:rgba(3,8,15,.55)} .overlay.open{display:grid}
+    .ifr-wrap{width:min(960px,96vw);max-height:84vh;overflow:auto;border-radius:20px;background:var(--glass);border:1px solid var(--glass-bd);backdrop-filter:blur(var(--blur));box-shadow:0 24px 80px rgba(0,0,0,.45);padding:16px}
+    .progressbar{height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}.progressbar>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--grad-a),var(--grad-b))}
+    #btnKOBLLUX{position:fixed;right:18px;bottom:18px;z-index:1002}
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="pill">KOBLLUX • InfoDose</div>
+      <div class="brand">Archetypes Extended 2</div>
+      <div class="right muted ellip" id="activeLabel">—</div>
+    </header>
+    <section id="main" class="page active"></section>
+    <nav><div class="nav-container"><div class="nav-item active">Arquétipos</div><div class="nav-item" id="to-tools">Ferramentas</div></div></nav>
+  </div>
+
+  <!-- Overlay genérico com área dinâmica -->
+  <div class="overlay" id="toolOverlay" aria-hidden="true">
+    <div class="ifr-wrap" role="dialog" aria-modal="true" aria-label="Ferramenta">
+      <div class="row"><strong id="toolTitle">Ferramenta</strong><button class="btn ghost small right" id="toolClose">Fechar</button></div>
+      <div id="toolBody" class="mt12"></div>
+    </div>
+  </div>
+
+  <button id="btnKOBLLUX" class="btn">☼ Botão Único</button>
+  <div id="templates" hidden></div>
+
+  <script>
+    /* ========= Catálogo (8 restantes) ========= */
+    const ARCHS = [
+      {id:'artemis', name:'Artemis – Explorador', element:'Madeira', role:'Exploração', ally:'Naviga', color:'#7fd2ff'},
+      {id:'serena',  name:'Serena – Cuidadora',   element:'Terra',   role:'Acolhimento', ally:'Ampara', color:'#ffb4c8'},
+      {id:'kaos',    name:'Kaos – Rebelde',       element:'Fogo',    role:'Disrupção',   ally:'Disruptor', color:'#ff6f6f'},
+      {id:'genus',   name:'Genus – Criador',      element:'Madeira', role:'Prototipagem', ally:'Fabricus', color:'#a1ffb2'},
+      {id:'lumine',  name:'Lumine – Alegre',      element:'Fogo',    role:'Alegria',      ally:'Brilhare', color:'#fff27a'},
+      {id:'rhea',    name:'Rhea – Órfão',         element:'Terra',   role:'Raízes/Empatia', ally:'Raízes', color:'#e1c099'},
+      {id:'solus',   name:'Solus – Mago',         element:'Metal',   role:'Harmonia',     ally:'Arcana', color:'#b8b8ff'},
+      {id:'aion',    name:'Aion – Transformador', element:'Água',    role:'Evolução',     ally:'Evolutia', color:'#98f5ff'},
+    ];
+
+    /* ========= Templates ========= */
+    const TPL = {
+      header:(a)=>`
+        <div class="glass card hero mb16" style="border-color:${a.color}99">
+          <div class="seal glass" style="border-color:${a.color}66">
+            <div style="text-align:center">
+              <div class="pill">Ritual • ${a.ally}</div>
+              <h2 class="title mt8">${a.name}</h2>
+              <div class="sub">${a.role} • Elemento ${a.element}</div>
+            </div>
+          </div>
+        </div>`,
+      panelBase:(a)=>`
+        <section class="grid cols-2">
+          <div class="glass card">
+            <h3 class="title">Ficha</h3>
+            <div class="row wrap mt8">
+              <span class="pill">Forças: <b id="${a.id}-strengths">—</b></span>
+              <span class="pill">Vulnerável: <b id="${a.id}-weak">—</b></span>
+              <span class="pill">Métrica: <b id="${a.id}-metric">—</b></span>
+            </div>
+            <div class="mt12">
+              <div class="muted mb8">Insight</div>
+              <div id="${a.id}-tip" class="glass card" style="padding:12px">—</div>
+            </div>
+            <div class="row mt12 wrap">
+              <button class="btn small" data-ritual="${a.id}">▶︎ Ritual ${a.ally}</button>
+              <button class="btn ghost small" data-reset="${a.id}">Zerar painel</button>
+            </div>
+          </div>
+          <div class="glass card">
+            <h3 class="title">Painel</h3>
+            <div class="mt8">
+              <label class="muted mb8" for="${a.id}-goal">Meta do dia</label>
+              <input id="${a.id}-goal" class="input" placeholder="Defina uma meta rápida"/>
+            </div>
+            <div class="mt12">
+              <label class="muted mb8" for="${a.id}-notes">Notas</label>
+              <textarea id="${a.id}-notes" placeholder="Anotações…"></textarea>
+            </div>
+            <div class="row mt12 wrap">
+              <button class="btn small" data-save="${a.id}">Salvar</button>
+              <button class="btn ghost small right" data-open="${a.id}-tool">Abrir Ferramenta</button>
+            </div>
+            <div class="mt12"><div class="muted mb8">Resumo</div><div id="${a.id}-summary">—</div></div>
+          </div>
+        </section>`,
+      // Ferramentas específicas (cada uma abre no overlay dinâmico)
+      tool: {
+        artemis: `
+          <div class="grid cols-2">
+            <div class="glass card">
+              <h4 class="title">Roteirizador de Rotas</h4>
+              <div class="muted">Tema / objetivo</div>
+              <input id="rtTopic" class="input" placeholder="Ex.: aprender X em 7 dias"/>
+              <div class="row mt12">
+                <button class="btn small" id="rtSuggest">Gerar 3 rotas</button>
+                <button class="btn ghost small right" id="rtClear">Limpar</button>
+              </div>
+              <pre id="rtOut" class="mt12" style="white-space:pre-wrap;word-break:break-word">—</pre>
+            </div>
+            <div class="glass card">
+              <h4 class="title">Favoritos</h4>
+              <div class="row">
+                <input id="rtFav" class="input" placeholder="Cole um link ou nota"/>
+                <button class="btn small" id="rtAdd">+ Favorito</button>
+              </div>
+              <ul id="rtList" class="mt12" style="list-style:none;padding:0;margin:0"></ul>
+            </div>
+          </div>`,
+        serena: `
+          <div class="grid cols-2">
+            <div class="glass card">
+              <h4 class="title">Jornal de Cuidado</h4>
+              <div class="muted">Como você se sente agora?</div>
+              <input id="seMood" type="range" min="0" max="4" value="2"/>
+              <div class="row mt8"><small class="muted">frágil</small><div class="right muted">forte</div></div>
+              <div class="mt12">
+                <div class="muted">3 gestos de gentileza (hoje)</div>
+                <textarea id="seActs" placeholder="Ex.: 1) água • 2) pausa • 3) mensagem…"></textarea>
+              </div>
+              <div class="row mt12">
+                <button class="btn small" id="seSave">Registrar</button>
+                <button class="btn ghost small right" id="seTTS">Ouvir frase calma</button>
+              </div>
+            </div>
+            <div class="glass card">
+              <h4 class="title">Registros</h4>
+              <pre id="seLog" style="white-space:pre-wrap;word-break:break-word">—</pre>
+            </div>
+          </div>`,
+        kaos: `
+          <div class="grid cols-2">
+            <div class="glass card">
+              <h4 class="title">Quebra-Padrão</h4>
+              <div class="muted">Liste até 3 “regras” do seu projeto.</div>
+              <textarea id="ksRules" placeholder="Regra 1…&#10;Regra 2…&#10;Regra 3…"></textarea>
+              <div class="row mt12">
+                <button class="btn small" id="ksInvert">Gerar Inversões</button>
+                <button class="btn ghost small right" id="ksDice">Desafio de 2 minutos</button>
+              </div>
+              <pre id="ksOut" class="mt12" style="white-space:pre-wrap;word-break:break-word">—</pre>
+            </div>
+            <div class="glass card">
+              <h4 class="title">Anotações</h4>
+              <textarea id="ksNotes" placeholder="Ideias radicais…"></textarea>
+              <div class="row mt12"><button class="btn small" id="ksSave">Salvar</button></div>
+            </div>
+          </div>`,
+        genus: `
+          <div class="grid cols-2">
+            <div class="glass card">
+              <h4 class="title">ProtoCanvas (blocos)</h4>
+              <div class="row">
+                <select id="geType" class="input" style="width:auto">
+                  <option value="header">Header</option>
+                  <option value="text">Texto</option>
+                  <option value="button">Botão</option>
+                  <option value="image">Imagem</option>
+                  <option value="card">Card</option>
+                </select>
+                <input id="geLabel" class="input" placeholder="rótulo / conteúdo" />
+                <button class="btn small" id="geAdd">+ bloco</button>
+              </div>
+              <div id="geCanvas" class="mt12" style="display:grid;gap:8px"></div>
+              <div class="row mt12">
+                <button class="btn ghost small" id="geClear">Limpar</button>
+                <button class="btn small right" id="geExport">Exportar JSON</button>
+              </div>
+            </div>
+            <div class="glass card">
+              <h4 class="title">Preview JSON</h4>
+              <pre id="geJSON" style="white-space:pre-wrap;word-break:break-word">[]</pre>
+            </div>
+          </div>`,
+        lumine: `
+          <div class="grid cols-2">
+            <div class="glass card">
+              <h4 class="title">Social Spark</h4>
+              <div class="muted">Gatilhos de interação rápida</div>
+              <div class="row wrap mt8">
+                <button class="btn ghost" data-lm="elogio">Elogio</button>
+                <button class="btn ghost" data-lm="pergunta">Pergunta</button>
+                <button class="btn ghost" data-lm="agradecer">Agradecer</button>
+              </div>
+              <pre id="lmOut" class="mt12" style="white-space:pre-wrap;word-break:break-word">—</pre>
+              <div class="row mt12">
+                <button class="btn small" id="lmTTS">Ouvir frase leve</button>
+                <button class="btn ghost small right" id="lmClear">Limpar</button>
+              </div>
+            </div>
+            <div class="glass card">
+              <h4 class="title">Gratidão</h4>
+              <div class="row">
+                <input id="lmG" class="input" placeholder="Hoje sou grato(a) por…" />
+                <button class="btn small" id="lmAdd">+1</button>
+              </div>
+              <div class="progressbar mt12"><span id="lmPB"></span></div>
+              <div class="row mt8"><span class="pill">Itens: <b id="lmCount">0</b></span></div>
+            </div>
+          </div>`,
+        rhea: `
+          <div class="grid cols-2">
+            <div class="glass card">
+              <h4 class="title">Memória-Trilha</h4>
+              <div class="muted">Registre um evento significativo</div>
+              <input id="rhTitle" class="input" placeholder="Título do evento" />
+              <textarea id="rhText" class="mt8" placeholder="O que aconteceu? Como você se sentiu? Quem estava lá?"></textarea>
+              <div class="row mt12">
+                <button class="btn small" id="rhAdd">Adicionar à linha do tempo</button>
+                <button class="btn ghost small right" id="rhClear">Limpar</button>
+              </div>
+            </div>
+            <div class="glass card">
+              <h4 class="title">Linha do Tempo</h4>
+              <ul id="rhList" style="list-style:none;padding:0;margin:0"></ul>
+            </div>
+          </div>`,
+        solus: `
+          <div class="grid cols-2">
+            <div class="glass card">
+              <h4 class="title">Ritual 5-10-5</h4>
+              <div class="center mt8">
+                <div class="title" id="soLabel">Preparar</div>
+                <div style="font-size:2.6rem;font-weight:700" id="soTimer">05:00</div>
+              </div>
+              <div class="row mt12 wrap">
+                <button class="btn small" id="soStart">Iniciar</button>
+                <button class="btn ghost small" id="soPause">Pausar</button>
+                <button class="btn ghost small" id="soReset">Resetar</button>
+                <span class="pill right">Sinos: <b id="soBells">0</b></span>
+              </div>
+              <div class="mt12">
+                <label class="muted mb8" for="soIntent">Intenção</label>
+                <input id="soIntent" class="input" placeholder="Ex.: acalmar, clarear, alinhar" />
+              </div>
+            </div>
+            <div class="glass card">
+              <h4 class="title">Observações</h4>
+              <textarea id="soNotes" placeholder="Percepções após a prática…"></textarea>
+              <div class="row mt12"><button class="btn small" id="soSave">Salvar</button></div>
+            </div>
+          </div>`,
+        aion: `
+          <div class="grid cols-2">
+            <div class="glass card">
+              <h4 class="title">Mapa de Micro-Ações</h4>
+              <div class="row">
+                <input id="aiKR" class="input" placeholder="KR (resultado-chave)"/>
+                <input id="aiVal" class="input" placeholder="Meta numérica (ex.: 10)"/>
+                <button class="btn small" id="aiAddKR">+ KR</button>
+              </div>
+              <ul id="aiList" class="mt12" style="list-style:none;padding:0;margin:0"></ul>
+            </div>
+            <div class="glass card">
+              <h4 class="title">Próximo Passo</h4>
+              <pre id="aiNext" style="white-space:pre-wrap;word-break:break-word">—</pre>
+              <div class="row mt12">
+                <button class="btn small" id="aiSuggest">Sugerir ação de 10 min</button>
+                <button class="btn ghost small right" id="aiClear">Limpar</button>
+              </div>
+            </div>
+          </div>`
+      }
+    };
+
+    function preloadTemplates(){
+      const holder = document.getElementById('templates');
+      ARCHS.forEach(a=>{
+        const t=document.createElement('template'); t.id=`archetype-${a.id}`;
+        t.innerHTML = TPL.header(a)+TPL.panelBase(a);
+        holder.appendChild(t);
+      });
+    }
+
+    /* ========= Render / Mount ========= */
+    function mount(id){
+      const tpl = document.getElementById(`archetype-${id}`); const main=document.getElementById('main');
+      if(!tpl){ main.innerHTML='<div class="glass card">Arquétipo não encontrado.</div>'; return; }
+      main.innerHTML = tpl.innerHTML;
+      document.getElementById('activeLabel').textContent = ARCHS.find(x=>x.id===id).name;
+      bootCommon(id);
+      // boots específicos
+      ({artemis:bootArtemis,serena:bootSerena,kaos:bootKaos,genus:bootGenus,lumine:bootLumine,rhea:bootRhea,solus:bootSolus,aion:bootAion}[id]||(()=>{}))();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    /* ========= Comum aos 8 ========= */
+    function tts(text){ if('speechSynthesis' in window){ const u=new SpeechSynthesisUtterance(text); speechSynthesis.cancel(); speechSynthesis.speak(u);} else alert(text); }
+    function bootCommon(id){
+      // forças & fraquezas (sintéticas)
+      const map={
+        artemis:['curiosidade, rotas, descoberta','dispersão'],
+        serena:['acolhimento, pausa, compaixão','auto-esquecimento'],
+        kaos:['inversão, coragem, ruptura','excesso de caos'],
+        genus:['materialização, blocagem, craft','perfeccionismo'],
+        lumine:['leveza, conexão, humor','superficialidade'],
+        rhea:['memória, vínculos, propósito','apego'],
+        solus:['harmonia, presença, alinhamento','abstração'],
+        aion:['micro-ações, visão, evolução','impaciência']
+      };
+      const pair=map[id]||['—','—'];
+      document.getElementById(`${id}-strengths`).textContent=pair[0];
+      document.getElementById(`${id}-weak`).textContent=pair[1];
+      document.getElementById(`${id}-metric`).textContent='1 passo útil';
+      // insight
+      document.getElementById(`${id}-tip`).innerHTML = `Hoje, ${id} sugere: um passo de 2 minutos agora, com um gancho para a próxima rodada.`;
+      // painel base
+      const g=document.getElementById(`${id}-goal`), n=document.getElementById(`${id}-notes`), s=document.getElementById(`${id}-summary`);
+      g.value = localStorage.getItem(`${id}.goal`)||''; n.value = localStorage.getItem(`${id}.notes`)||''; s.textContent=localStorage.getItem(`${id}.summary`)||'—';
+      document.querySelector(`[data-save="${id}"]`).addEventListener('click', ()=>{
+        localStorage.setItem(`${id}.goal`, g.value.trim());
+        localStorage.setItem(`${id}.notes`, n.value.trim());
+        localStorage.setItem(`${id}.summary`, `• ${new Date().toLocaleTimeString()} — meta atualizada: ${g.value}\n---\n`+(localStorage.getItem(`${id}.summary`)||'')); alert('Salvo!');
+      });
+      document.querySelector(`[data-reset="${id}"]`).addEventListener('click', ()=>{
+        ['goal','notes','summary'].forEach(k=>localStorage.removeItem(`${id}.${k}`)); mount(id);
+      });
+      document.querySelector(`[data-ritual="${id}"]`).addEventListener('click', ()=>{
+        tts(`${ARCHS.find(a=>a.id===id).name}. Traga a intenção e execute agora um passo de 2 minutos.`);
+      });
+      // Ferramenta → overlay dinâmico
+      document.querySelector(`[data-open="${id}-tool"]`).addEventListener('click', ()=>{
+        openTool(ARCHS.find(a=>a.id===id).name, TPL.tool[id]);
+        // ligar handlers específicos após injetar
+        ({artemis:wArtemis,serena:wSerena,kaos:wKaos,genus:wGenus,lumine:wLumine,rhea:wRhea,solus:wSolus,aion:wAion}[id]||(()=>{}))();
+      });
+    }
+
+    /* ========= Overlay util ========= */
+    const toolOverlay=document.getElementById('toolOverlay'), toolBody=document.getElementById('toolBody'), toolTitle=document.getElementById('toolTitle');
+    document.getElementById('toolClose').onclick=()=>closeTool();
+    toolOverlay.addEventListener('click', (e)=>{ if(e.target===toolOverlay) closeTool(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && toolOverlay.classList.contains('open')) closeTool(); });
+    function openTool(title, html){ toolTitle.textContent=title; toolBody.innerHTML=html; toolOverlay.classList.add('open'); toolOverlay.setAttribute('aria-hidden','false'); }
+    function closeTool(){ toolOverlay.classList.remove('open'); toolOverlay.setAttribute('aria-hidden','true'); toolBody.innerHTML=''; }
+
+    /* ========= Ferramentas / Boots específicos ========= */
+    // ARTEMIS
+    function bootArtemis(){/* nada além do comum */}
+    function wArtemis(){
+      const L = JSON.parse(localStorage.getItem('artemis.favs')||'[]'); const ul=document.getElementById('rtList'); const out=document.getElementById('rtOut');
+      function paint(){ ul.innerHTML=''; L.forEach((v,i)=>{ const li=document.createElement('li'); li.className='glass card'; li.style.padding='10px'; li.innerHTML=`${v}<button class="btn ghost small right" data-del="${i}">✕</button>`; ul.appendChild(li); });
+        ul.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ L.splice(Number(b.dataset.del),1); persist(); paint(); }); }
+      function persist(){ localStorage.setItem('artemis.favs', JSON.stringify(L)); }
+      paint();
+      document.getElementById('rtAdd').onclick=()=>{ const v=document.getElementById('rtFav').value.trim(); if(!v) return; L.unshift(v); persist(); paint(); document.getElementById('rtFav').value='';};
+      document.getElementById('rtClear').onclick=()=>{ out.textContent='—'; };
+      document.getElementById('rtSuggest').onclick=()=>{
+        const t=document.getElementById('rtTopic').value||'explorar um tema';
+        const routes=[
+          `Rota Leve (30min/dia): 1 vídeo base → 3 anotações → 1 micro-prática.`,
+          `Rota Média (1h/dia): 1 fonte primária → resumo → compartilhar 1 insight.`,
+          `Rota Profunda (2h/dia): 1 paper/capítulo → mapa mental → protótipo simples.`
+        ];
+        out.textContent = `Tema: ${t}\n\n`+routes.map(r=>'• '+r).join('\n');
+      };
+    }
+
+    // SERENA
+    function bootSerena(){/* comum basta */}
+    function wSerena(){
+      const logKey='serena.log'; const log=()=>localStorage.getItem(logKey)||'—'; const setLog=(v)=>localStorage.setItem(logKey, v);
+      document.getElementById('seLog').textContent = log();
+      document.getElementById('seSave').onclick=()=>{
+        const mood=Number(document.getElementById('seMood').value); const acts=document.getElementById('seActs').value.trim();
+        const moodName=['frágil','cansado','ok','presente','forte'][mood];
+        const line=`• ${new Date().toLocaleTimeString()} • humor:${moodName}\n${acts||'(sem atos)'}\n---\n`+(log()==='—'?'':log());
+        setLog(line); document.getElementById('seLog').textContent=line; alert('Registrado!');
+      };
+      document.getElementById('seTTS').onclick=()=>tts('Respira. Você está seguro. Avance um passo pequeno e gentil agora.');
+    }
+
+    // KAOS
+    function bootKaos(){/* comum */}
+    function wKaos(){
+      const out=document.getElementById('ksOut'); const notesKey='kaos.notes';
+      document.getElementById('ksInvert').onclick=()=>{
+        const rules=(document.getElementById('ksRules').value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+        if(!rules.length){ out.textContent='Adicione regras primeiro.'; return; }
+        const inv=rules.map((r,i)=>`R${i+1}: ${r}\n→ Inversão: e se fizermos o OPOSTO por 1 rodada controlada?\n→ Alternativa: como X mas com Y (híbrido)\n`).join('\n');
+        out.textContent=inv;
+      };
+      document.getElementById('ksDice').onclick=()=>{
+        const dice=['Elimine uma etapa','Inverta ordem','Reduza 90%','Troque o meio','Imponha limite 2 min','Use dado para decidir'];
+        out.textContent='Desafio: '+dice[Math.floor(Math.random()*dice.length)]+' (rodada de 2 minutos).';
+      };
+      document.getElementById('ksSave').onclick=()=>{
+        const prev=localStorage.getItem(notesKey)||''; localStorage.setItem(notesKey, (document.getElementById('ksNotes').value||'')+'\n---\n'+prev); alert('Salvo.');
+      };
+    }
+
+    // GENUS
+    function bootGenus(){/* comum */}
+    function wGenus(){
+      const list=JSON.parse(localStorage.getItem('genus.blocks')||'[]'); const canvas=document.getElementById('geCanvas'); const pre=document.getElementById('geJSON');
+      function paint(){ canvas.innerHTML=''; list.forEach((b,i)=>{ const el=document.createElement('div'); el.className='glass card'; el.style.padding='10px'; el.innerHTML=`<b>${b.type}</b> — ${b.label} <button class="btn ghost small right" data-del="${i}">✕</button>`; canvas.appendChild(el); });
+        pre.textContent = JSON.stringify(list,null,2);
+        canvas.querySelectorAll('[data-del]').forEach(btn=>btn.onclick=()=>{ list.splice(Number(btn.dataset.del),1); persist(); paint(); });
+      }
+      function persist(){ localStorage.setItem('genus.blocks', JSON.stringify(list)); }
+      paint();
+      document.getElementById('geAdd').onclick=()=>{ const type=document.getElementById('geType').value; const label=document.getElementById('geLabel').value.trim(); if(!label) return; list.push({type,label}); persist(); paint(); document.getElementById('geLabel').value=''; };
+      document.getElementById('geClear').onclick=()=>{ list.length=0; persist(); paint(); };
+      document.getElementById('geExport').onclick=()=>{ navigator.clipboard?.writeText(pre.textContent); alert('JSON copiado!'); };
+    }
+
+    // LUMINE
+    function bootLumine(){/* comum */}
+    function wLumine(){
+      const bank={
+        elogio:['Teu cuidado com os detalhes brilhou.','Sua clareza torna tudo mais simples.','Que energia boa você trouxe!'],
+        pergunta:['O que te animou hoje?','Se pudesse simplificar isso em 1 frase, qual seria?','Qual pequeno passo faria agora?'],
+        agradecer:['Obrigado por estar aqui.','Valeu por somar leveza hoje.','Gratidão pela sua presença.']
+      };
+      document.querySelectorAll('[data-lm]').forEach(b=>b.onclick=()=>{ const arr=bank[b.dataset.lm]; document.getElementById('lmOut').textContent = '• '+arr[Math.floor(Math.random()*arr.length)]; });
+      document.getElementById('lmTTS').onclick=()=>tts('Sorria por 3 segundos. Envie uma boa palavra agora.');
+      const countKey='lumine.count'; const pb=document.getElementById('lmPB'), cnt=document.getElementById('lmCount');
+      function paint(){ const c=Number(localStorage.getItem(countKey)||0); cnt.textContent=c; pb.style.width=Math.min(100,c*10)+'%'; }
+      paint();
+      document.getElementById('lmAdd').onclick=()=>{ const g=(document.getElementById('lmG').value||''); if(!g) return; const c=Number(localStorage.getItem(countKey)||0)+1; localStorage.setItem(countKey,c); paint(); document.getElementById('lmG').value=''; };
+      document.getElementById('lmClear').onclick=()=>{ document.getElementById('lmOut').textContent='—'; };
+    }
+
+    // RHEA
+    function bootRhea(){/* comum */}
+    function wRhea(){
+      const key='rhea.timeline'; const list=JSON.parse(localStorage.getItem(key)||'[]'); const ul=document.getElementById('rhList');
+      function paint(){ ul.innerHTML=''; list.forEach((e,i)=>{ const li=document.createElement('li'); li.className='glass card'; li.style.padding='10px'; li.innerHTML=`<b>${e.title}</b><br>${e.text}<button class="btn ghost small right" data-del="${i}">✕</button>`; ul.appendChild(li); });
+        ul.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ list.splice(Number(b.dataset.del),1); persist(); paint(); });
+      }
+      function persist(){ localStorage.setItem(key, JSON.stringify(list)); }
+      paint();
+      document.getElementById('rhAdd').onclick=()=>{ const t=document.getElementById('rhTitle').value.trim(); const tx=document.getElementById('rhText').value.trim(); if(!t||!tx)return; list.unshift({title:t,text:tx}); persist(); paint(); document.getElementById('rhTitle').value=''; document.getElementById('rhText').value=''; };
+      document.getElementById('rhClear').onclick=()=>{ ul.innerHTML=''; localStorage.removeItem(key); };
+    }
+
+    // SOLUS
+    function bootSolus(){/* comum */}
+    function wSolus(){
+      let ctx=null, bell=null; function beep(){ if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)(); const o=ctx.createOscillator(), g=ctx.createGain(); o.type='sine'; o.frequency.value=660; g.gain.setValueAtTime(0.0001, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime+0.02); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.6); o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+0.6); }
+      let mode=0, // 0:5min / 1:10min / 2:5min
+          remain=300, run=false, t=null, bells=0;
+      const lab=document.getElementById('soLabel'), tm=document.getElementById('soTimer'), bEl=document.getElementById('soBells');
+      function fmt(s){const m=String(Math.floor(s/60)).padStart(2,'0'), x=String(s%60).padStart(2,'0'); return `${m}:${x}`;}
+      function paint(){ lab.textContent=['Acalmar (5m)','Clarear (10m)','Alinhar (5m)'][mode]; tm.textContent=fmt(remain); bEl.textContent=bells; }
+      function step(){ paint(); if(remain<=0){ beep(); bells++; if(mode===0){mode=1; remain=600}else if(mode===1){mode=2; remain=300}else{run=false; return;} } t=setTimeout(()=>{remain--; step();},1000); }
+      document.getElementById('soStart').onclick=()=>{ if(run) return; run=true; mode=0; remain=300; step(); };
+      document.getElementById('soPause').onclick=()=>{ clearTimeout(t); run=false; };
+      document.getElementById('soReset').onclick=()=>{ clearTimeout(t); run=false; mode=0; remain=300; bells=0; paint(); };
+      document.getElementById('soSave').onclick=()=>{ const it=document.getElementById('soIntent').value||'—'; const notes=document.getElementById('soNotes').value||''; const prev=localStorage.getItem('solus.log')||''; localStorage.setItem('solus.log', `• ${new Date().toLocaleString()} • intenção: ${it}\n${notes}\n---\n`+prev); alert('Salvo!'); };
+      paint();
+    }
+
+    // AION
+    function bootAion(){/* comum */}
+    function wAion(){
+      const key='aion.krs'; const list=JSON.parse(localStorage.getItem(key)||'[]'); const ul=document.getElementById('aiList'); const next=document.getElementById('aiNext');
+      function paint(){ ul.innerHTML=''; list.forEach((k,i)=>{ const li=document.createElement('li'); li.className='glass card'; li.style.padding='10px'; li.innerHTML=`
+          <div class="row wrap">
+            <b>${k.name}</b> (meta: ${k.target})
+            <span class="pill right">Atual: <b>${k.current}</b></span>
+          </div>
+          <div class="row mt8">
+            <input data-i="${i}" class="input" placeholder="+ incremento"/>
+            <button class="btn small" data-inc="${i}">+ Atualizar</button>
+            <button class="btn ghost small right" data-del="${i}">✕</button>
+          </div>`; ul.appendChild(li); });
+        ul.querySelectorAll('[data-inc]').forEach(b=>b.onclick=()=>{ const i=Number(b.dataset.inc); const input=ul.querySelector(`input[data-i="${i}"]`); const v=Number(input.value||0); if(!v) return; list[i].current=Math.max(0, list[i].current+v); persist(); paint(); });
+        ul.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ list.splice(Number(b.dataset.del),1); persist(); paint(); });
+        suggest();
+      }
+      function persist(){ localStorage.setItem(key, JSON.stringify(list)); }
+      paint();
+      document.getElementById('aiAddKR').onclick=()=>{ const n=document.getElementById('aiKR').value.trim(); const v=Number(document.getElementById('aiVal').value||0); if(!n||!v)return; list.push({name:n,target:v,current:0}); persist(); paint(); document.getElementById('aiKR').value=''; document.getElementById('aiVal').value=''; };
+      document.getElementById('aiClear').onclick=()=>{ list.length=0; persist(); paint(); next.textContent='—'; };
+      document.getElementById('aiSuggest').onclick=()=>suggest(true);
+      function suggest(force=false){
+        if(!list.length){ next.textContent='Adicione um KR e eu proponho a próxima micro-ação.'; return; }
+        // heurística simples: KR mais distante do target
+        const scored=list.map((k,i)=>({i, gap:(k.target-k.current)})).sort((a,b)=>b.gap-a.gap)[0];
+        const k=list[scored.i];
+        const ideas=[
+          `Dividir ${k.name} em 3 passos que caibam em 10 min.`,
+          `Criar um lembrete recorrente de 10 min/dia para ${k.name}.`,
+          `Pare agora 10 min e avance 1% de ${k.name} (qual é o menor gesto?).`
+        ];
+        if(force || scored.gap>0) next.textContent = `Foque no KR: ${k.name}\nSugestão: ${ideas[Math.floor(Math.random()*ideas.length)]}`;
+      }
+    }
+
+    /* ========= Botão Único ========= */
+    function openMenu(){
+      const items = ARCHS.map((a,i)=>`${i+1}. Abrir ${a.name}`).join('\n');
+      const pick = prompt(`☼ Botão Único — Ações\n${items}\n\nDigite o número:`);
+      if(!pick) return;
+      const idx=parseInt(pick,10); if(!Number.isNaN(idx)&&idx>=1&&idx<=ARCHS.length){ mount(ARCHS[idx-1].id); }
+    }
+
+    /* ========= Boot ========= */
+    preloadTemplates(); mount('artemis');
+    document.getElementById('btnKOBLLUX').addEventListener('click', openMenu);
+    document.getElementById('to-tools').addEventListener('click', ()=>{ const n=document.getElementById('activeLabel').textContent; const a=ARCHS.find(x=>x.name===n); if(!a) return; openTool(a.name, TPL.tool[a.id]); ({artemis:wArtemis,serena:wSerena,kaos:wKaos,genus:wGenus,lumine:wLumine,rhea:wRhea,solus:wSolus,aion:wAion}[a.id]||(()=>{}))(); });
+    // atalhos rápida (Ctrl/Cmd+5..12)
+    document.addEventListener('keydown', (e)=>{
+      const mapIdx={5:'artemis',6:'serena',7:'kaos',8:'genus',9:'lumine',0:'rhea', '-':'solus','=':'aion'};
+      if(e.ctrlKey||e.metaKey){ const id=mapIdx[e.key]; if(id) mount(id); }
+    });
+  </script>
+</body>
+</html>

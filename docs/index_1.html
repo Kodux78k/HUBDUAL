@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hub Uno Mockup</title>
+    <!-- Import Google Fonts for a modern look -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Import Ionicons for crisp icons -->
+    <script
+      type="module"
+      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"
+    ></script>
+    <script
+      nomodule
+      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"
+    ></script>
+    <style>
+      /* Root variables define the overall colour palette and ease future adjustments */
+      :root {
+        /* Background gradient resembles the dark, moody hues seen in the screenshots */
+        --bg-gradient: linear-gradient(180deg, #4d2a73 0%, #0f5275 100%);
+        --card-bg: rgba(255, 255, 255, 0.05);
+        --card-border: rgba(255, 255, 255, 0.1);
+        --glass-blur: 14px;
+        --primary-gradient: linear-gradient(90deg, #b84d99 0%, #2583c6 100%);
+        --accent-blue: #59b5e5;
+        --accent-green: #4dbf99;
+        --accent-purple: #5d5eea;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        font-family: 'Inter', sans-serif;
+        color: #ffffff;
+        background: var(--bg-gradient);
+        overflow: hidden;
+      }
+
+      /* The main container holds all pages and ensures they fill the viewport */
+      #app {
+        position: relative;
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Pages are hidden by default; the active one becomes visible */
+      .page {
+        flex: 1;
+        display: none;
+        padding: 24px 20px 120px; /* bottom padding leaves space for nav bar */
+        overflow-y: auto;
+      }
+
+      .page.active {
+        display: block;
+      }
+
+      /* Generic card styling reminiscent of the frosted glass panels */
+      .card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        padding: 16px;
+        position: relative;
+        backdrop-filter: blur(var(--glass-blur));
+      }
+
+      /* A grid layout for home cards */
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+      /* Ensure all cards in the home grid have a consistent minimum height so they align neatly */
+      .card-grid > .card {
+        min-height: 150px;
+      }
+
+      /* User card specific tweaks */
+      .user-card .user-info h2 {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 600;
+      }
+      .user-card .user-info span {
+        font-size: 0.8rem;
+        opacity: 0.75;
+      }
+      .user-card .icon-wrapper {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, #5ecff3 0%, #1f89d1 100%);
+      }
+      .user-card .icon-wrapper svg {
+        width: 40px;
+        height: 40px;
+      }
+
+      /* Last session card styling */
+      .last-session-card .title {
+        font-size: 0.8rem;
+        opacity: 0.7;
+        margin-bottom: 8px;
+      }
+      .last-session-card h2 {
+        margin: 0;
+        font-size: 1.2rem;
+        line-height: 1.2;
+        font-weight: 600;
+      }
+      .last-session-card .icon-circle {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .last-session-card .icon-circle ion-icon {
+        font-size: 1.8rem;
+      }
+
+      /* Ecos card styling */
+      .eco-card .count {
+        font-size: 2.6rem;
+        font-weight: 600;
+        margin: 0;
+      }
+      .eco-card .label {
+        font-size: 1rem;
+        opacity: 0.7;
+        margin-bottom: 8px;
+      }
+      .eco-card .details span {
+        display: block;
+        font-size: 0.75rem;
+        opacity: 0.7;
+      }
+
+      /* Audio card styling */
+      .audio-card .title {
+        font-size: 0.9rem;
+        opacity: 0.7;
+      }
+      .audio-card .audio-wrapper {
+        margin-top: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .audio-card svg {
+        width: 64px;
+        height: 64px;
+      }
+
+      /* The big call‑to‑action button on home */
+      .big-button {
+        display: block;
+        width: 100%;
+        margin-top: 24px;
+        padding: 16px;
+        border: none;
+        border-radius: 22px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #fff;
+        cursor: pointer;
+        background: var(--primary-gradient);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        transition: transform 0.15s;
+      }
+      .big-button:active {
+        transform: scale(0.98);
+      }
+
+      /* Navigation bar styling */
+      nav {
+        position: fixed;
+        bottom: 12px;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+        pointer-events: none; /* disable pointer events on wrapper to confine to nav-container */
+      }
+      nav .nav-container {
+        display: flex;
+        justify-content: space-between;
+        width: calc(100% - 24px);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(var(--glass-blur));
+        border-radius: 28px;
+        padding: 6px;
+        pointer-events: all;
+      }
+      .nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 0;
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        transition: color 0.3s;
+      }
+      .nav-item ion-icon {
+        font-size: 1.6rem;
+        margin-bottom: 2px;
+      }
+      .nav-item.active {
+        color: #ffffff;
+      }
+
+      /* Settings page header */
+      .settings-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+      }
+      .settings-header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+      .settings-header .subtitle {
+        display: block;
+        font-size: 0.9rem;
+        opacity: 0.7;
+        margin-top: 4px;
+      }
+      .icon-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        cursor: pointer;
+        backdrop-filter: blur(var(--glass-blur));
+      }
+
+      /* Settings cards grid */
+      .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .settings-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        padding: 16px;
+        backdrop-filter: blur(var(--glass-blur));
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 140px;
+      }
+      .settings-card .header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .settings-card .header .icon-box {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+      }
+      .settings-card.theme .icon-box {
+        background: linear-gradient(180deg, #5c77e0 0%, #1a43a5 100%);
+      }
+      .settings-card.apps .icon-box {
+        background: linear-gradient(180deg, #59c6a3 0%, #2b9c8a 100%);
+      }
+      .settings-card h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      .settings-card .sub {
+        font-size: 0.75rem;
+        opacity: 0.7;
+      }
+      .settings-card .action-btn {
+        align-self: stretch;
+        margin-top: 12px;
+        padding: 10px;
+        border: none;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(var(--glass-blur));
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .settings-card .action-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      /* Appearance (Aparência) section */
+      .appearance-section {
+        margin-bottom: 24px;
+      }
+      .appearance-section h3 {
+        margin: 0 0 12px;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      .segmented-control {
+        display: flex;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 18px;
+        overflow: hidden;
+        backdrop-filter: blur(var(--glass-blur));
+      }
+      .segmented-control button {
+        flex: 1;
+        padding: 10px 0;
+        border: none;
+        background: transparent;
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+      .segmented-control button.active {
+        background: var(--primary-gradient);
+      }
+
+      /* Personalization section */
+      .personalization-section h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      .personalization-section .subtitle {
+        font-size: 0.8rem;
+        opacity: 0.7;
+        margin-bottom: 16px;
+      }
+
+      /* ===== Archetypes page styling ===== */
+      .arch-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        margin-top: 20px;
+      }
+      .arch-switcher {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        padding: 8px 12px;
+        backdrop-filter: blur(var(--glass-blur));
+      }
+      .arch-switcher button {
+        border: none;
+        background: var(--card-bg);
+        color: #ffffff;
+        border-radius: 14px;
+        padding: 8px 12px;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      .arch-switcher select {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        color: #ffffff;
+        border-radius: 14px;
+        padding: 6px 8px;
+        font-size: 0.9rem;
+      }
+      .arch-circle {
+        position: relative;
+        width: 260px;
+        height: 260px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 1px solid var(--card-border);
+        backdrop-filter: blur(var(--glass-blur));
+        background: radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+      }
+      .arch-circle iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+      .arch-audio-btn {
+        display: block;
+        width: 100%;
+        margin-top: 12px;
+        padding: 14px;
+        border: none;
+        border-radius: 20px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #ffffff;
+        background: var(--primary-gradient);
+        cursor: pointer;
+      }
+      .voice-select {
+        width: 100%;
+        padding: 10px;
+        border-radius: 16px;
+        border: 1px solid var(--card-border);
+        background: var(--card-bg);
+        color: #ffffff;
+        font-size: 0.9rem;
+        margin-top: 8px;
+      }
+      .arch-message {
+        margin-top: 8px;
+        padding: 8px 12px;
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.6);
+        color: #ffffff;
+        font-size: 0.9rem;
+        opacity: 0;
+        transition: opacity 0.3s;
+        text-align: center;
+      }
+      .arch-message.show {
+        opacity: 1;
+      }
+
+      /* Responsive tweaks */
+      @media (max-width: 480px) {
+        .settings-card {
+          min-height: 150px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- Home Page -->
+      <div class="page active" id="page-home">
+        <div class="card-grid">
+          <!-- User card -->
+          <div class="card user-card">
+            <div class="user-info">
+              <h2>Rafael</h2>
+              <span>Arcanjo Ativo</span>
+            </div>
+            <div class="icon-wrapper">
+              <!-- Custom angel icon built with inline SVG to more closely mirror the simple angel silhouette from the reference -->
+              <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                <!-- Halo: thin ellipse above the head -->
+                <ellipse cx="32" cy="8" rx="10" ry="2" stroke="#ffffff" stroke-width="2" fill="none" />
+                <!-- Head -->
+                <circle cx="32" cy="18" r="6" fill="#ffffff" />
+                <!-- Body -->
+                <rect x="28" y="24" width="8" height="14" rx="4" fill="#ffffff" />
+                <!-- Left wing: triangular wing stretching outward -->
+                <path d="M32 24 L20 32 L20 36 L32 28 Z" fill="#ffffff" />
+                <!-- Right wing: mirror of left -->
+                <path d="M32 24 L44 32 L44 36 L32 28 Z" fill="#ffffff" />
+              </svg>
+            </div>
+          </div>
+          <!-- Last session card -->
+          <div class="card last-session-card">
+            <div class="title">Última Sessão</div>
+            <h2>Stack<br />Infodose A</h2>
+            <div class="icon-circle">
+              <ion-icon name="refresh-outline"></ion-icon>
+            </div>
+          </div>
+          <!-- Ecos card -->
+          <div class="card eco-card">
+            <p class="count">14</p>
+            <div class="label">Ecos</div>
+            <div class="details">
+              <span>14 apps locais</span>
+              <span>12 apps remotos</span>
+            </div>
+          </div>
+          <!-- Audio card -->
+          <div class="card audio-card">
+            <div class="title">Áudio Ativo</div>
+            <div class="audio-wrapper">
+              <!-- Custom audio icon built with inline SVG and gradient fill -->
+              <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="audioGradient" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#5fc3e2" />
+                    <stop offset="100%" stop-color="#1d7fc3" />
+                  </linearGradient>
+                </defs>
+                <circle cx="32" cy="32" r="28" fill="url(#audioGradient)" />
+                <rect x="18" y="22" width="4" height="20" rx="2" fill="#ffffff" />
+                <rect x="26" y="16" width="4" height="32" rx="2" fill="#ffffff" />
+                <rect x="34" y="20" width="4" height="24" rx="2" fill="#ffffff" />
+                <rect x="42" y="26" width="4" height="12" rx="2" fill="#ffffff" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <!-- Primary action button -->
+        <button class="big-button">Ativar Dual Infodose</button>
+      </div>
+
+      <!-- Apps Page (placeholder) -->
+      <div class="page" id="page-apps">
+        <h2>Apps</h2>
+        <p>Gerencie e descubra seus aplicativos aqui. Esta seção está em construção.</p>
+      </div>
+
+      <!-- Stack Page (placeholder) -->
+      <div class="page" id="page-stack">
+        <h2>Stack</h2>
+        <p>Veja suas pilhas de informação e progresso. Esta seção está em construção.</p>
+      </div>
+
+      <!-- Brain Page (placeholder) -->
+      <div class="page" id="page-brain">
+        <h2>Brain</h2>
+        <p>Acompanhe as recomendações inteligentes aqui. Esta seção está em construção.</p>
+      </div>
+
+      <!-- Settings Page -->
+      <div class="page" id="page-settings">
+        <div class="settings-header">
+          <button class="icon-btn" id="back-home" title="Voltar">
+            <ion-icon name="chevron-back"></ion-icon>
+          </button>
+          <div>
+            <h1>HUB UNO</h1>
+            <span class="subtitle">Personalização</span>
+          </div>
+          <button class="icon-btn" title="Mais opções">
+            <ion-icon name="ellipsis-vertical"></ion-icon>
+          </button>
+        </div>
+        <!-- Cards grid -->
+        <div class="settings-grid">
+          <div class="settings-card theme">
+            <div class="header">
+              <div class="icon-box">
+                <ion-icon name="moon"></ion-icon>
+              </div>
+              <div>
+                <h3>Tema atual</h3>
+                <div class="sub">Escuro</div>
+              </div>
+            </div>
+            <button class="action-btn">ALTERAR</button>
+          </div>
+          <div class="settings-card apps">
+            <div class="header">
+              <div class="icon-box">
+                <ion-icon name="checkmark-circle"></ion-icon>
+              </div>
+              <div>
+                <h3>Aplicativos</h3>
+                <div class="sub">32 apps</div>
+              </div>
+            </div>
+            <button class="action-btn">GERENCIAR</button>
+          </div>
+        </div>
+        <!-- Appearance section -->
+        <div class="appearance-section">
+          <h3>Aparência</h3>
+          <div class="segmented-control">
+            <button class="seg-btn active">Padrão</button>
+            <button class="seg-btn">Médio</button>
+            <button class="seg-btn">Alto</button>
+          </div>
+        </div>
+        <!-- Personalization section -->
+        <div class="personalization-section">
+          <h3>Personalização</h3>
+          <div class="subtitle">Personalize seu aplicativo</div>
+          <button class="big-button">INICIAR</button>
+        </div>
+      </div>
+
+      <!-- Archetypes Page -->
+      <div class="page" id="page-archetype">
+        <div class="arch-container">
+          <div class="arch-switcher">
+            <button id="arch-prev-btn" title="Anterior">◀</button>
+            <select id="arch-select"></select>
+            <button id="arch-next-btn" title="Próximo">▶</button>
+          </div>
+          <div class="arch-circle">
+            <iframe id="arch-iframe" title="Archetype View" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
+          </div>
+          <button id="arch-audio-btn" class="arch-audio-btn">Áudio</button>
+          <select id="voice-select" class="voice-select"></select>
+          <div id="arch-message" class="arch-message"></div>
+        </div>
+      </div>
+
+      <!-- Navigation bar -->
+      <nav>
+        <div class="nav-container">
+          <div class="nav-item active" data-page="home">
+            <ion-icon name="home"></ion-icon>
+            <span>Início</span>
+          </div>
+          <div class="nav-item" data-page="apps">
+            <ion-icon name="grid"></ion-icon>
+            <span>Apps</span>
+          </div>
+          <div class="nav-item" data-page="stack">
+            <ion-icon name="layers"></ion-icon>
+            <span>Stack</span>
+          </div>
+          <div class="nav-item" data-page="brain">
+            <ion-icon name="bulb"></ion-icon>
+            <span>Brain</span>
+          </div>
+          <!-- New nav item for archetypes page -->
+          <div class="nav-item" data-page="archetype">
+            <ion-icon name="aperture"></ion-icon>
+            <span>Arch</span>
+          </div>
+          <div class="nav-item" data-page="settings">
+            <ion-icon name="settings"></ion-icon>
+            <span>Ajustes</span>
+          </div>
+        </div>
+      </nav>
+    </div>
+    <script>
+      // Simple navigation logic: show/hide pages and update active nav item
+      document.querySelectorAll('.nav-item').forEach((item) => {
+        item.addEventListener('click', () => {
+          // update nav active state
+          document.querySelectorAll('.nav-item').forEach((el) => {
+            el.classList.remove('active');
+          });
+          item.classList.add('active');
+
+          // show corresponding page
+          const pageId = 'page-' + item.dataset.page;
+          document.querySelectorAll('.page').forEach((page) => {
+            page.classList.remove('active');
+          });
+          const targetPage = document.getElementById(pageId);
+          if (targetPage) targetPage.classList.add('active');
+        });
+      });
+      // Back button in settings header returns to home
+      const backBtn = document.getElementById('back-home');
+      backBtn.addEventListener('click', () => {
+        document.querySelector('[data-page="home"]').click();
+      });
+      // Segmented control toggling
+      document.querySelectorAll('.segmented-control .seg-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          btn.parentElement.querySelectorAll('.seg-btn').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+      });
+
+      // Handle theme toggling via the "ALTERAR" button. On each click the app
+      // switches between a dark and a light palette by updating CSS variables.
+      (function () {
+        const themeBtn = document.querySelector('.settings-card.theme .action-btn');
+        let darkMode = true;
+        themeBtn.addEventListener('click', () => {
+          darkMode = !darkMode;
+          if (!darkMode) {
+            // Light theme colours
+            document.documentElement.style.setProperty('--bg-gradient', 'linear-gradient(180deg, #b58ede 0%, #7fc9e2 100%)');
+            document.documentElement.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.2)');
+            document.documentElement.style.setProperty('--card-border', 'rgba(255, 255, 255, 0.4)');
+            document.documentElement.style.setProperty('--primary-gradient', 'linear-gradient(90deg, #fc8c9b 0%, #8ac9f0 100%)');
+            themeBtn.previousElementSibling.querySelector('.sub').textContent = 'Claro';
+          } else {
+            // Dark theme colours (reset to original)
+            document.documentElement.style.setProperty('--bg-gradient', 'linear-gradient(180deg, #4d2a73 0%, #0f5275 100%)');
+            document.documentElement.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.05)');
+            document.documentElement.style.setProperty('--card-border', 'rgba(255, 255, 255, 0.1)');
+            document.documentElement.style.setProperty('--primary-gradient', 'linear-gradient(90deg, #b84d99 0%, #2583c6 100%)');
+            themeBtn.previousElementSibling.querySelector('.sub').textContent = 'Escuro';
+          }
+        });
+      })();
+
+      // Handle app management button: navigating to the Apps page or
+      // notifying the user that the feature is under development.
+      (function () {
+        const manageBtn = document.querySelector('.settings-card.apps .action-btn');
+        manageBtn.addEventListener('click', () => {
+          // For now, navigate to the Apps section
+          document.querySelector('[data-page="apps"]').click();
+          alert('Gerenciamento de aplicativos em desenvolvimento.');
+        });
+      })();
+
+      // Handle the big call‑to‑action on the home page. When clicked the
+      // button informs the user that the dual infodose mode has been activated.
+      (function () {
+        const dualBtn = document.querySelector('#page-home .big-button');
+        dualBtn.addEventListener('click', () => {
+          alert('Dual Infodose ativado! Aproveite a experiência.');
+        });
+      })();
+
+      // Handle the INICIAR button on the personalization section: show
+      // a message indicating that personalization has started.
+      (function () {
+        const startBtn = document.querySelector('#page-settings .personalization-section .big-button');
+        startBtn.addEventListener('click', () => {
+          alert('Personalização iniciada! Em breve você poderá ajustar seu aplicativo.');
+        });
+      })();
+
+      /*
+       * =============== Archetypes Logic ===============
+       * This section powers the archetype circle page. It loads simple HTML files
+       * from the local ./archetypes folder into an iframe, provides next/previous
+       * navigation, allows the user to pick among available voices for
+       * synthesised greetings and plays a short introduction when the
+       * archetype is changed or the audio button is pressed.
+       */
+      document.addEventListener('DOMContentLoaded', () => {
+        const archList = ['luxara.html','rhea.html','aion.html','atlas.html','nova.html','genus.html','lumine.html','kaion.html','kaos.html','horus.html','elysha.html'];
+        let archIndex = 0;
+        const archSelect = document.getElementById('arch-select');
+        const archIframe = document.getElementById('arch-iframe');
+        const archMessage = document.getElementById('arch-message');
+        const archPrevBtn = document.getElementById('arch-prev-btn');
+        const archNextBtn = document.getElementById('arch-next-btn');
+        const archAudioBtn = document.getElementById('arch-audio-btn');
+        const voiceSelect = document.getElementById('voice-select');
+        function populateArch() {
+          archSelect.innerHTML = '';
+          archList.forEach((file, i) => {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = file.replace(/\.html$/i, '');
+            archSelect.appendChild(opt);
+          });
+        }
+        function showArchMsg(msg) {
+          if (!archMessage) return;
+          archMessage.textContent = msg;
+          archMessage.classList.add('show');
+          clearTimeout(archMessage._tm);
+          archMessage._tm = setTimeout(() => archMessage.classList.remove('show'), 3000);
+        }
+        function speakGreeting(text) {
+          if (!('speechSynthesis' in window)) return;
+          const voices = speechSynthesis.getVoices();
+          let voice = voices.find(v => v.name === voiceSelect.value);
+          if (!voice) voice = voices.find(v => v.lang.startsWith('pt')) || voices[0];
+          if (!voice) return;
+          localStorage.setItem('arch_voice', voice.name);
+          const utter = new SpeechSynthesisUtterance(text);
+          utter.voice = voice;
+          speechSynthesis.cancel();
+          speechSynthesis.speak(utter);
+        }
+        function setArch(i) {
+          archIndex = (i + archList.length) % archList.length;
+          archSelect.value = archIndex;
+          const file = archList[archIndex];
+          archIframe.src = './archetypes/' + file;
+          const name = file.replace(/\.html$/i, '');
+          showArchMsg('Arquétipo: ' + name);
+          // Auto greet when changing archetype
+          speakGreeting('Olá, eu sou ' + name);
+        }
+        archPrevBtn && archPrevBtn.addEventListener('click', () => setArch(archIndex - 1));
+        archNextBtn && archNextBtn.addEventListener('click', () => setArch(archIndex + 1));
+        archSelect && archSelect.addEventListener('change', () => setArch(parseInt(archSelect.value)));
+        archAudioBtn && archAudioBtn.addEventListener('click', () => {
+          const file = archList[archIndex];
+          const name = file.replace(/\.html$/i, '');
+          speakGreeting('Olá, eu sou ' + name);
+        });
+        function loadVoices() {
+          const voices = speechSynthesis.getVoices();
+          if (!voiceSelect) return;
+          voiceSelect.innerHTML = '';
+          voices.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.name;
+            opt.textContent = `${v.name} (${v.lang})`;
+            voiceSelect.appendChild(opt);
+          });
+          const savedVoice = localStorage.getItem('arch_voice');
+          if (savedVoice) voiceSelect.value = savedVoice;
+        }
+        if (typeof speechSynthesis !== 'undefined') {
+          speechSynthesis.onvoiceschanged = loadVoices;
+        }
+        voiceSelect && voiceSelect.addEventListener('change', () => {
+          localStorage.setItem('arch_voice', voiceSelect.value);
+        });
+        // Initialise lists and voices
+        populateArch();
+        loadVoices();
+        setArch(0);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="nebula">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Infodose • Archetypes Extended (Pulse + Vitalis)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --grad-a:#00d8d8; --grad-b:#d800d8; --text:#d7d7d7; --accent:#39FFB6;
+      --ok:#00ffff; --warn:#FFC857; --err:#FF5C8A; --muted:#A8B0C0;
+      --glass:rgba(255,255,255,.06); --glass-bd:rgba(255,255,255,.12); --blur:24px;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--text);
+      font:15px/1.5 'Montserrat',system-ui;
+      background:
+        radial-gradient(60% 60% at 20% 10%, rgba(0,216,216,.25), transparent 60%),
+        radial-gradient(50% 50% at 80% 10%, rgba(216,0,216,.18), transparent 60%),
+        linear-gradient(180deg,#0f1b2a 0%, #0a0b13 100%);
+      overflow:hidden;
+    }
+    #app{position:relative; height:100%; display:flex; flex-direction:column}
+    header{display:flex; align-items:center; gap:12px; padding:12px 16px}
+    .brand{font-weight:800; letter-spacing:.5px}
+    .page{flex:1; display:none; padding:18px 18px 110px; overflow:auto}
+    .page.active{display:block}
+
+    .glass{background:var(--glass); border:1px solid var(--glass-bd); border-radius:20px; backdrop-filter:blur(var(--blur)); box-shadow:0 8px 32px rgba(0,255,255,.12)}
+    .card{padding:16px}
+    .grid{display:grid; gap:16px}
+    .grid.cols-2{grid-template-columns:repeat(2,1fr)}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    @media (max-width:900px){ .grid.cols-3{grid-template-columns:repeat(2,1fr)} }
+    @media (max-width:640px){ .grid.cols-2,.grid.cols-3{grid-template-columns:1fr} }
+
+    .title{font-size:1.25rem; font-weight:700; margin:0 0 6px}
+    .sub{font-size:.9rem; opacity:.8; margin:0}
+    .muted{color:var(--muted)}
+    .pill{display:inline-block; padding:6px 10px; border-radius:999px; border:1px solid var(--glass-bd); background:rgba(255,255,255,.04); font-size:.75rem}
+
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:12px 16px;border:0;border-radius:20px;cursor:pointer;color:#001014;font-weight:700;background:linear-gradient(90deg,var(--grad-a),var(--grad-b));box-shadow:0 8px 22px rgba(0,216,216,.25);transition:transform .12s ease}
+    .btn:active{transform:translateY(1px)}
+    .btn.ghost{color:var(--text);background:transparent;border:1px solid var(--glass-bd)}
+    .btn.small{padding:8px 12px; font-size:.85rem}
+
+    .input, textarea, select, input[type="range"]{
+      width:100%; padding:12px 14px; color:var(--text); background:rgba(255,255,255,.05);
+      border:1px solid var(--glass-bd); border-radius:14px; outline:none
+    }
+    textarea{min-height:96px; resize:vertical}
+    input[type="range"]{height:40px}
+
+    .hero{position:relative; min-height:220px; overflow:hidden; display:grid; place-items:center}
+    .seal{width:240px;height:240px;border-radius:24px;border:1px dashed rgba(255,255,255,.22); display:grid;place-items:center; backdrop-filter: blur(10px)}
+    .orbit{position:absolute; inset:0; background:
+      radial-gradient(40% 40% at 50% 40%, rgba(0,255,214,.18), transparent 60%),
+      radial-gradient(50% 50% at 60% 60%, rgba(185,136,255,.20), transparent 60%);
+      animation: drift 12s ease-in-out infinite}
+    @keyframes drift{0%{transform:translateY(-6px)}50%{transform:translateY(6px)}100%{transform:translateY(-6px)}}
+
+    .progressbar{height:10px; border-radius:999px; background:rgba(255,255,255,.08); overflow:hidden}
+    .progressbar > span{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--grad-a),var(--grad-b))}
+
+    .overlay{position:fixed; inset:0; display:none; place-items:center; z-index:1000; background:rgba(3,8,15,.55)}
+    .overlay.open{display:grid}
+    .ifr-wrap{width:min(960px,96vw); max-height:84vh; overflow:auto; border-radius:20px; background:var(--glass); border:1px solid var(--glass-bd); backdrop-filter: blur(var(--blur)); box-shadow:0 24px 80px rgba(0,0,0,.45); padding:16px}
+    .overlay .bar{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px}
+
+    nav{position:fixed; bottom:12px; left:0; right:0; z-index:10; display:flex; justify-content:center; pointer-events:none}
+    .nav-container{pointer-events:auto; display:flex; justify-content:space-between; width:calc(100% - 24px); padding:6px; border-radius:28px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); backdrop-filter:blur(var(--blur))}
+    .nav-item{flex:1; text-align:center; padding:6px 0; font-size:.75rem; opacity:.7; cursor:pointer}
+    .nav-item.active{opacity:1}
+
+    .row{display:flex; gap:12px; align-items:center} .wrap{flex-wrap:wrap}
+    .ellip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .right{margin-left:auto} .center{text-align:center}
+    .mb8{margin-bottom:8px} .mb12{margin-bottom:12px} .mb16{margin-bottom:16px} .mb24{margin-bottom:24px}
+    .mt8{margin-top:8px} .mt12{margin-top:12px} .mt16{margin-top:16px}
+    #btnKOBLLUX{position:fixed; right:18px; bottom:18px; z-index:1002}
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="pill">KOBLLUX • InfoDose</div>
+      <div class="brand">Archetypes Extended</div>
+      <div class="right muted ellip" id="activeLabel">—</div>
+    </header>
+
+    <section id="main" class="page active"></section>
+
+    <nav>
+      <div class="nav-container">
+        <div class="nav-item active">Arquétipos</div>
+        <div class="nav-item" id="to-labs">Labs</div>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Overlays -->
+  <!-- Pulse Studio: monta sessões de 3 faixas + WebAudio pad -->
+  <div class="overlay" id="pulseStudio" aria-hidden="true">
+    <div class="ifr-wrap" role="dialog" aria-modal="true" aria-label="Pulse Studio">
+      <div class="bar">
+        <strong>Pulse Studio • Sessão 3 faixas</strong>
+        <button class="btn ghost" id="psClose">Fechar</button>
+      </div>
+      <div class="grid cols-2">
+        <div class="glass card">
+          <div class="muted mb8">URLs de áudio (mp3/ogg). Dica: pode colar links próprios ou usar arquivos locais (drag&drop no navegador, depois use a URL blob).</div>
+          <input id="psUrl1" class="input" placeholder="Faixa 1 — aquecimento" />
+          <input id="psUrl2" class="input mt8" placeholder="Faixa 2 — foco" />
+          <input id="psUrl3" class="input mt8" placeholder="Faixa 3 — fechamento" />
+          <div class="row mt12">
+            <button class="btn" id="psPlay">▶️ Tocar</button>
+            <button class="btn ghost right" id="psSave">Salvar sessão</button>
+          </div>
+        </div>
+        <div class="glass card">
+          <div class="muted mb8">Gerador Sonoro (WebAudio)</div>
+          <div class="row">
+            <select id="waWave" class="input" style="width:auto">
+              <option value="sine">sine</option>
+              <option value="triangle">triangle</option>
+              <option value="square">square</option>
+              <option value="sawtooth">sawtooth</option>
+            </select>
+            <input id="waFreq" type="range" min="60" max="1200" value="432" />
+            <span class="pill">Hz: <b id="waHz">432</b></span>
+          </div>
+          <div class="row mt12">
+            <button class="btn small" id="waStart">Iniciar</button>
+            <button class="btn ghost small" id="waStop">Parar</button>
+            <input id="waGain" type="range" min="0" max="1" step="0.01" value="0.1" />
+          </div>
+          <div class="muted mt8">Use para criar uma “coluna sonora” neutra quando não tiver playlist.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vitalis Lab: rotinas energéticas (Tabata/4-7-8/Hidratação) -->
+  <div class="overlay" id="vitalisLab" aria-hidden="true">
+    <div class="ifr-wrap" role="dialog" aria-modal="true" aria-label="Vitalis Lab">
+      <div class="bar">
+        <strong>Vitalis Lab • Rotinas Energéticas</strong>
+        <button class="btn ghost" id="vlClose">Fechar</button>
+      </div>
+      <div class="grid cols-3">
+        <div class="glass card">
+          <h4 class="title">Tabata 20/10</h4>
+          <div class="center mt8">
+            <div class="title" id="tbLabel">Ready</div>
+            <div style="font-size:2.6rem;font-weight:700" id="tbTimer">00:20</div>
+          </div>
+          <div class="row mt12 wrap">
+            <button class="btn small" id="tbStart">Start</button>
+            <button class="btn ghost small" id="tbPause">Pause</button>
+            <button class="btn ghost small" id="tbReset">Reset</button>
+            <span class="pill right">Rounds: <b id="tbRounds">0</b>/8</span>
+          </div>
+        </div>
+        <div class="glass card">
+          <h4 class="title">Respiração 4–7–8</h4>
+          <div class="center mt8">
+            <canvas id="breathCanvas" width="280" height="140" class="glass" style="border-radius:12px;"></canvas>
+          </div>
+          <div class="row mt12 wrap">
+            <button class="btn small" id="brStart">Guiar</button>
+            <button class="btn ghost small" id="brStop">Parar</button>
+            <span class="pill right">Ciclos: <b id="brCycles">0</b></span>
+          </div>
+        </div>
+        <div class="glass card">
+          <h4 class="title">Hidratação</h4>
+          <div class="muted">Meta diária</div>
+          <div class="row mt8">
+            <input id="waterGoal" class="input" style="width:40%" placeholder="ml (ex.: 2000)" />
+            <button class="btn small" id="waterSet">Definir</button>
+          </div>
+          <div class="row mt12">
+            <input id="waterAdd" class="input" style="width:40%" placeholder="+ml (ex.: 250)" />
+            <button class="btn small" id="waterInc">Adicionar</button>
+          </div>
+          <div class="mt12">
+            <div class="progressbar"><span id="waterBar"></span></div>
+            <div class="row mt8">
+              <span class="pill">Ingerido: <b id="waterNow">0</b> / <b id="waterMax">0</b> ml</span>
+              <button class="btn ghost small right" id="waterReset">Zerar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botão Único -->
+  <button id="btnKOBLLUX" class="btn" title="Ações e troca de arquétipo">☼ Botão Único</button>
+
+  <!-- Templates -->
+  <div id="templates" hidden></div>
+
+  <script>
+    /*************
+     * CATÁLOGO  *
+     *************/
+    const ARCHS = [
+      {id:'pulse',   name:'Pulse – Musical',    element:'Água',   role:'Som/Emoção',      ally:'Resona',   color:'#00d8d8'},
+      {id:'vitalis', name:'Vitalis – Energético',element:'Fogo', role:'Energia',          ally:'Momentum', color:'#FFC857'},
+    ];
+
+    /***********************************
+     * PRELOAD TEMPLATES (<template/>) *
+     ***********************************/
+    const TPL = {
+      pulse: ()=>`
+        <div class="glass card hero mb16" style="border-color:#00d8d880">
+          <div class="orbit" style="background:
+            radial-gradient(40% 40% at 50% 40%, rgba(0,216,216,.20), transparent 60%),
+            radial-gradient(50% 50% at 60% 60%, rgba(0,216,216,.15), transparent 60%);"></div>
+          <div class="seal glass" style="border-color:#00d8d855">
+            <div style="text-align:center">
+              <div class="pill">Ritual • Resona</div>
+              <h2 class="title mt8">Pulse – Musical</h2>
+              <div class="sub">Regular emoção via som. Três faixas: aquecer → foco → fechar.</div>
+            </div>
+          </div>
+        </div>
+
+        <section class="grid cols-3">
+          <div class="glass card">
+            <h3 class="title">Mood & Preferências</h3>
+            <div class="row wrap">
+              <span class="pill">Humor: <b id="plMoodLabel">neutro</b></span>
+              <span class="pill">BPM alvo: <b id="plBpmLabel">80</b></span>
+            </div>
+            <div class="mt12">
+              <label class="muted mb8">Como você se sente agora?</label>
+              <input id="plMood" type="range" min="0" max="4" value="2"/>
+              <div class="row mt8">
+                <small class="muted">calmo</small><div class="right muted">eufórico</div>
+              </div>
+            </div>
+            <div class="mt12">
+              <label class="muted mb8">BPM desejado</label>
+              <input id="plBpm" type="range" min="60" max="160" value="80"/>
+            </div>
+            <div class="row mt12">
+              <button class="btn small" id="plSave">Salvar</button>
+              <button class="btn ghost small right" data-open="pulseStudio">Abrir Pulse Studio</button>
+            </div>
+          </div>
+
+          <div class="glass card">
+            <h3 class="title">Playlist & Player</h3>
+            <div class="muted">Cole uma playlist (URLs separadas por quebra de linha) ou use a sessão salva.</div>
+            <textarea id="plList" class="mt8" placeholder="https://exemplo/faixa1.mp3
+https://exemplo/faixa2.mp3
+https://exemplo/faixa3.mp3"></textarea>
+            <div class="row mt12 wrap">
+              <button class="btn small" id="plLoad">Carregar</button>
+              <button class="btn ghost small" id="plUseSaved">Usar sessão salva</button>
+              <span class="pill right">Faixa: <b id="plNow">0</b>/<b id="plMax">0</b></span>
+            </div>
+            <div class="row mt12 wrap center">
+              <audio id="audio" controls style="width:100%"></audio>
+            </div>
+            <div class="row mt12 wrap">
+              <button class="btn small" id="prev">⟵</button>
+              <button class="btn small" id="next">⟶</button>
+              <button class="btn ghost small right" id="plClear">Limpar</button>
+            </div>
+          </div>
+
+          <div class="glass card">
+            <h3 class="title">Sugestões Rápidas</h3>
+            <div class="muted">Gere ideias de trilhas conforme humor/BPM.</div>
+            <div class="row wrap mt8">
+              <button class="btn ghost" data-suggest="focus">Foco</button>
+              <button class="btn ghost" data-suggest="calm">Calmar</button>
+              <button class="btn ghost" data-suggest="boost">Boost</button>
+            </div>
+            <div class="mt12">
+              <div class="muted mb8">Sugestões</div>
+              <pre id="plSuggest" style="white-space:pre-wrap;word-break:break-word">—</pre>
+            </div>
+          </div>
+        </section>
+      `,
+      vitalis: ()=>`
+        <div class="glass card hero mb16" style="border-color:#FFC85780">
+          <div class="orbit" style="background:
+            radial-gradient(40% 40% at 50% 40%, rgba(255,200,87,.20), transparent 60%),
+            radial-gradient(50% 50% at 60% 60%, rgba(255,200,87,.15), transparent 60%);"></div>
+          <div class="seal glass" style="border-color:#FFC85755">
+            <div style="text-align:center">
+              <div class="pill">Ritual • Momentum</div>
+              <h2 class="title mt8">Vitalis – Energético</h2>
+              <div class="sub">Energia física + mental. Tabata • Respiração 4–7–8 • Hidratação.</div>
+            </div>
+          </div>
+        </div>
+
+        <section class="grid cols-2">
+          <div class="glass card">
+            <h3 class="title">Rotinas Rápidas</h3>
+            <div class="muted">Escolha uma rotina para agora:</div>
+            <div class="row wrap mt8">
+              <button class="btn ghost" data-vr="tabata">Tabata 20/10 (8x)</button>
+              <button class="btn ghost" data-vr="breathe">Respiração 4–7–8 (4 ciclos)</button>
+              <button class="btn ghost" data-vr="water">Registrar hidratação</button>
+            </div>
+            <div class="mt12">
+              <div class="muted mb8">Log</div>
+              <pre id="vtLog" style="white-space:pre-wrap;word-break:break-word;min-height:100px">—</pre>
+            </div>
+            <div class="row mt12 wrap">
+              <button class="btn small" data-open="vitalisLab">Abrir Vitalis Lab</button>
+              <button class="btn ghost small right" id="vtReset">Limpar log</button>
+            </div>
+          </div>
+
+          <div class="glass card">
+            <h3 class="title">Indicadores</h3>
+            <div class="grid cols-3">
+              <div class="glass card">
+                <div class="muted">Tabata rounds</div>
+                <div class="title" id="vtRounds">0</div>
+              </div>
+              <div class="glass card">
+                <div class="muted">Respiração ciclos</div>
+                <div class="title" id="vtBreath">0</div>
+              </div>
+              <div class="glass card">
+                <div class="muted">Água hoje (ml)</div>
+                <div class="title" id="vtWater">0</div>
+              </div>
+            </div>
+            <div class="mt12">
+              <div class="muted mb8">Progresso diário</div>
+              <div class="progressbar"><span id="vtPB"></span></div>
+            </div>
+          </div>
+        </section>
+      `
+    };
+
+    function preloadTemplates(){
+      const holder = document.getElementById('templates');
+      const tPulse = document.createElement('template'); tPulse.id='archetype-pulse'; tPulse.innerHTML = TPL.pulse(); holder.appendChild(tPulse);
+      const tVital = document.createElement('template'); tVital.id='archetype-vitalis'; tVital.innerHTML = TPL.vitalis(); holder.appendChild(tVital);
+    }
+
+    /***********************
+     * RENDER & SWITCHING *
+     ***********************/
+    function mount(id){
+      const tpl = document.getElementById(`archetype-${id}`);
+      const main = document.getElementById('main');
+      main.innerHTML = tpl ? tpl.innerHTML : `<div class="glass card">Arquétipo não encontrado.</div>`;
+      document.getElementById('activeLabel').textContent = ARCHS.find(x=>x.id===id)?.name || '—';
+      if(id==='pulse') bootPulse();
+      if(id==='vitalis') bootVitalis();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    /*****************
+     * PULSE • MUSIC *
+     *****************/
+    const PL = {
+      mood:Number(localStorage.getItem('pulse.mood')||2), // 0..4
+      bpm:Number(localStorage.getItem('pulse.bpm')||80),
+      session: JSON.parse(localStorage.getItem('pulse.session')||'[]'),
+      water:false
+    };
+    function bootPulse(){
+      const moodNames = ['calmo','leve','neutro','alerta','eufórico'];
+      const mood = document.getElementById('plMood'), bpm = document.getElementById('plBpm');
+      const moodLabel = document.getElementById('plMoodLabel'), bpmLabel=document.getElementById('plBpmLabel');
+      mood.value = PL.mood; bpm.value = PL.bpm; moodLabel.textContent = moodNames[PL.mood]; bpmLabel.textContent=PL.bpm;
+
+      mood.oninput = ()=>{ PL.mood=Number(mood.value); moodLabel.textContent=moodNames[PL.mood]; };
+      bpm.oninput  = ()=>{ PL.bpm =Number(bpm.value); bpmLabel.textContent = PL.bpm; };
+
+      document.getElementById('plSave').onclick = ()=>{
+        localStorage.setItem('pulse.mood', PL.mood);
+        localStorage.setItem('pulse.bpm', PL.bpm);
+        alert('Preferências salvas!');
+      };
+
+      // Player
+      const textarea = document.getElementById('plList');
+      const audio = document.getElementById('audio');
+      let list=[], idx=0;
+
+      function loadList(arr){
+        list=[...arr].filter(Boolean);
+        document.getElementById('plMax').textContent=list.length;
+        idx=0; document.getElementById('plNow').textContent=list.length?1:0;
+        audio.src = list[0] || '';
+      }
+
+      document.getElementById('plLoad').onclick = ()=>{
+        const arr = textarea.value.split('\n').map(s=>s.trim());
+        loadList(arr);
+      };
+      document.getElementById('plUseSaved').onclick = ()=> loadList(PL.session);
+      document.getElementById('plClear').onclick = ()=>{ textarea.value=''; loadList([]); };
+
+      document.getElementById('prev').onclick = ()=>{ if(!list.length) return; idx=(idx-1+list.length)%list.length; audio.src=list[idx]; audio.play(); document.getElementById('plNow').textContent=idx+1; };
+      document.getElementById('next').onclick = ()=>{ if(!list.length) return; idx=(idx+1)%list.length; audio.src=list[idx]; audio.play(); document.getElementById('plNow').textContent=idx+1; };
+      audio.onended = ()=> document.getElementById('next').click();
+
+      // Sugestões
+      const suggestBox = document.getElementById('plSuggest');
+      function suggest(kind){
+        const bpm = PL.bpm;
+        const banks = {
+          focus:  [`Lo-fi ${bpm-10}–${bpm+5} BPM`, `Ambient tech ${bpm} BPM`, `Minimal piano ${bpm-5} BPM`],
+          calm:   [`Strings slow ${Math.max(60,bpm-20)} BPM`, `Drones ${Math.max(60,bpm-30)} BPM`, `Ocean noise + pads`],
+          boost:  [`Synthwave ${bpm+20} BPM`, `Drum&bass ${bpm+60} BPM (curto)`, `Perc loop ${bpm+30} BPM`]
+        };
+        suggestBox.textContent = banks[kind].map(s=>'• '+s).join('\n');
+      }
+      document.querySelectorAll('[data-suggest]').forEach(b=>b.onclick=()=>suggest(b.dataset.suggest));
+
+      // Pulse Studio overlay
+      document.querySelector('[data-open="pulseStudio"]').onclick = ()=> openOverlay('pulseStudio');
+      bindOverlay('pulseStudio');
+
+      // Pulse Studio controls
+      const ps1 = document.getElementById('psUrl1'), ps2=document.getElementById('psUrl2'), ps3=document.getElementById('psUrl3');
+      document.getElementById('psSave').onclick = ()=>{
+        const sess=[ps1.value.trim(), ps2.value.trim(), ps3.value.trim()].filter(Boolean);
+        localStorage.setItem('pulse.session', JSON.stringify(sess));
+        PL.session=sess; alert('Sessão salva!');
+      };
+      document.getElementById('psPlay').onclick = ()=>{
+        const seq=[ps1.value.trim(), ps2.value.trim(), ps3.value.trim()].filter(Boolean);
+        if(!seq.length){ alert('Adicione pelo menos 1 URL.'); return; }
+        document.getElementById('plList').value = seq.join('\n');
+        document.getElementById('psClose').click();
+        document.getElementById('plLoad').click();
+        document.getElementById('audio').play();
+      };
+
+      // WebAudio pad
+      let ctx=null, osc=null, gain=null;
+      const waHz = document.getElementById('waHz'), waWave=document.getElementById('waWave'), waFreq=document.getElementById('waFreq'), waGain=document.getElementById('waGain');
+      function ensureWA(){ if(ctx) return; ctx=new (window.AudioContext||window.webkitAudioContext)(); gain=ctx.createGain(); gain.gain.value=parseFloat(waGain.value); gain.connect(ctx.destination); }
+      document.getElementById('waStart').onclick = ()=>{
+        ensureWA();
+        if(osc) return;
+        osc=ctx.createOscillator(); osc.type=waWave.value; osc.frequency.value=parseFloat(waFreq.value);
+        osc.connect(gain); osc.start();
+      };
+      document.getElementById('waStop').onclick = ()=>{ if(osc){ osc.stop(); osc.disconnect(); osc=null; } };
+      waFreq.oninput = ()=>{ waHz.textContent=waFreq.value; if(osc) osc.frequency.value=parseFloat(waFreq.value); };
+      waWave.onchange= ()=>{ if(osc) osc.type = waWave.value; };
+      waGain.oninput = ()=>{ ensureWA(); gain.gain.value=parseFloat(waGain.value); };
+    }
+
+    /*****************
+     * VITALIS • EN  *
+     *****************/
+    const VT = {
+      rounds:Number(localStorage.getItem('vitalis.rounds')||0),
+      breath:Number(localStorage.getItem('vitalis.breath')||0),
+      waterNow:Number(localStorage.getItem('vitalis.waterNow')||0),
+      waterMax:Number(localStorage.getItem('vitalis.waterMax')||2000),
+      log:localStorage.getItem('vitalis.log')||'—'
+    };
+    function bootVitalis(){
+      const logEl = document.getElementById('vtLog');
+      const pb = document.getElementById('vtPB');
+      const rEl = document.getElementById('vtRounds'), bEl=document.getElementById('vtBreath'), wEl=document.getElementById('vtWater');
+      function paint(){
+        rEl.textContent = VT.rounds; bEl.textContent = VT.breath; wEl.textContent = VT.waterNow;
+        logEl.textContent = VT.log;
+        const p = Math.min(100, Math.round(((VT.rounds/8)*34) + ((VT.breath/4)*33) + (VT.waterMax? (VT.waterNow/VT.waterMax)*33 : 0)));
+        pb.style.width = p+'%';
+      }
+      paint();
+
+      // Atalhos de rotina
+      document.querySelectorAll('[data-vr]').forEach(b=>b.onclick = ()=>{
+        const k=b.dataset.vr;
+        if(k==='tabata'){ openOverlay('vitalisLab'); startTabata(); }
+        if(k==='breathe'){ openOverlay('vitalisLab'); startBreathGuide(4); }
+        if(k==='water'){ openOverlay('vitalisLab'); }
+      });
+      document.getElementById('vtReset').onclick = ()=>{ VT.rounds=0; VT.breath=0; VT.waterNow=0; VT.log='—'; persist(); paint(); };
+
+      // Lab overlay
+      bindOverlay('vitalisLab');
+
+      /* Tabata */
+      let tbMode='work', tbRemain=20, tbT=null, tbRun=false, tbRounds=0;
+      const tbLabel=document.getElementById('tbLabel'), tbTimer=document.getElementById('tbTimer'), tbRoundsEl=document.getElementById('tbRounds');
+      function tbPaint(){ tbLabel.textContent = tbMode==='work'?'Go!':'Rest'; tbTimer.textContent = (tbRemain<10?'00:0':'00:')+tbRemain; tbRoundsEl.textContent = tbRounds; }
+      function tbTick(){ tbPaint(); if(tbRemain<=0){ tbSwap(); return; } tbT=setTimeout(()=>{tbRemain--; tbTick();},1000); }
+      function tbSwap(){
+        clearTimeout(tbT);
+        if(tbMode==='work'){ tbMode='rest'; tbRemain=10; tbRounds++; VT.rounds++; VT.log = `• Tabata round ${tbRounds} — ${new Date().toLocaleTimeString()}\n` + (VT.log==='—'?'':VT.log); persist(); }
+        else{
+          tbMode='work'; tbRemain=20; if(tbRounds>=8){ tbRun=false; return; }
+        }
+        tbTick();
+      }
+      function startTabata(){ if(tbRun) return; tbRun=true; tbMode='work'; tbRemain=20; tbRounds=0; tbTick(); }
+      document.getElementById('tbStart').onclick = startTabata;
+      document.getElementById('tbPause').onclick = ()=>{ clearTimeout(tbT); tbRun=false; };
+      document.getElementById('tbReset').onclick = ()=>{ clearTimeout(tbT); tbRun=false; tbMode='work'; tbRemain=20; tbRounds=0; tbPaint(); };
+
+      /* Respiração 4–7–8 (visual) */
+      const canvas = document.getElementById('breathCanvas'); const ctx = canvas.getContext('2d');
+      function drawBreath(phase, t, total){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        const w=canvas.width, h=canvas.height;
+        ctx.fillStyle='rgba(255,255,255,.05)'; ctx.fillRect(0,0,w,h);
+        const pct = t/total;
+        const radius = 20 + pct*100;
+        const x = w/2, y = h/2;
+        ctx.beginPath(); ctx.arc(x,y,radius,0,Math.PI*2); ctx.strokeStyle='rgba(0,216,216,.8)'; ctx.lineWidth=4; ctx.stroke();
+        ctx.fillStyle='#d7d7d7'; ctx.font='bold 16px Montserrat'; ctx.textAlign='center';
+        ctx.fillText(phase, x, y);
+      }
+      let brT=null, brRun=false, brCycles=0;
+      function startBreathGuide(cycles=4){
+        if(brRun) return; brRun=true; brCycles=0;
+        const seq = [
+          {name:'Inspire 4', secs:4},
+          {name:'Segure 7', secs:7},
+          {name:'Expire 8', secs:8},
+        ];
+        let phase=0, t=0;
+        function step(){
+          const cur = seq[phase];
+          drawBreath(cur.name, t, cur.secs);
+          if(t>=cur.secs){ phase++; t=0;
+            if(phase>=seq.length){ phase=0; brCycles++; VT.breath++; VT.log = `• Respiração 4–7–8 ciclo ${brCycles} — ${new Date().toLocaleTimeString()}\n` + (VT.log==='—'?'':VT.log); persist();
+              if(brCycles>=cycles){ brRun=false; return; }
+            }
+          }
+          t++; brT=setTimeout(step,1000);
+        }
+        step();
+      }
+      document.getElementById('brStart').onclick = ()=> startBreathGuide(4);
+      document.getElementById('brStop').onclick  = ()=>{ clearTimeout(brT); brRun=false; };
+
+      /* Hidratação */
+      const waterBar=document.getElementById('waterBar'), wNow=document.getElementById('waterNow'), wMax=document.getElementById('waterMax');
+      function paintWater(){
+        wNow.textContent = VT.waterNow; wMax.textContent = VT.waterMax;
+        waterBar.style.width = (VT.waterMax? Math.min(100, Math.round(100*VT.waterNow/VT.waterMax)) : 0)+'%';
+      }
+      paintWater();
+      document.getElementById('waterSet').onclick = ()=>{
+        const v = Number(document.getElementById('waterGoal').value||0); if(!v) return;
+        VT.waterMax = v; persist(); paintWater(); paint();
+      };
+      document.getElementById('waterInc').onclick = ()=>{
+        const v = Number(document.getElementById('waterAdd').value||0); if(!v) return;
+        VT.waterNow = Math.max(0, VT.waterNow + v); VT.log = `• Água +${v}ml — ${new Date().toLocaleTimeString()}\n` + (VT.log==='—'?'':VT.log); persist(); paintWater(); paint();
+      };
+      document.getElementById('waterReset').onclick = ()=>{ VT.waterNow=0; persist(); paintWater(); paint(); };
+
+      function persist(){
+        localStorage.setItem('vitalis.rounds', VT.rounds);
+        localStorage.setItem('vitalis.breath', VT.breath);
+        localStorage.setItem('vitalis.waterNow', VT.waterNow);
+        localStorage.setItem('vitalis.waterMax', VT.waterMax);
+        localStorage.setItem('vitalis.log', VT.log);
+      }
+    }
+
+    /*****************
+     * OVERLAY utils *
+     *****************/
+    function bindOverlay(id){
+      const ov=document.getElementById(id);
+      ov.addEventListener('click', (e)=>{ if(e.target===ov) closeOverlay(id); });
+      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && ov.classList.contains('open')) closeOverlay(id); });
+      if(id==='pulseStudio') document.getElementById('psClose').onclick = ()=>closeOverlay(id);
+      if(id==='vitalisLab')  document.getElementById('vlClose').onclick = ()=>closeOverlay(id);
+    }
+    function openOverlay(id){ const ov=document.getElementById(id); ov.classList.add('open'); ov.setAttribute('aria-hidden','false'); }
+    function closeOverlay(id){ const ov=document.getElementById(id); ov.classList.remove('open'); ov.setAttribute('aria-hidden','true'); }
+
+    /****************
+     * Botão Único  *
+     ****************/
+    function openMenu(){
+      const items = ARCHS.map((a,i)=>`${i+1}. Abrir ${a.name}`).join('\n');
+      const sys = [
+        'A. Ritual atual (TTS)',
+        'B. Abrir Pulse Studio',
+        'C. Abrir Vitalis Lab',
+        'D. Resetar cache do arquétipo atual',
+      ].join('\n');
+      const pick = prompt(`☼ Botão Único — Ações\n${items}\n${sys}\n\nDigite número/letra:`);
+      if(!pick) return;
+      const idx = parseInt(pick,10);
+      if(!Number.isNaN(idx) && idx>=1 && idx<=ARCHS.length){ mount(ARCHS[idx-1].id); return; }
+      const active = document.getElementById('activeLabel').textContent;
+      const cur = ARCHS.find(a=>a.name===active);
+      if(!cur) return;
+      if(/^[aA]$/.test(pick)){
+        const t = `${cur.name}. Ajuste a intenção e execute um passo de 2 minutos agora.`;
+        if('speechSynthesis' in window){ const u=new SpeechSynthesisUtterance(t); speechSynthesis.cancel(); speechSynthesis.speak(u);} else alert(t);
+        return;
+      }
+      if(/^[bB]$/.test(pick)){ if(cur.id==='pulse') openOverlay('pulseStudio'); else alert('Pulse Studio disponível no arquétipo Pulse.'); return; }
+      if(/^[cC]$/.test(pick)){ if(cur.id==='vitalis') openOverlay('vitalisLab');  else alert('Vitalis Lab disponível no arquétipo Vitalis.'); return; }
+      if(/^[dD]$/.test(pick)){
+        ['mood','bpm','session','rounds','breath','waterNow','waterMax','log'].forEach(k=>{
+          localStorage.removeItem(`pulse.${k}`); localStorage.removeItem(`vitalis.${k}`);
+        });
+        alert('Cache do arquétipo atual limpo.');
+        return;
+      }
+    }
+
+    /*************
+     * BOOTSTRAP *
+     *************/
+    preloadTemplates();
+    mount('pulse'); // default neste arquivo
+    document.getElementById('btnKOBLLUX').addEventListener('click', openMenu);
+    document.getElementById('to-labs').addEventListener('click', ()=>{
+      const active = document.getElementById('activeLabel').textContent;
+      if(/Pulse/.test(active)) openOverlay('pulseStudio');
+      else if(/Vitalis/.test(active)) openOverlay('vitalisLab');
+      else alert('Abra Pulse ou Vitalis para acessar os labs.');
+    });
+
+    // Acessos rápidos
+    document.addEventListener('keydown', (e)=>{
+      if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='3') mount('pulse');
+      if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='4') mount('vitalis');
+    });
+
+    // Vincula overlays
+    bindOverlay('pulseStudio'); bindOverlay('vitalisLab');
+  </script>
+</body>
+</html>
