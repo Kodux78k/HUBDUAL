@@ -1,0 +1,371 @@
+<!--
+  This is a lightly modified copy of the original index‑100_revo.html.
+  The purpose of this file is to integrate with the unified UNO hub.  The
+  modifications are minimal: the `loadApps()` function now attempts to
+  source the app catalogue from a parent page’s `<script id="APPS_JSON">`
+  element before falling back to fetching `apps/apps.json`.  This allows
+  the Revo viewer, when embedded inside another page via an <iframe
+  srcdoc="...">, to display the same set of apps defined in the host
+  without requiring an external JSON file.
+-->
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Infodose Hub Ultra — Revo</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0b0b0b" id="metaThemeColor">
+  <link rel="apple-touch-startup-image" href="splash-1242x2688.png"
+        media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <style>
+    :root {
+      --fg:#fff;
+      --muted:#a7c1cc;
+      --acc:#E7C65A;
+      --stroke:rgba(255,235,180,.30);
+      --stroke-soft:rgba(255,235,180,.16);
+      --blur:22px;
+      --radius:18px;
+      --radius-lg:22px;
+      --dock-space:84px;
+      --header-h:72px;
+    }
+
+    html,body{height:100%;margin:0}
+    html{background: linear-gradient(42deg, #f0f, #0ff)}
+    body{
+      color:var(--fg);
+      font-family:ui-rounded,system-ui,-apple-system,Inter,Segoe UI,Roboto,Arial;
+      background: linear-gradient(42deg, #f0f, #0ff);
+      min-height:100vh;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Header */
+    .header {
+      position:sticky;
+      top:0;
+      z-index:100;
+      backdrop-filter:blur(var(--blur)) saturate(150%);
+      background:rgba(0,0,0,.4);
+      border-bottom:1px solid var(--stroke);
+      box-shadow:0 12px 34px rgba(0,0,0,.42);
+      padding-top:env(safe-area-inset-top);
+    }
+    .inner {
+      max-width:980px;margin:0 auto;padding:14px;
+      display:flex;gap:14px;align-items:center;
+    }
+    .logo {width:46px;height:46px;border-radius:50%;display:inline-grid;place-items:center;position:relative;background:rgba(0,0,0,.25)}
+    .ring{position:absolute;inset:0;border:2px solid var(--acc);border-radius:50%;animation:spin 6s linear infinite}
+    .bar{position:absolute;left:50%;top:50%;width:60%;height:2px;background:var(--acc);transform:translate(-50%,-50%);border-radius:999px;animation:breathe 2.4s ease-in-out infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes breathe{0%,100%{opacity:.8}50%{opacity:1}}
+    h1{font-size:1.2rem;margin:.12rem 0 0;font-weight:800}
+    .kicker{font-size:.72rem;letter-spacing:.16em;color:#e0e0e0;text-transform:uppercase}
+
+    /* Grid/cards */
+    .grid{max-width:980px;margin:18px auto 22px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:0 14px;
+      padding-bottom:calc(var(--dock-space) + env(safe-area-inset-bottom) + 12px)}
+    @media(max-width:560px){.grid{grid-template-columns:1fr}}
+    .card{background:rgba(0,0,0,.3);border:1px solid var(--stroke-soft);border-radius:20px;padding:16px;display:flex;gap:14px;align-items:center;box-shadow:0 6px 18px rgba(0,0,0,.45)}
+    .icon{width:58px;height:58px;border-radius:16px;display:grid;place-items:center;overflow:hidden;background:#0f1320;border:1px solid var(--stroke-soft)}
+    .btn{appearance:none;border:1px solid var(--stroke-soft);cursor:pointer;background:linear-gradient(42deg,#f0f,#0ff);color:#fff;padding:.72rem 1.05rem;border-radius:999px;font-weight:700}
+
+    /* Bottom Dock — stays ABOVE any iframe */
+    .dock{position:fixed;left:0;right:0;bottom:0;z-index:1000;display:block}
+    .dock-inner{
+      max-width:980px;margin:0 auto;
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+      display:flex;gap:8px;justify-content:space-between;align-items:center;
+      backdrop-filter:blur(18px) saturate(140%);
+      background:rgba(0,0,0,.45);
+      border-top:1px solid var(--stroke);
+      box-shadow:0 -10px 30px rgba(0,0,0,.45);
+    }
+    .dbtn{appearance:none;border:1px solid var(--stroke);background:linear-gradient(42deg,#f0f,#0ff);color:#fff;padding:.64rem .9rem;border-radius:12px;font-weight:700}
+    .dbtn.small{padding:.5rem .7rem;font-size:.9rem}
+
+    footer{color:#fff;font-size:.8rem;text-align:center;margin:18px 0;opacity:.9}
+
+    /* Inverte ícones SVG para exibir claros sobre fundo escuro */
+    .header img,
+    .viewer-head img,
+    .dock img,
+    .dbtn img {
+      filter: invert(1) brightness(1.2);
+    }
+
+    /* REVO viewer (iframe overlay UNDER the dock) */
+    .viewer{
+      position:fixed;left:0;right:0;z-index:900;
+      /* dynamic top/bottom set via JS to respect header and dock */
+      background:rgba(0,0,0,.18);
+      backdrop-filter: blur(6px);
+      box-shadow:0 -10px 30px rgba(0,0,0,.35) inset;
+      border-top:1px solid var(--stroke-soft);
+      display:none; /* hidden by default */
+    }
+    .viewer.active{display:block}
+    .viewer-head{
+      position:sticky;top:0;z-index:1;
+      display:flex;gap:8px;align-items:center;justify-content:space-between;
+      padding:8px 10px;
+      background:rgba(0,0,0,.55);
+      border-bottom:1px solid var(--stroke);
+      backdrop-filter: blur(10px) saturate(140%);
+    }
+    .viewer-title{font-weight:800}
+    .viewer-actions{display:flex;gap:8px;align-items:center}
+    .viewer-iframe{
+      display:block;width:100%;height:100%;
+      border:0;outline:0;background:#0b0b0b;
+      -webkit-overflow-scrolling: touch;
+      transform: translateZ(0); /* iOS z-index fix */
+    }
+    .reopen{
+      position:fixed;right:12px;bottom:calc(var(--dock-space) + env(safe-area-inset-bottom) + 12px);
+      z-index:950;display:none;
+    }
+    .reopen.active{display:block}
+  </style>
+</head>
+<body>
+  <header class="header" id="mainHeader">
+    <div class="inner">
+      <span class="logo" aria-hidden="true">
+        <span class="ring"></span><span class="bar"></span>
+      </span>
+      <div style="flex:1">
+        <div class="kicker">Infodose • Hub Principal</div>
+        <h1>Infodose Hub Ultra</h1>
+      </div>
+      <nav aria-label="Instalar">
+        <button class="btn" id="btnInstall" type="button">
+          <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/download.svg" alt="Instalar" width="16" height="16" onerror="this.onerror=null;this.src='icons/download.svg'" style="margin-right:6px">Instalar
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="grid" id="cards" aria-live="polite"></main>
+  <footer>Infodose Hub Ultra • PWA</footer>
+
+  <!-- REVO: iframe viewer overlay (sits UNDER the dock) -->
+  <section class="viewer" id="revo">
+    <div class="viewer-head">
+      <div class="viewer-title" id="revoTitle">Revo</div>
+      <div class="viewer-actions">
+        <button class="dbtn small" id="revoBack" type="button">
+          <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/arrow-left.svg" alt="Voltar" width="14" height="14" onerror="this.onerror=null;this.src='icons/arrow-left.svg'" style="margin-right:4px">Hub
+        </button>
+        <button class="dbtn small" id="revoMin" type="button">
+          <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/minus.svg" alt="Minimizar" width="14" height="14" onerror="this.onerror=null;this.src='icons/minus.svg'" style="margin-right:4px">Minimizar
+        </button>
+        <a class="dbtn small" id="revoOpen" target="_blank" rel="noopener">
+          <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/arrow-up-right-from-square.svg" alt="Abrir" width="14" height="14" onerror="this.onerror=null;this.src='icons/arrow-up-right-from-square.svg'" style="margin-right:4px">Abrir
+        </a>
+      </div>
+    </div>
+    <iframe id="revoFrame" class="viewer-iframe" sandbox="allow-scripts allow-forms allow-modals allow-same-origin allow-popups allow-downloads" referrerpolicy="no-referrer"></iframe>
+  </section>
+  <button class="dbtn reopen" id="btnReopen">
+    <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/arrow-rotate-right.svg" alt="Reabrir" width="16" height="16" onerror="this.onerror=null;this.src='icons/arrow-rotate-right.svg'" style="margin-right:6px">Reabrir
+  </button>
+
+  <!-- Bottom dock -->
+  <div class="dock" role="navigation" aria-label="Dock">
+    <div class="dock-inner">
+      <div style="display:flex;gap:8px">
+        <button class="dbtn" id="dockHome" type="button">Home</button>
+        <button class="dbtn" id="dockInfodose" type="button">Infodose</button>
+        <button class="dbtn" id="dockInstall" type="button">Instalar</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <input id="localHtmlInput" type="file" accept=".html,.htm,text/html" hidden>
+        <button class="dbtn" id="btnLocalOpen" type="button">
+          <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/folder-open.svg" alt="Abrir" width="16" height="16" onerror="this.onerror=null;this.src='icons/folder-open.svg'" style="margin-right:6px">Abrir HTML Local
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  const $ = (q,root=document) => root.querySelector(q);
+
+  // Revo geometry: keeps dock visible on top and header space at top
+  function fitRevo(){
+    const header = $('#mainHeader');
+    const revo   = $('#revo');
+    const rect   = header.getBoundingClientRect();
+    const headerH = rect.height;
+    document.documentElement.style.setProperty('--header-h', headerH + 'px');
+    // Respect safe-areas and leave space for dock
+    const bottomSpace = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--dock-space')) || 84;
+    revo.style.top = headerH + 'px';
+    revo.style.bottom = 'calc(' + bottomSpace + 'px + env(safe-area-inset-bottom))';
+  }
+  window.addEventListener('resize', fitRevo);
+  window.addEventListener('orientationchange', fitRevo);
+
+  // Load cards from apps.json but open inside Revo (iframe), not a new tab
+  // Render cards given an array of app objects
+  function renderCards(list) {
+    const root = $('#cards');
+    root.innerHTML = '';
+    (list || []).forEach(app => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      const icon = app.icon || 'icons/icon-192.png';
+      const title = app.title || app.key || 'App';
+      const desc  = app.desc || '';
+      const url   = app.url;
+      const onclick = url ? `openInRevo('${encodeURI(url)}','${(title+'').replace(/'/g, "\\'")}')` : '';
+      card.innerHTML = `
+        <div class="icon">
+          <img src="${icon}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px"/>
+        </div>
+        <div style="flex:1">
+          <div class="title" style="font-weight:800">${title}</div>
+          <div class="muted" style="opacity:.9">${desc}</div>
+          <div class="row" style="margin-top:8px">
+            <button class="btn" type="button" ${onclick ? `onclick="${onclick}"` : 'disabled'}>Abrir</button>
+          </div>
+        </div>`;
+      root.appendChild(card);
+    });
+  }
+
+  async function loadApps(){
+    // First, see if apps were provided externally (via postMessage)
+    if (Array.isArray(window.externalApps)) {
+      renderCards(window.externalApps);
+      return;
+    }
+    // Otherwise, attempt to fetch the local apps.json
+    try {
+      const res  = await fetch('./apps/apps.json', {cache:'no-store'});
+      const data = await res.json();
+      if (Array.isArray(data.apps)) {
+        renderCards(data.apps);
+        return;
+      }
+    } catch(e) {
+      /* ignore fetch errors for now */
+    }
+    // If still no data, show error message
+    $('#cards').innerHTML =
+      '<div class="card">' +
+      '<div class="icon"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/triangle-exclamation.svg" alt="Erro" width="32" height="32" onerror="this.onerror=null;this.src=\'icons/triangle-exclamation.svg\'" /></div>' +
+      '<div><div class="title" style="font-weight:800">Falha ao carregar</div><div class="muted">' +
+      'apps/apps.json não encontrado.' +
+      '</div></div></div>';
+  }
+  // Listen for messages from parent to receive the apps list
+  window.addEventListener('message', (event) => {
+    const data = event.data;
+    if (data && data.type === 'apps' && Array.isArray(data.apps)) {
+      window.externalApps = data.apps;
+      renderCards(data.apps);
+    }
+  });
+  // Initial load (in case not embedded)
+  loadApps();
+
+  // REVO controls
+  let currentObjectURL = null;
+  function openInRevo(url, title='App'){
+    fitRevo();
+    const frame = $('#revoFrame');
+    const v = $('#revo');
+    const t = $('#revoTitle');
+    const openA = $('#revoOpen');
+    t.textContent = title;
+    frame.src = url;
+    openA.href = url;
+    v.classList.add('active');
+    $('#btnReopen').classList.remove('active');
+    // Prevent body scroll when viewer is open (better iOS behavior)
+    document.body.style.overflow = 'hidden';
+  }
+  function closeRevo(){
+    const frame = $('#revoFrame');
+    const v = $('#revo');
+    v.classList.remove('active');
+    // revoke previous object URL from local uploads
+    if(currentObjectURL){
+      URL.revokeObjectURL(currentObjectURL);
+      currentObjectURL = null;
+    }
+    frame.src = 'about:blank';
+    document.body.style.overflow = '';
+  }
+  function minRevo(){
+    $('#revo').classList.remove('active');
+    $('#btnReopen').classList.add('active');
+    document.body.style.overflow = '';
+  }
+  $('#revoBack').addEventListener('click', closeRevo);
+  $('#revoMin').addEventListener('click', minRevo);
+  $('#btnReopen').addEventListener('click', () => {
+    $('#btnReopen').classList.remove('active');
+    $('#revo').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+
+  // Dock actions
+  $('#dockHome').addEventListener('click', () => {
+    closeRevo();
+    window.scrollTo({top:0, behavior:'smooth'});
+    history.pushState('', document.title, window.location.pathname + window.location.search);
+  });
+  $('#dockInfodose').addEventListener('click', () => {
+    openInRevo('https://infodose.com.br','Infodose');
+  });
+
+  // PWA install
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+  });
+  async function doInstall(){
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+    } else {
+      alert('Use “Adicionar à Tela de Início”.');
+    }
+  }
+  $('#btnInstall').addEventListener('click', doInstall);
+  $('#dockInstall').addEventListener('click', doInstall);
+
+  // Local HTML upload → open in Revo
+  const inputLocal = $('#localHtmlInput');
+  $('#btnLocalOpen').addEventListener('click', () => inputLocal.click());
+  inputLocal.addEventListener('change', (ev) => {
+    const f = ev.target.files && ev.target.files[0];
+    if(!f) return;
+    // revoke any previous object URL
+    if(currentObjectURL) URL.revokeObjectURL(currentObjectURL);
+    currentObjectURL = URL.createObjectURL(f);
+    openInRevo(currentObjectURL, f.name || 'HTML Local');
+    // reset input so same file can be picked again later
+    inputLocal.value = '';
+  });
+
+  // First layout
+  fitRevo();
+  </script>
+</body>
+</html>
