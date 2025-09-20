@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="pt-br" data-theme="tesseract">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Pulse — KOBLLUX InfoDose</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0b0f; --text:#d7d7d7; --grad_a:#00d8d8; --grad_b:#d800d8;
+  --accent:#39FFB6; --ok:#00ffff; --warn:#FFC857; --err:#FF5C8A;
+  --radius:20px; --blur:24px; --shadow:0 8px 32px rgba(0,255,255,.25);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:radial-gradient(1200px 800px at 70% -10%,rgba(0,216,216,.15),transparent 60%),
+  radial-gradient(900px 700px at -20% 110%,rgba(216,0,216,.15),transparent 60%), var(--bg);
+  color:var(--text); font-family:'Montserrat',system-ui,sans-serif; -webkit-font-smoothing:antialiased;
+}
+.response-container{max-width:1100px;margin:0 auto;padding:24px}
+h1{
+  text-align:center; letter-spacing:.2em; font-weight:800; margin:10px 0 6px;
+  background:linear-gradient(90deg,var(--grad_a),var(--grad_b));
+  -webkit-background-clip:text;background-clip:text;color:transparent; filter:drop-shadow(0 0 18px rgba(0,255,255,.35));
+}
+.subtitle{opacity:.7;text-align:center;margin-bottom:18px;font-size:.9rem}
+.controls{
+  display:grid; gap:16px; grid-template-columns:1fr; margin:10px auto; max-width:900px;
+}
+@media (min-width:880px){ .controls{grid-template-columns:1fr 1fr 1fr;} }
+.glass{
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+  border-radius:var(--radius); backdrop-filter:blur(var(--blur));
+  box-shadow:var(--shadow);
+}
+.card{padding:16px}
+.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+label{font-size:.8rem; opacity:.85}
+select,input[type=range],input[type=number]{
+  width:100%; padding:10px 12px; border-radius:14px; background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.15); color:var(--text); outline:none;
+}
+.badge{font-size:.7rem; padding:4px 8px; border-radius:999px; background:rgba(0,255,255,.12); border:1px solid rgba(0,255,255,.3)}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  background:linear-gradient(135deg, rgba(0,216,216,.25), rgba(216,0,216,.25));
+  border:1px solid rgba(0,255,255,.35); color:#e9ffff; padding:16px 20px; border-radius:22px;
+  box-shadow:0 8px 24px rgba(0,255,255,.25), inset 0 0 30px rgba(0,255,255,.1);
+  cursor:pointer; transition:transform .15s ease, box-shadow .2s ease; font-weight:700; letter-spacing:.06em;
+}
+.btn:active{transform:translateY(1px)}
+.btn.secondary{background:rgba(255,255,255,.06)}
+#btnKOBLLUX{width:min(520px,92vw); margin:26px auto; display:block; font-size:1.25rem}
+.wave{
+  height:90px; width:100%; border-radius:16px; overflow:hidden; position:relative; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12)
+}
+.wave canvas{position:absolute; inset:0}
+.pill{display:flex; align-items:center; justify-content:space-between; gap:10px}
+.pill .title{font-weight:700; opacity:.9}
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.grid-3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px}
+.grid-auto{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px}
+.ellip{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.small{font-size:.8rem; opacity:.8}
+.overlay{position:fixed; inset:0; background:rgba(0,0,0,.5); display:none}
+.ifr-wrap{position:fixed; inset:auto 0 0 0; margin:auto; max-width:980px; width:var(--openW,66vw); display:none}
+.panel{padding:16px}
+.panel .head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px}
+.controls-mini{display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.knob{
+  width:120px; height:120px; border-radius:50%; margin:auto; position:relative;
+  background:radial-gradient(120px 120px at 70% 30%,rgba(0,255,255,.2),rgba(216,0,216,.2));
+  border:1px solid rgba(255,255,255,.25); box-shadow:0 10px 30px rgba(0,255,255,.25), inset 0 0 30px rgba(255,255,255,.08);
+}
+.knob:after{
+  content:""; position:absolute; top:10%; left:50%; width:2px; height:24px; background:#e6ffff; transform:translateX(-50%) rotate(var(--deg,0deg));
+  box-shadow:0 0 10px rgba(0,255,255,.6);
+}
+footer{margin:20px 0 50px; text-align:center; font-size:.8rem; opacity:.7}
+.badge-reopen{
+  position:fixed; bottom:18px; right:18px; display:none; padding:10px 14px; border-radius:999px;
+  background:rgba(0,255,255,.15); border:1px solid rgba(0,255,255,.35); backdrop-filter:blur(14px); cursor:pointer;
+}
+</style>
+</head>
+<body>
+  <div class="response-container">
+    <h1>PULSE</h1>
+    <div class="subtitle">Gerador dual • Pad Hoover + Melodia • Binaurais focados • MIDI generativo</div>
+
+    <!-- Waves -->
+    <div class="controls">
+      <div class="glass card">
+        <div class="pill"><div class="title ellip">PAD HOOVER</div><span class="badge">pista A</span></div>
+        <div class="wave"><canvas id="wavePad"></canvas></div>
+      </div>
+      <div class="glass card">
+        <div class="pill"><div class="title ellip">MELODIA</div><span class="badge">pista B</span></div>
+        <div class="wave"><canvas id="waveLead"></canvas></div>
+      </div>
+      <div class="glass card">
+        <div class="pill"><div class="title ellip">BINAURAIS</div><span class="badge">dif. L/R</span></div>
+        <div class="knob" id="knob"></div>
+        <div class="grid-3" style="margin-top:10px">
+          <div><label>Modo</label>
+            <select id="bnMode">
+              <option value="delta">Delta (2 Hz)</option>
+              <option value="theta" selected>Theta (5 Hz)</option>
+              <option value="alpha">Alpha (10 Hz)</option>
+              <option value="beta">Beta (20 Hz)</option>
+              <option value="gamma">Gamma (40 Hz)</option>
+              <option value="off">Off</option>
+            </select>
+          </div>
+          <div><label>Base (Hz)</label><input id="bnBase" type="number" min="80" max="400" value="200"/></div>
+          <div><label>Ganhos L/R</label>
+            <div class="grid-2">
+              <input id="gainL" type="range" min="0" max="1" step="0.01" value="0.5"/>
+              <input id="gainR" type="range" min="0" max="1" step="0.01" value="0.5"/>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botão Único -->
+    <button id="btnKOBLLUX" class="btn">BOTÃO ÚNICO — Iniciar</button>
+
+    <!-- Painel / Controles -->
+    <div id="overlay" class="overlay"></div>
+    <div id="panel" class="ifr-wrap">
+      <div class="glass panel">
+        <div class="head">
+          <div class="ellip" style="font-weight:700">Controles Avançados</div>
+          <div class="row">
+            <button class="btn secondary" id="togglePlay">▶︎/⏸</button>
+            <button class="btn secondary" id="btnExport">Exportar MIDI</button>
+            <button class="btn secondary" id="btnMIDIout" title="Usa WebMIDI se disponível">WebMIDI</button>
+            <button class="btn" id="closePanel">Fechar</button>
+          </div>
+        </div>
+        <div class="controls-mini">
+          <div>
+            <label>BPM</label>
+            <input id="bpm" type="range" min="50" max="180" step="1" value="92">
+            <div class="small"><span id="bpmVal">92</span> bpm</div>
+          </div>
+          <div>
+            <label>Tom / Campo</label>
+            <div class="grid-2">
+              <select id="keyRoot">
+                <option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option>
+                <option>F</option><option>F#</option><option>G</option><option>G#</option><option>A</option><option>A#</option><option>B</option>
+              </select>
+              <select id="scale">
+                <option value="ionian">Maior (Jônia)</option>
+                <option value="aeolian" selected>Menor (Eólia)</option>
+                <option value="dorian">Dórica</option>
+                <option value="phrygian">Frígia</option>
+                <option value="lydian">Lídia</option>
+                <option value="mixolydian">Mixolídia</option>
+                <option value="harmonic">Menor Harmônica</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label>Progressão</label>
+            <select id="prog">
+              <option value="i-vi-iii-vii">i–VI–III–VII</option>
+              <option value="i-iv-v-iv" selected>i–iv–v–iv</option>
+              <option value="i-v-vi-iv">i–v–vi–iv</option>
+              <option value="i-iii-iv-v">i–III–IV–V</option>
+              <option value="ii-v-i">ii–V–I (maior)</option>
+            </select>
+          </div>
+          <div>
+            <label>Semente (melodia)</label>
+            <input id="seed" type="number" value="1337" min="0" max="999999">
+          </div>
+          <div>
+            <label>Intensidade Pad</label>
+            <input id="padGain" type="range" min="0" max="1" step="0.01" value="0.6">
+          </div>
+          <div>
+            <label>Intensidade Melodia</label>
+            <input id="leadGain" type="range" min="0" max="1" step="0.01" value="0.75">
+          </div>
+          <div>
+            <label>Comprimento Loop (compassos)</label>
+            <input id="bars" type="number" min="1" max="16" value="8">
+          </div>
+          <div>
+            <label>Humanização (ms)</label>
+            <input id="human" type="range" min="0" max="25" step="1" value="6">
+          </div>
+          <div>
+            <label>Síntese Pad</label>
+            <select id="padFlavor">
+              <option value="hoover" selected>Hoover (supersaw)</option>
+              <option value="warm">Warm</option>
+              <option value="air">Air</option>
+            </select>
+          </div>
+          <div>
+            <label>Reverb/Delay</label>
+            <div class="grid-2">
+              <input id="rev" type="range" min="0" max="1" step="0.01" value="0.2">
+              <input id="dly" type="range" min="0" max="0.9" step="0.01" value="0.28">
+            </div>
+          </div>
+        </div>
+        <div class="small" style="margin-top:6px">ESC ou clique fora fecha. WebAudio sem plugins; MIDI SMF Type-0 gerado localmente.</div>
+      </div>
+    </div>
+
+    <button id="badge" class="badge-reopen">Abrir Painel</button>
+
+    <footer>© KOBLLUX Glow • “Refinar sempre, inflar nunca.”</footer>
+  </div>
+
+<script>
+/* ===== ArteASC (ativa) ===== */
+window.ArteASC={render:(n,v={})=>({portal369:`╔═══🌌═══╗\n ✪ (°ロ°)☝\n 🧭 ${v.tri||'KOBLLUX'}`,
+  seal_trinity_v2:`⟐ Trinity v2\n⚡ Pulso:${v.pulso||'∞'}`}[n]||'[ArteASC]')}
+console.log(ArteASC.render('seal_trinity_v2',{pulso:'binaural'}))
+
+/* ===== Util ===== */
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function LCG(seed){let s=(seed>>>0)||1; return ()=> (s=(s*1664525+1013904223)>>>0)/4294967296 }
+const NOTE_INDEX={'C':0,'C#':1,'D':2,'D#':3,'E':4,'F':5,'F#':6,'G':7,'G#':8,'A':9,'A#':10,'B':11}
+const SCALES={
+ ionian:[0,2,4,5,7,9,11], aeolian:[0,2,3,5,7,8,10], dorian:[0,2,3,5,7,9,10],
+ phrygian:[0,1,3,5,7,8,10], lydian:[0,2,4,6,7,9,11], mixolydian:[0,2,4,5,7,9,10],
+ harmonic:[0,2,3,5,7,8,11]
+}
+const ROMAN_MINOR={i:0,ii:2,iii:3,iv:5,v:7,vi:8,vii:10}
+const ROMAN_MAJOR={i:0,ii:2,iii:4,iv:5,v:7,vi:9,vii:11}
+const BN_MAP={delta:2,theta:5,alpha:10,beta:20,gamma:40,off:0}
+
+/* ===== Áudio ===== */
+let ctx, master, meterL, meterR, oscL, oscR, bnGainL, bnGainR, started=false;
+let pad = { voices:[], filter:null, gain:null, analyser:null };
+let lead = { osc:null, gain:null, analyser:null, delay:null, rev:null };
+let schedule = [];
+let currentTick=0, nextNoteTime=0, lookahead=0.08, scheduleHorizon=0.15;
+
+function initAudio(){
+  ctx = new (window.AudioContext||window.webkitAudioContext)();
+  master = ctx.createGain(); master.gain.value=.9; master.connect(ctx.destination);
+
+  // meters
+  meterL = ctx.createAnalyser(); meterR = ctx.createAnalyser();
+  meterL.fftSize = 1024; meterR.fftSize=1024; let splitter = ctx.createChannelSplitter(2);
+  // Insert a channel merger/splitter around master for visualization
+  let merger = ctx.createChannelMerger(2);
+  // Binaural carriers
+  bnGainL = ctx.createGain(); bnGainR = ctx.createGain();
+  oscL = ctx.createOscillator(); oscR = ctx.createOscillator();
+  oscL.type='sine'; oscR.type='sine';
+  oscL.connect(bnGainL).connect(merger,0,0);
+  oscR.connect(bnGainR).connect(merger,0,1);
+
+  // Pad bus
+  pad.gain = ctx.createGain(); pad.gain.gain.value = parseFloat(padGain.value);
+  pad.filter = ctx.createBiquadFilter(); pad.filter.type='lowpass'; pad.filter.frequency.value=1400;
+  pad.analyser = ctx.createAnalyser(); pad.analyser.fftSize=2048;
+  pad.gain.connect(pad.filter).connect(merger);
+  pad.filter.connect(pad.analyser);
+
+  // Lead bus
+  lead.gain = ctx.createGain(); lead.gain.gain.value = parseFloat(leadGain.value);
+  lead.delay = ctx.createDelay(0.8); let fb = ctx.createGain(); fb.gain.value=parseFloat(dly.value);
+  lead.delay.connect(fb).connect(lead.delay);
+  lead.rev = ctx.createConvolver(); lead.rev.buffer=makeSmallHall();
+  let wet = ctx.createGain(); wet.gain.value=parseFloat(rev.value);
+  let dry = ctx.createGain(); dry.gain.value=1;
+  lead.gain.connect(lead.delay); lead.delay.connect(wet); lead.gain.connect(dry);
+  lead.analyser = ctx.createAnalyser(); lead.analyser.fftSize=2048;
+  let leadBus = ctx.createGain();
+  wet.connect(leadBus); dry.connect(leadBus);
+  leadBus.connect(merger);
+  leadBus.connect(lead.analyser);
+
+  // Route merger to meters and master
+  merger.connect(splitter);
+  splitter.connect(meterL,0);
+  splitter.connect(meterR,1);
+  merger.connect(master);
+
+  oscL.start(); oscR.start();
+
+  buildPadSynth(padFlavor.value);
+  started=true;
+}
+
+function makeSmallHall(){
+  const sr=48000, len=sr*2.2, buf=ctx.createBuffer(2,len,sr);
+  for(let c=0;c<2;c++){
+    let d=buf.getChannelData(c);
+    for(let i=0;i<len;i++){
+      let t=i/len;
+      d[i]=(Math.random()*2-1)*Math.pow(1-t,3); // short noisy tail
+    }
+  }
+  return buf;
+}
+
+function buildPadSynth(flavor){
+  // remove old voices
+  pad.voices.forEach(v=>v.osc.stop());
+  pad.voices=[];
+  const detunes = flavor==='hoover' ? [-14,-7,0,7,14] : flavor==='warm' ? [-5,0,5] : [-9,-3,0,3,9];
+  for(const cents of detunes){
+    const o=ctx.createOscillator(); o.type='sawtooth'; o.detune.value=cents*100;
+    o.connect(pad.gain); o.start();
+    pad.voices.push({osc:o});
+  }
+}
+
+/* ===== Sequência ===== */
+const state={playing:false};
+function noteToFreq(n){ return 440*Math.pow(2,(n-69)/12) }
+function scaleNotes(root, scale, oct=4){
+  const rootIndex = NOTE_INDEX[root];
+  return SCALES[scale].map(i=> (oct*12) + rootIndex + i );
+}
+function chordFromRoman(rn, isMajor){
+  const map = isMajor ? ROMAN_MAJOR : ROMAN_MINOR;
+  const root = map[rn];
+  return [root, root+ (isMajor?4:3), root+7];
+}
+function parseProg(p){ return p.split('-') } // e.g. ["i","iv","v","iv"]
+
+function makeSequence(){
+  const rng = LCG(parseInt(seed.value,10)||1);
+  const bpmVal = parseInt(bpm.value,10);
+  const spb = 60/bpmVal;
+  const bars = parseInt(barsInput.value,10);
+  const isMajor = (scaleSel.value==='ionian'||scaleSel.value==='lydian'||scaleSel.value==='mixolydian');
+  const prog = parseProg(progSel.value);
+  const key = keySel.value;
+  const scale = scaleSel.value;
+
+  const seq=[]; // {t,dur,notes:[midi], lead:[midi?]}
+  let bar=0, beat=0;
+  while(bar<bars){
+    const degree = prog[bar % prog.length];
+    const chordSemis = chordFromRoman(degree,isMajor); // relative to key root in semis
+    const baseOct=4;
+    const chordMidi = chordSemis.map(s=> NOTE_INDEX[key]+ s + baseOct*12);
+    // push pad chord (whole bar)
+    seq.push({t: (bar*4)*spb, dur: 4*spb, notes: chordMidi});
+
+    // melody: 1/8s with skips, from scale across 4–6th octave, bias to chord tones
+    const scaleSet = new Set(scaleNotes(key, scale, 5).concat(scaleNotes(key, scale, 4)));
+    const chordSet = new Set(chordMidi.map(n=>n%12));
+    for(let step=0; step<8; step++){
+      if(rng()<0.15) continue; // rest
+      // pick from scale; bias ~60% to chord tone
+      let candidates=[...scaleSet];
+      let pick;
+      if(rng()<0.6){
+        const chordCandidates = candidates.filter(n=> chordSet.has(n%12));
+        pick = chordCandidates[Math.floor(rng()*chordCandidates.length)];
+      }else{
+        pick = candidates[Math.floor(rng()*candidates.length)];
+      }
+      // small random octave up/down sometimes
+      if(rng()<0.25) pick += (rng()<0.5? -12:12);
+      const dur = (rng()<0.2)? 0.5*spb : 0.25*spb; // 1/8 or 1/16 tied
+      seq.push({t:(bar*4 + step*0.5)*spb, dur, lead:[pick]});
+    }
+    bar++;
+  }
+  return {seq, spb};
+}
+
+let currentSeq=null, timer=null;
+function play(){
+  if(!started) initAudio();
+  currentSeq = makeSequence();
+  currentTick=0; nextNoteTime=ctx.currentTime;
+  state.playing=true;
+  scheduler();
+}
+function stop(){
+  state.playing=false;
+  window.clearTimeout(timer);
+}
+
+function scheduleEvent(ev){
+  if(ev.notes){
+    // set pad chord by tuning pad voices to chord tones
+    ev.notes.slice(0,pad.voices.length).forEach((n,i)=>{
+      pad.voices[i].osc.frequency.setValueAtTime( noteToFreq(n), nextNoteTime );
+    });
+    // slightly open/close filter for movement
+    const f= 600 + Math.random()*1200;
+    pad.filter.frequency.cancelScheduledValues(nextNoteTime);
+    pad.filter.frequency.linearRampToValueAtTime(f,nextNoteTime+ev.dur*0.6);
+  }
+  if(ev.lead){
+    ev.lead.forEach(n=>{
+      const o = ctx.createOscillator(); o.type='triangle';
+      const g = ctx.createGain(); g.gain.value=lead.gain.gain.value;
+      let t = nextNoteTime + (Math.random()*human.value/1000);
+      o.frequency.value = noteToFreq(n);
+      o.connect(g).connect(lead.gain);
+      o.start(t);
+      o.stop(t+ev.dur*0.92);
+    });
+  }
+}
+
+function scheduler(){
+  while(nextNoteTime < ctx.currentTime + scheduleHorizon){
+    // pull events in window
+    currentSeq.seq.forEach(ev=>{
+      const evTime = ev.t;
+      const base = nextNoteTime===0? ctx.currentTime : 0; // first call safety
+    });
+    const t = currentTick*0.125 * (60/parseInt(bpm.value,10)); // 1/8th grid
+    // schedule events whose t is in [nextNoteTime, next window]
+    currentSeq.seq.forEach(ev=>{
+      const when = ev.t;
+      if(when >= (currentTick*0.125)*(60/bpm.value) && when < ((currentTick+1)*0.125)*(60/bpm.value)){
+        nextNoteTime = ctx.currentTime + (when - (currentTick*0.125)*(60/bpm.value));
+        scheduleEvent(ev);
+      }
+    });
+    currentTick++;
+    if((currentTick*0.125) >= (parseInt(barsInput.value,10)*4)) currentTick=0; // loop
+  }
+  // draw viz
+  drawWave(pad.analyser, wavePad);
+  drawWave(lead.analyser, waveLead);
+  if(state.playing) timer = setTimeout(scheduler, lookahead*1000);
+}
+
+function drawWave(analyser, canvas){
+  const W=canvas.width=canvas.clientWidth, H=canvas.height=canvas.clientHeight;
+  const arr=new Uint8Array(analyser.fftSize); analyser.getByteTimeDomainData(arr);
+  const ctx2=canvas.getContext('2d'); ctx2.clearRect(0,0,W,H);
+  const grad=ctx2.createLinearGradient(0,0,W,0); grad.addColorStop(0,'#00d8d8'); grad.addColorStop(1,'#d800d8');
+  ctx2.strokeStyle=grad; ctx2.lineWidth=2; ctx2.globalAlpha=.9; ctx2.beginPath();
+  for(let i=0;i<arr.length;i++){
+    const x = i/arr.length*W;
+    const y = (arr[i]/255)*H;
+    (i?ctx2.lineTo(x,y):ctx2.moveTo(x,y));
+  }
+  ctx2.stroke();
+}
+
+/* ===== Binaurais ===== */
+function updateBinaurals(){
+  const base=parseFloat(bnBase.value);
+  const diff = BN_MAP[bnMode.value]||0;
+  const l=base - diff/2, r=base + diff/2;
+  bnGainL.gain.value = parseFloat(gainL.value);
+  bnGainR.gain.value = parseFloat(gainR.value);
+  oscL.frequency.setValueAtTime(l, ctx.currentTime);
+  oscR.frequency.setValueAtTime(r, ctx.currentTime);
+  // knob angle visual
+  const deg = diff===0? 0 : clamp(diff*3, -120, 120);
+  document.getElementById('knob').style.setProperty('--deg', deg+'deg');
+}
+
+/* ===== MIDI Export (SMF Type 0) ===== */
+function toVarLen(v){ const bytes=[]; bytes.push(v&0x7F); while(v>>=7){bytes.unshift((v&0x7F)|0x80)} return bytes }
+function writeShort(arr, n){ arr.push((n>>8)&255, n&255) }
+function writeLong(arr, n){ arr.push((n>>24)&255,(n>>16)&255,(n>>8)&255,n&255) }
+function makeMIDI(){
+  const ppq=480; const bpmVal=parseInt(bpm.value,10); const spb=60/bpmVal;
+  const events=[];
+  const seq = currentSeq || makeSequence();
+
+  function addNote(delta, on, note, vel, ch){ events.push(...toVarLen(delta), on? (0x90|(ch&0x0F)) : (0x80|(ch&0x0F)), note&127, vel&127) }
+
+  let lastTick=0;
+  const toTicks = sec=> Math.round(sec * (ppq*(bpmVal/60)));
+  // lead channel 0
+  seq.seq.filter(e=>e.lead).forEach(e=>{
+    const onT=toTicks(e.t), offT=toTicks(e.t+e.dur);
+    const dtOn = onT-lastTick; addNote(dtOn, true, e.lead[0], 96, 0); lastTick=onT;
+    const dtOff= offT-lastTick; addNote(dtOff, false, e.lead[0], 64, 0); lastTick=offT;
+  });
+  // pad tônicas no canal 1
+  lastTick=0;
+  seq.seq.filter(e=>e.notes).forEach(e=>{
+    const onT=toTicks(e.t), offT=toTicks(e.t+e.dur);
+    const n=e.notes[0];
+    const dtOn = onT-lastTick; addNote(dtOn, true, n, 80, 1); lastTick=onT;
+    const dtOff= offT-lastTick; addNote(dtOff, false, n, 64, 1); lastTick=offT;
+  });
+
+  // End of track
+  const track=[];
+  // tempo meta
+  const mpqn=Math.round(60000000/bpmVal); track.push(0x00,0xFF,0x51,0x03,(mpqn>>16)&255,(mpqn>>8)&255,mpqn&255);
+  track.push(...events);
+  track.push(0x00,0xFF,0x2F,0x00);
+
+  // Build SMF
+  const data=[];
+  // Header MThd
+  data.push(...[0x4d,0x54,0x68,0x64]); writeLong(data,6); writeShort(data,0); writeShort(data,1); writeShort(data,ppq);
+  // Track MTrk
+  data.push(...[0x4d,0x54,0x72,0x6b]); writeLong(data,track.length); data.push(...track);
+
+  const blob = new Blob([new Uint8Array(data)], {type:'audio/midi'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='Pulse_'+Date.now()+'.mid'; a.click();
+}
+
+/* ===== WebMIDI Out (opcional) ===== */
+let midiOut=null;
+async function initMIDI(){
+  if(!('requestMIDIAccess' in navigator)){ alert('WebMIDI não disponível'); return }
+  const access = await navigator.requestMIDIAccess();
+  const outs = [...access.outputs.values()];
+  if(!outs.length){ alert('Nenhuma saída MIDI encontrada'); return }
+  midiOut = outs[0];
+  alert('Conectado a: '+midiOut.name);
+}
+
+/* ===== UI Wiring ===== */
+const wavePad=document.getElementById('wavePad'), waveLead=document.getElementById('waveLead');
+const bnMode=bnBase=bnBase??null;
+const knob=document.getElementById('knob');
+
+const overlay=document.getElementById('overlay');
+const panel=document.getElementById('panel');
+const btnMain=document.getElementById('btnKOBLLUX');
+const badge=document.getElementById('badge');
+
+const bpm=document.getElementById('bpm'), bpmVal=document.getElementById('bpmVal');
+const keySel=document.getElementById('keyRoot'); const scaleSel=document.getElementById('scale');
+const progSel=document.getElementById('prog'); const seed=document.getElementById('seed');
+const padGain=document.getElementById('padGain'), leadGain=document.getElementById('leadGain');
+const barsInput=document.getElementById('bars'); const human=document.getElementById('human');
+const padFlavor=document.getElementById('padFlavor'); const rev=document.getElementById('rev'); const dly=document.getElementById('dly');
+
+const bnModeEl=document.getElementById('bnMode'); const bnBaseEl=document.getElementById('bnBase');
+const gainL=document.getElementById('gainL'); const gainR=document.getElementById('gainR');
+
+function openIFrame(){ overlay.style.display='block'; panel.style.setProperty('--openW','66vw'); panel.style.display='block'; }
+function closeIFrame(){ overlay.style.display='none'; panel.style.display='none'; }
+document.getElementById('closePanel').onclick=()=>{ closeIFrame(); badge.style.display='block' }
+badge.onclick=()=>{ openIFrame(); badge.style.display='none' }
+overlay.addEventListener('click', closeIFrame);
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeIFrame() });
+
+btnMain.onclick=()=>{
+  if(!started){ initAudio(); updateBinaurals(); }
+  if(state.playing){ stop(); btnMain.textContent='BOTÃO ÚNICO — Iniciar' }
+  else { play(); btnMain.textContent='BOTÃO ÚNICO — Pausar'; openIFrame() }
+};
+
+document.getElementById('togglePlay').onclick=()=>{ btnMain.click() }
+document.getElementById('btnExport').onclick=makeMIDI;
+document.getElementById('btnMIDIout').onclick=initMIDI;
+
+[bpm,keySel,scaleSel,progSel,seed,padGain,leadGain,barsInput,human,padFlavor,rev,dly].forEach(el=>{
+  el.addEventListener('input', ()=>{
+    bpmVal.textContent=bpm.value;
+    if(pad && pad.gain) pad.gain.gain.value=parseFloat(padGain.value);
+    if(lead && lead.gain) lead.gain.gain.value=parseFloat(leadGain.value);
+    if(lead && lead.rev){ const wet=clamp(parseFloat(rev.value),0,1); // simple
+      // rev routed via wet gain in bus chain; using convolver level through wet node above
+      // (we left wet as variable inside initAudio; approximate by finding the node through lead.delay -> wet)
+    }
+    if(started){ buildPadSynth(padFlavor.value) }
+  })
+})
+
+;['input','change'].forEach(evt=>{
+  document.getElementById('bnMode').addEventListener(evt, updateBinaurals);
+  document.getElementById('bnBase').addEventListener(evt, updateBinaurals);
+  document.getElementById('gainL').addEventListener(evt, updateBinaurals);
+  document.getElementById('gainR').addEventListener(evt, updateBinaurals);
+});
+
+window.addEventListener('resize', ()=>{ drawWave(pad.analyser,wavePad); drawWave(lead.analyser,waveLead) });
+
+/* Inicial */
+bpmVal.textContent=bpm.value;
+</script>
+</body>
+</html>
