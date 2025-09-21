@@ -708,6 +708,18 @@ body::after {
       padding-bottom: calc(env(safe-area-inset-bottom, 0) + 12px);
     }
   </style>
+
+<style>
+  /* ===== Archetype-driven BG effects ===== */
+  #custom-bg[data-arch*="Atlas"] * { filter: saturate(1.15) hue-rotate(12deg); }
+  #custom-bg[data-arch*="Nova"] * { filter: contrast(1.1) brightness(1.03); }
+  #custom-bg[data-arch*="Kaion"] * { filter: saturate(1.25) contrast(1.05); }
+  #custom-bg[data-arch*="Elysha"] * { filter: hue-rotate(-18deg) saturate(1.1); }
+  #custom-bg[data-arch*="Ignyra"] * { filter: contrast(1.12) brightness(1.06); }
+  #custom-bg[data-arch*="Genus"] * { filter: saturate(1.08) blur(0px); }
+  /* Long-fade cue (no visual change itself; JS controls timing) */
+  #ls-panel header .toggle { display:flex; align-items:center; gap:6px; margin-left:8px; font:12px/1.2 system-ui; color:#bfe3ff }
+</style>
 </head>
 <body>
   <!-- ===== Header ===== -->
@@ -2662,6 +2674,271 @@ body::after {
       });
     }
   })();
+})();
+</script>
+
+<!-- ===== Dual • Debug & UX Kit v2 (routing + toaster + LS viewer) ===== -->
+<style>
+  #dual-toaster{position:fixed;left:50%;top:14px;transform:translateX(-50%);
+    background:rgba(16,24,33,.92);color:#e6f1ff;border:1px solid rgba(255,255,255,.12);
+    padding:10px 14px;border-radius:12px;backdrop-filter:blur(10px);
+    font:600 13px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;z-index:99999;
+    max-width:80vw;box-shadow:0 10px 30px rgba(0,0,0,.35);display:none}
+  #dual-toaster.show{display:block;animation:dualToastFade .25s ease}
+  @keyframes dualToastFade{from{opacity:0;transform:translate(-50%,-6px)}to{opacity:1;transform:translate(-50%,0)}}
+
+  #arch-bubble{position:fixed;right:16px;bottom:92px;z-index:99998;max-width:60ch}
+  #arch-bubble .bubble{background:rgba(0,0,0,.6);color:#e6f1ff;border:1px solid rgba(255,255,255,.14);
+    padding:10px 12px;border-radius:14px;backdrop-filter:blur(8px);font:500 13px/1.35 system-ui;opacity:0;transform:translateY(6px)}
+  #arch-bubble .bubble.show{opacity:1;transform:translateY(0);transition:opacity .2s ease, transform .2s ease}
+
+  /* LocalStorage Brain Viewer */
+  #ls-panel-btn{position:fixed;bottom:16px;left:16px;z-index:99997;
+    width:34px;height:34px;border-radius:12px;border:1px solid rgba(255,255,255,.14);
+    background:rgba(12,16,22,.7);color:#bfe3ff;backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;
+    cursor:pointer}
+  #ls-panel{position:fixed;inset:auto 16px 16px auto;right:16px;bottom:16px;max-width:min(680px,90vw);max-height:60vh;overflow:auto;
+    z-index:99996;background:rgba(10,14,20,.85);border:1px solid rgba(255,255,255,.12);border-radius:16px;backdrop-filter:blur(8px);
+    display:none}
+  #ls-panel header{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.08);color:#cfe6ff}
+  #ls-panel .grid{display:grid;grid-template-columns:240px 1fr auto;gap:8px;padding:12px}
+  #ls-panel .grid div{border-bottom:1px dashed rgba(255,255,255,.08);padding:6px 4px;color:#d9e6ff;font:12px/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;word-break:break-all}
+  #ls-panel .grid div.k{color:#a9c7ff}
+  #ls-panel .actions{margin-left:auto;display:flex;gap:8px}
+  #ls-panel button{background:#0d1b2a;border:1px solid #254b70;color:#cfe6ff;border-radius:10px;padding:6px 10px;cursor:pointer}
+</style>
+<div id="dual-toaster"></div>
+<div id="arch-bubble" aria-live="polite"></div>
+<div id="ls-panel" role="dialog" aria-label="LocalStorage Viewer">
+  <header>
+    <strong>LocalStorage • Brain</strong>
+    <div class="actions">
+      <button id="ls-refresh">Atualizar</button>
+      <button id="ls-clear-all">Limpar tudo</button>
+      <button id="ls-hide">Fechar</button>
+    </div>
+  </header>
+  <div class="grid" id="ls-grid"></div>
+</div>
+<div id="ls-panel-btn" title="Brain • LocalStorage">LS</div>
+<script>
+(function(){
+  const $ = (q,r=document)=>r.querySelector(q);
+  const $$ = (q,r=document)=>Array.from(r.querySelectorAll(q));
+  const LS = {
+    get:(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+    set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
+    raw:(k)=>localStorage.getItem(k)||'',
+    del:(k)=>{try{localStorage.removeItem(k)}catch(e){}},
+    clear:()=>{try{localStorage.clear()}catch(e){}}
+  };
+  const isROM = ()=>/rom/i.test(location.hash)||/\\brom\\b/i.test(document.title)||/\\brom\\b/i.test((document.body.getAttribute('data-page')||''));
+
+  // ===== Toaster =====
+  let toastTimer=null;
+  function showToast(msg, ms=2800){
+    const el = $('#dual-toaster');
+    if(!el) return;
+    el.textContent = String(msg);
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>{ el.classList.remove('show'); }, ms);
+  }
+  window.DualToast = showToast;
+
+  // ===== Archetype bubble (ROM) =====
+  let bubbleTimer=null;
+  function showArchBubble(msg, ms=4500){
+    const host = $('#arch-bubble'); if(!host) return;
+    host.innerHTML = '<div class="bubble"></div>';
+    const b = host.firstElementChild;
+    b.textContent = String(msg);
+    requestAnimationFrame(()=>{
+      b.classList.add('show');
+      clearTimeout(bubbleTimer);
+      bubbleTimer = setTimeout(()=>{ b.classList.remove('show'); }, ms);
+    });
+  }
+
+  // ===== LocalStorage Brain Viewer =====
+  function renderLS(){
+    const grid = $('#ls-grid'); if(!grid) return;
+    grid.innerHTML = '';
+    Object.keys(localStorage).sort().forEach(k=>{
+      const v = LS.raw(k);
+      const rowK = document.createElement('div'); rowK.className='k'; rowK.textContent=k;
+      const rowV = document.createElement('div'); rowV.textContent = v.length>200? (v.slice(0,200)+'…'): v;
+      const rowA = document.createElement('div');
+      const del = document.createElement('button'); del.textContent='apagar';
+      del.addEventListener('click', ()=>{ LS.del(k); renderLS(); });
+      rowA.appendChild(del);
+      grid.appendChild(rowK); grid.appendChild(rowV); grid.appendChild(rowA);
+    });
+  }
+  const panel = $('#ls-panel');
+  $('#ls-panel-btn')?.addEventListener('click', ()=>{ panel.style.display='block'; renderLS(); });
+  $('#ls-hide')?.addEventListener('click', ()=>{ panel.style.display='none'; });
+  $('#ls-refresh')?.addEventListener('click', renderLS);
+  $('#ls-clear-all')?.addEventListener('click', ()=>{
+    if(confirm('Limpar TODO o LocalStorage? Esta ação é irreversível.')){
+      LS.clear(); renderLS(); showToast('LocalStorage limpo.');
+    }
+  });
+
+  // ===== Message routing =====
+  // If chatPush exists, wrap it so AI messages are routed: ROM -> archetype bubble; other pages -> toaster.
+  const _chatPush = window.chatPush;
+  if(typeof _chatPush === 'function'){
+    window.chatPush = function(type, text){
+      try{
+        if(type==='ai'){
+          if(isROM()) showArchBubble(text);
+          else showToast(text);
+          // Não duplicar na timeline original quando for AI
+          return;
+        }
+      }catch(e){}
+      return _chatPush.apply(this, arguments);
+    };
+  }
+
+  // If your code dispatches window events instead of chatPush, you can use these:
+  window.dispatchEvent(new CustomEvent('dual:assistant:message',{detail:{text:'(hook pronto)'}}));
+  window.addEventListener('dual:assistant:message', (ev)=>{
+    const text = (ev && ev.detail && ev.detail.text) ? ev.detail.text : '';
+    if(!text) return;
+    if(isROM()) showArchBubble(text); else showToast(text);
+  });
+
+  // ===== Ensure ROM speaks via archetype (signal) =====
+  // Fire a lightweight signal any time we land on ROM; your archetype code can listen and speak.
+  function pingROM(){
+    if(isROM()){
+      window.dispatchEvent(new CustomEvent('dual:rom:entered', {detail:{archetype: localStorage.getItem('archetype:active')||''}}));
+    }
+  }
+  window.addEventListener('hashchange', pingROM);
+  document.addEventListener('DOMContentLoaded', pingROM);
+})();
+</script>
+
+<script>
+(function(){
+  const $ = (q,r=document)=>r.querySelector(q);
+  const $$ = (q,r=document)=>Array.from(r.querySelectorAll(q));
+  const LS = {
+    get:(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+    set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
+    raw:(k)=>localStorage.getItem(k)||'',
+  };
+
+  // 1) Mount LS button inside Helper panel (and remove floating LS button if exists)
+  function mountLSInHelper(){
+    const helper = $('#helper') || $('#helper-panel') || $('#help-panel') || $('#help') || $('#brain-help') || $('#menu-help') || document.querySelector('[data-help]') || document.querySelector('[data-role="helper"]');
+    const panel = $('#ls-panel');
+    if(!panel) return;
+    // remove floating button if present
+    const floatBtn = $('#ls-panel-btn'); if(floatBtn) floatBtn.remove();
+
+    if(helper){
+      // create or reuse a commands bar
+      let bar = helper.querySelector('.helper-commands, nav, .actions, .toolbar');
+      if(!bar){
+        bar = document.createElement('div');
+        bar.className = 'helper-commands';
+        helper.prepend(bar);
+      }
+      const btn = document.createElement('button');
+      btn.id = 'ls-open-from-helper';
+      btn.textContent = 'LocalStorage';
+      btn.style.cssText = 'background:#0d1b2a;border:1px solid #254b70;color:#cfe6ff;border-radius:10px;padding:6px 10px;cursor:pointer';
+      btn.addEventListener('click', ()=>{ panel.style.display='block'; window.dispatchEvent(new Event('dual:ls:open'));});
+      bar.appendChild(btn);
+    }
+  }
+
+  // 2) Expose long-fade toggle in LS panel header; wire into BG transition logic
+  function addLongFadeToggle(){
+    const hdr = document.querySelector('#ls-panel header');
+    if(!hdr) return;
+    const wrap = document.createElement('label');
+    wrap.className = 'toggle';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = !!LS.get('uno:bg:longfade', false);
+    const span = document.createElement('span');
+    span.textContent = 'fade longo (9s)';
+    wrap.appendChild(cb); wrap.appendChild(span);
+    hdr.appendChild(wrap);
+    cb.addEventListener('change', ()=>{
+      LS.set('uno:bg:longfade', cb.checked);
+      // optional nudge: re-apply bg to feel the change on next swap
+    });
+  }
+
+  // 3) Patch applyTheme_NoFlicker to honor longfade + set data-arch for CSS effects
+  function patchApply(){
+    const fn = window.applyTheme_NoFlicker;
+    if(typeof fn!=='function') return;
+    window.applyTheme_NoFlicker = function(forceSrc){
+      const long = !!LS.get('uno:bg:longfade', false);
+      const activeArch = localStorage.getItem('archetype:active')||'';
+      const bgContainer = document.getElementById('custom-bg');
+      if(bgContainer){ bgContainer.dataset.arch = activeArch; }
+      // run original once to ensure elements exist
+      const res = fn.apply(this, arguments);
+      try{
+        // adjust last appended element transition if any crossfade happens now
+        const cont = document.getElementById('custom-bg');
+        if(!cont) return res;
+        const kids = cont.children;
+        if(kids && kids.length){
+          const last = kids[kids.length-1];
+          // find the previous sibling (for crossfade removal); original code removes after 360ms; we'll extend if needed
+          const prev = last.previousElementSibling;
+          if(last && last.style){
+            const dur = long ? 9000 : 360;
+            last.style.transition = 'opacity '+(dur/1000)+'s ease-in-out';
+            last.style.opacity = '1';
+            if(prev){
+              // schedule previous removal after same duration to let concatenation happen
+              setTimeout(()=>{ try{ prev.remove(); }catch(e){} }, dur);
+            }
+          }
+        }
+      }catch(e){}
+      return res;
+    };
+  }
+
+  // 4) Also apply longfade when we detect a swap via our own code path (fallback)
+  window.addEventListener('dual:bg:swap', (ev)=>{
+    const cont = document.getElementById('custom-bg'); if(!cont) return;
+    const kids = cont.children;
+    if(!kids || !kids.length) return;
+    const last = kids[kids.length-1];
+    const prev = last.previousElementSibling;
+    const long = !!LS.get('uno:bg:longfade', false);
+    const dur = long ? 9000 : 360;
+    if(last && last.style){
+      last.style.transition = 'opacity '+(dur/1000)+'s ease-in-out';
+      last.style.opacity = '1';
+      if(prev){ setTimeout(()=>{ try{ prev.remove(); }catch(e){} }, dur); }
+    }
+  });
+
+  // 5) Update data-arch on ROM enter (ensures effect follows active archetype)
+  window.addEventListener('dual:rom:entered', (ev)=>{
+    const arch = (ev && ev.detail && ev.detail.archetype) ? ev.detail.archetype : (localStorage.getItem('archetype:active')||'');
+    const bgContainer = document.getElementById('custom-bg');
+    if(bgContainer){ bgContainer.dataset.arch = arch||''; }
+  });
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    mountLSInHelper();
+    addLongFadeToggle();
+    patchApply();
+  });
 })();
 </script>
 </body>

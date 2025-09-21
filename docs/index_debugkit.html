@@ -2664,5 +2664,150 @@ body::after {
   })();
 })();
 </script>
+
+<!-- ===== Dual • Debug & UX Kit v2 (routing + toaster + LS viewer) ===== -->
+<style>
+  #dual-toaster{position:fixed;left:50%;top:14px;transform:translateX(-50%);
+    background:rgba(16,24,33,.92);color:#e6f1ff;border:1px solid rgba(255,255,255,.12);
+    padding:10px 14px;border-radius:12px;backdrop-filter:blur(10px);
+    font:600 13px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;z-index:99999;
+    max-width:80vw;box-shadow:0 10px 30px rgba(0,0,0,.35);display:none}
+  #dual-toaster.show{display:block;animation:dualToastFade .25s ease}
+  @keyframes dualToastFade{from{opacity:0;transform:translate(-50%,-6px)}to{opacity:1;transform:translate(-50%,0)}}
+
+  #arch-bubble{position:fixed;right:16px;bottom:92px;z-index:99998;max-width:60ch}
+  #arch-bubble .bubble{background:rgba(0,0,0,.6);color:#e6f1ff;border:1px solid rgba(255,255,255,.14);
+    padding:10px 12px;border-radius:14px;backdrop-filter:blur(8px);font:500 13px/1.35 system-ui;opacity:0;transform:translateY(6px)}
+  #arch-bubble .bubble.show{opacity:1;transform:translateY(0);transition:opacity .2s ease, transform .2s ease}
+
+  /* LocalStorage Brain Viewer */
+  #ls-panel-btn{position:fixed;bottom:16px;left:16px;z-index:99997;
+    width:34px;height:34px;border-radius:12px;border:1px solid rgba(255,255,255,.14);
+    background:rgba(12,16,22,.7);color:#bfe3ff;backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;
+    cursor:pointer}
+  #ls-panel{position:fixed;inset:auto 16px 16px auto;right:16px;bottom:16px;max-width:min(680px,90vw);max-height:60vh;overflow:auto;
+    z-index:99996;background:rgba(10,14,20,.85);border:1px solid rgba(255,255,255,.12);border-radius:16px;backdrop-filter:blur(8px);
+    display:none}
+  #ls-panel header{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.08);color:#cfe6ff}
+  #ls-panel .grid{display:grid;grid-template-columns:240px 1fr auto;gap:8px;padding:12px}
+  #ls-panel .grid div{border-bottom:1px dashed rgba(255,255,255,.08);padding:6px 4px;color:#d9e6ff;font:12px/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;word-break:break-all}
+  #ls-panel .grid div.k{color:#a9c7ff}
+  #ls-panel .actions{margin-left:auto;display:flex;gap:8px}
+  #ls-panel button{background:#0d1b2a;border:1px solid #254b70;color:#cfe6ff;border-radius:10px;padding:6px 10px;cursor:pointer}
+</style>
+<div id="dual-toaster"></div>
+<div id="arch-bubble" aria-live="polite"></div>
+<div id="ls-panel" role="dialog" aria-label="LocalStorage Viewer">
+  <header>
+    <strong>LocalStorage • Brain</strong>
+    <div class="actions">
+      <button id="ls-refresh">Atualizar</button>
+      <button id="ls-clear-all">Limpar tudo</button>
+      <button id="ls-hide">Fechar</button>
+    </div>
+  </header>
+  <div class="grid" id="ls-grid"></div>
+</div>
+<div id="ls-panel-btn" title="Brain • LocalStorage">LS</div>
+<script>
+(function(){
+  const $ = (q,r=document)=>r.querySelector(q);
+  const $$ = (q,r=document)=>Array.from(r.querySelectorAll(q));
+  const LS = {
+    get:(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+    set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
+    raw:(k)=>localStorage.getItem(k)||'',
+    del:(k)=>{try{localStorage.removeItem(k)}catch(e){}},
+    clear:()=>{try{localStorage.clear()}catch(e){}}
+  };
+  const isROM = ()=>/rom/i.test(location.hash)||/\\brom\\b/i.test(document.title)||/\\brom\\b/i.test((document.body.getAttribute('data-page')||''));
+
+  // ===== Toaster =====
+  let toastTimer=null;
+  function showToast(msg, ms=2800){
+    const el = $('#dual-toaster');
+    if(!el) return;
+    el.textContent = String(msg);
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>{ el.classList.remove('show'); }, ms);
+  }
+  window.DualToast = showToast;
+
+  // ===== Archetype bubble (ROM) =====
+  let bubbleTimer=null;
+  function showArchBubble(msg, ms=4500){
+    const host = $('#arch-bubble'); if(!host) return;
+    host.innerHTML = '<div class="bubble"></div>';
+    const b = host.firstElementChild;
+    b.textContent = String(msg);
+    requestAnimationFrame(()=>{
+      b.classList.add('show');
+      clearTimeout(bubbleTimer);
+      bubbleTimer = setTimeout(()=>{ b.classList.remove('show'); }, ms);
+    });
+  }
+
+  // ===== LocalStorage Brain Viewer =====
+  function renderLS(){
+    const grid = $('#ls-grid'); if(!grid) return;
+    grid.innerHTML = '';
+    Object.keys(localStorage).sort().forEach(k=>{
+      const v = LS.raw(k);
+      const rowK = document.createElement('div'); rowK.className='k'; rowK.textContent=k;
+      const rowV = document.createElement('div'); rowV.textContent = v.length>200? (v.slice(0,200)+'…'): v;
+      const rowA = document.createElement('div');
+      const del = document.createElement('button'); del.textContent='apagar';
+      del.addEventListener('click', ()=>{ LS.del(k); renderLS(); });
+      rowA.appendChild(del);
+      grid.appendChild(rowK); grid.appendChild(rowV); grid.appendChild(rowA);
+    });
+  }
+  const panel = $('#ls-panel');
+  $('#ls-panel-btn')?.addEventListener('click', ()=>{ panel.style.display='block'; renderLS(); });
+  $('#ls-hide')?.addEventListener('click', ()=>{ panel.style.display='none'; });
+  $('#ls-refresh')?.addEventListener('click', renderLS);
+  $('#ls-clear-all')?.addEventListener('click', ()=>{
+    if(confirm('Limpar TODO o LocalStorage? Esta ação é irreversível.')){
+      LS.clear(); renderLS(); showToast('LocalStorage limpo.');
+    }
+  });
+
+  // ===== Message routing =====
+  // If chatPush exists, wrap it so AI messages are routed: ROM -> archetype bubble; other pages -> toaster.
+  const _chatPush = window.chatPush;
+  if(typeof _chatPush === 'function'){
+    window.chatPush = function(type, text){
+      try{
+        if(type==='ai'){
+          if(isROM()) showArchBubble(text);
+          else showToast(text);
+          // Não duplicar na timeline original quando for AI
+          return;
+        }
+      }catch(e){}
+      return _chatPush.apply(this, arguments);
+    };
+  }
+
+  // If your code dispatches window events instead of chatPush, you can use these:
+  window.dispatchEvent(new CustomEvent('dual:assistant:message',{detail:{text:'(hook pronto)'}}));
+  window.addEventListener('dual:assistant:message', (ev)=>{
+    const text = (ev && ev.detail && ev.detail.text) ? ev.detail.text : '';
+    if(!text) return;
+    if(isROM()) showArchBubble(text); else showToast(text);
+  });
+
+  // ===== Ensure ROM speaks via archetype (signal) =====
+  // Fire a lightweight signal any time we land on ROM; your archetype code can listen and speak.
+  function pingROM(){
+    if(isROM()){
+      window.dispatchEvent(new CustomEvent('dual:rom:entered', {detail:{archetype: localStorage.getItem('archetype:active')||''}}));
+    }
+  }
+  window.addEventListener('hashchange', pingROM);
+  document.addEventListener('DOMContentLoaded', pingROM);
+})();
+</script>
 </body>
 </html>
