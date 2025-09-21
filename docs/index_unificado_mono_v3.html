@@ -1075,17 +1075,18 @@ body::after {
 
   <!-- Controles de texto e voz empilhados acima da barra de navegação -->
   <div id="homeButtons" class="home-btns">
+   <!-- Botão inferior: envio de texto.  Usa o ícone fornecido (PNG) como
+         indicador de digitação. -->
+    <button id="homeTextBtn" class="home-btn">
+      <img src="icons/bolt.svg" alt="Texto" width="20" height="20" onerror="this.onerror=null;this.src='icons/pen-to-square.svg'">
+    </button>
     <!-- Botão superior: voz/arquetipo.  Utilizamos um iframe miniatura para
          renderizar o círculo do arquétipo ativo.  Ao clicar este botão,
          iniciamos a captura de voz (startSpeechConversation). -->
     <button id="homeVoiceBtn" class="home-btn">
       <iframe id="miniArchFrame" title="Arquétipo ativo" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
     </button>
-    <!-- Botão inferior: envio de texto.  Usa o ícone fornecido (PNG) como
-         indicador de digitação. -->
-    <button id="homeTextBtn" class="home-btn">
-      <img src="HubAdlineChat.png" alt="Texto" width="20" height="20" onerror="this.onerror=null;this.src='icons/pen-to-square.svg'">
-    </button>
+    
   </div>
   <!-- Overlay de input para envio rápido de mensagens na Home -->
   <div id="homeInputOverlay">
