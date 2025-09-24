@@ -1,0 +1,935 @@
+<!doctype html><html lang="pt-BR"><head>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0f14">
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" /><title>HUB UNO</title><meta name="theme-color" content="#0b0f14" /><style>
+    :root {
+      /* Paleta padrão (rosa/azul) */
+      --grad-a: #ff52e5;
+      --grad-b: #00c5e5;
+      --fg: #f5f7ff;
+      --mut: rgba(245, 247, 255, .68);
+      --surface: rgba(15, 17, 32, .50);
+      --surface-strong: rgba(15, 17, 32, .88);
+      --bd: 1px solid rgba(255, 255, 255, .12);
+      --ok: #39ffb6;
+      --warn: #ffb86b;
+      --err: #ff6b6b;
+      --r: 18px;
+      --r2: 22px;
+      --shadow: 0 14px 40px rgba(0, 0, 0, .45);
+      --tabsH: 74px;
+      --hdrH: 64px;
+      --blur: 24px;
+  /* Deslocamento opcional para o cabeçalho.  Ajuste este valor para
+     empurrar o cabeçalho (header.mast) alguns pixels para baixo.  O
+     padding superior do main será ajustado automaticamente. */
+  --hdrOffset: 0px;
+
+  /* Cor de overlay por arquétipo (gradiente sólido).  Esta variável
+     será atualizada dinamicamente via script conforme o arquétipo
+     ativo.  O valor padrão é transparente para não interferir na
+     estética quando nenhum arquétipo estiver selecionado. */
+ /* --arch-overlay: rgba(0,0,0,0); */
+  /*    --ease: cubic-bezier(.22, .61, .36, 1); */
+    }
+    header.mast{flex-wrap:wrap}
+    header.mast .ib{flex:0 0 auto}
+
+    /* Tema alternativo: medium gray / glasmorfismo. Quando body[data-theme="medium"] estiver definido, estas variáveis substituem as originais. */
+    body[data-theme="medium"] {
+      /* Ajustamos a paleta “medium” para um visual ainda mais tecnológico,
+         com tons de cinza-escuro/azulado e transparências suaves para
+         reforçar o glasmorfismo. */
+      --grad-a: #2c313c;
+      --grad-b: #1f242d;
+      --fg: #f1f2f5;
+      --mut: rgba(241, 242, 245, .68);
+      --surface: rgba(44, 47, 56, .40);
+      --surface-strong: rgba(44, 47, 56, .75);
+      --bd: 1px solid rgba(255, 255, 255, .06);
+      --ok: #68d391;
+      --warn: #f6ad55;
+      --err: #fc8181;
+      --blur: 36px;
+    }
+
+    * { box-sizing: border-box }
+    html, body { height: 100% }
+
+    body {
+      margin: 0;
+      color: var(--fg);
+      background: linear-gradient(42deg, var(--grad-a), var(--grad-b)) fixed;
+      font: 14px/1.45 Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overflow: hidden;
+  /* Permite que o pseudo-elemento ::after fique posicionado em relação ao corpo */
+  position: relative;
+    }
+
+/* Overlay de cor do arquétipo ativo.  Usa a variável --arch-overlay definida no
+   :root e atualizada via script.  O overlay cobre toda a tela, tem pointer-events
+   desativado e fica atrás dos demais elementos (z-index: 0). */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: var(--arch-overlay);
+  pointer-events: none;
+  z-index: 0;
+ 
+}
+
+    /* ===== Micro-interações base ===== */
+    .fx-trans { transition: transform .16s var(--ease), background .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease), color .25s var(--ease), opacity .25s var(--ease) }
+    .fx-lift:hover { transform: translateY(-1px) }
+    .fx-press:active { transform: translateY(0) scale(.98) }
+    .ring:focus-visible { outline: 0; box-shadow: 0 0 0 4px rgba(255,255,255,.14) }
+    @media (prefers-reduced-motion: reduce) { .fx-trans { transition: none } }
+
+    /* ===== Botões ===== */
+    button, .btn, .ib { background: var(--surface); border: var(--bd); color: var(--fg); font-weight: 800; border-radius: 12px; cursor: pointer; position: relative }
+    .btn { padding: .58rem .9rem; background: linear-gradient(180deg, #11162a, #0b1122) }
+    .btn.prime { background: linear-gradient(90deg, #a66fff, #6db4ff); color: #0b0f14; border-color: transparent }
+    .btn:hover { box-shadow: 0 8px 26px rgba(0,0,0,.36), 0 0 0 1px rgba(255,255,255,.10) inset }
+    .btn.prime:hover { box-shadow: 0 10px 30px rgba(166,111,255,.26), 0 0 0 1px rgba(255,255,255,.18) inset }
+    .btn:active { filter: saturate(1.02) brightness(.98) }
+    .btn[disabled] { opacity: .55; pointer-events: none }
+
+    /* Ripple */
+    .ripple { position: absolute; inset: 0; overflow: hidden; border-radius: inherit }
+    .ripple > i { position: absolute; border-radius: 999px; pointer-events: none; transform: translate(-50%, -50%); background: radial-gradient(closest-side, rgba(255,255,255,.35), rgba(255,255,255,0) 70%); animation: ripple .6s var(--ease) forwards }
+    @keyframes ripple { from { opacity: .55; width: 0; height: 0 } to { opacity: 0; width: 260px; height: 260px } }
+
+    /* ===== Header ===== */
+    header.mast { position: relative; inset: 0 0 auto 0; height: var(--hdrH); z-index: 100; display: flex; align-items: center; gap: 10px; padding: 0 12px; backdrop-filter: blur(var(--blur)) saturate(130%); background: linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,0)); margin-top: var(--hdrOffset); }
+    .ib { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; box-shadow: var(--shadow) }
+    .ib.fx-trans:hover { box-shadow: 0 10px 28px rgba(0,0,0,.5), 0 0 0 2px rgba(255,255,255,.10) inset }
+    .title { flex: 1; text-align: center; line-height: 1 }
+    .title h1 { margin: 0; font-size: 18px; letter-spacing: .06em; font-weight: 900 }
+    .title small { display: block; color: var(--mut); letter-spacing: .1em }
+
+    /* ===== Layout ===== */
+    main { position: relative; height: 100%; padding-top: calc(var(--hdrH) + env(safe-area-inset-top) + var(--hdrOffset)); padding-bottom: calc(var(--tabsH) + env(safe-area-inset-bottom)); overflow: hidden }
+    .view { position: absolute; inset: 0; padding: 12px 14px; overflow: auto; display: none }
+    .view.active { display: block; animation: fade .18s var(--ease) }
+    @keyframes fade { from { opacity: 0; transform: translateY(6px) } }
+
+    /* ===== Cards / grids ===== */
+    .grid { display: grid; gap: 12px; max-width: 820px; margin: 0 auto }
+    /* Distribua os cartões de status da Home em duas colunas para melhor encaixe.
+       Em telas estreitas (<560px) eles se empilham em uma única coluna. */
+    .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px }
+    @media (max-width: 560px) { .cards { grid-template-columns: 1fr } }
+
+    /* Ocultar o menu de opções (Apps, Stack, Brain, Revo) na Home quando apenas a bola dos arquétipos deve aparecer */
+    /* Hide the UNO info card on home. The cards row is now used for status notifications */
+    #v-home #unoCard {
+      display: none;
+    }
+
+    /* Esconde a grade de cards na Home e abre espaço para o feed de IA */
+    #v-home .cards {
+      display: none !important;
+    }
+
+    /* O feed de IA na Home foi substituído pelo preview laranja; esconda o feed original */
+    #v-home #iaFeed {
+      display: none !important;
+    }
+
+    /* Estiliza o feed de mensagens da IA em formato de conversa */
+    #iaFeed {
+      margin: 12px auto 0;
+      max-width: 820px;
+      background: var(--surface);
+      border: var(--bd);
+      border-radius: var(--r2);
+      box-shadow: var(--shadow);
+      padding: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #iaFeed .msg {
+      margin: 0;
+      padding: 8px 12px;
+      border-radius: 16px;
+      max-width: 75%;
+      word-wrap: break-word;
+    }
+    #iaFeed .msg.user {
+      align-self: flex-end;
+      background: rgba(255,255,255,0.1);
+      border-radius: 16px 16px 0 16px;
+    }
+    #iaFeed .msg.ai {
+      align-self: flex-start;
+      background: rgba(57,255,182,0.12);
+      border-radius: 16px 16px 16px 0;
+    }
+    #iaFeed .status {
+      color: var(--mut);
+      font-size: 12px;
+      align-self: center;
+    }
+
+    /* ===== Apps Page customizations ===== */
+    /* Estilizar botão de upload de HTML local para destaque */
+    #btnImport {
+      font-weight: 700;
+      color: var(--ink);
+      background: var(--glass);
+      border-color: var(--line);
+    }
+    /* Favorite icon/button dentro de cada cartão de app */
+    .app-card {
+      position: relative;
+    }
+    .fav-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 22px;
+      height: 22px;
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      opacity: 0.6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+    .fav-btn.fav {
+      opacity: 1;
+    }
+    .fav-btn img {
+      width: 100%;
+      height: 100%;
+      /* Ícones não favoritados ficam em tons de cinza para indicar estado off */
+      filter: grayscale(1) brightness(0.5);
+    }
+    .fav-btn.fav img {
+      /* Ícone favoritado mantém cor original (amarelo) */
+      filter: none;
+    }
+    .card { background: var(--surface); border: var(--bd); border-radius: var(--r2); box-shadow: var(--shadow); padding: 12px; display: flex; gap: 10px; align-items: center; position: relative }
+    .card.fx-trans:hover { box-shadow: 0 16px 40px rgba(0,0,0,.5) }
+    .ico { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: rgba(255,255,255,.06); border: var(--bd) }
+    .mut { color: var(--mut); font-size: 12px }
+    .input, select, textarea { width: 100%; background: #0f1426; color: var(--fg); border: var(--bd); border-radius: 12px; padding: 10px }
+
+    /* Ajuste para ícones SVG externos: invertê-los para que fiquem claros em temas escuros */
+    header.mast img,
+    .tabbar img,
+    .card .ico img,
+    .session .tools img,
+    .dock img {
+      filter: invert(1) brightness(1.2);
+    }
+
+    /* ===== Apps ===== */
+.apps-wrap {
+      display: grid;
+      gap: 12px;
+      /* Distribui os apps em colunas responsivas: cada cartão terá no mínimo 240px. */
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      /* Adiciona uma margem inferior generosa para que o dock/tabbar não sobreponha os últimos elementos. */
+      padding-bottom: 80px;
+    }
+.app-card {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      /* Use um fundo um pouco mais claro para destacar cada app e melhorar a legibilidade */
+      background: rgba(255, 255, 255, 0.06);
+      border: var(--bd);
+      border-radius: var(--r);
+      padding: 14px;
+    }
+    .app-card:hover { box-shadow: 0 12px 34px rgba(0,0,0,.46) }
+    .app-icon { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: #0f1528; border: var(--bd); overflow: hidden }
+    .app-title {
+      font-weight: 800;
+      /* Evitar quebra de linhas em títulos longos e mostrar reticências */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* Âncora para sessões abertas no topo da página (modo "abrir dentro"). */
+    #sessionsAnchor {
+      display: grid;
+      gap: 12px;
+      margin: 12px 14px;
+    }
+    /* Estilos para o painel Brain (perfil, performance, voz, logs). */
+    #brain { position: fixed; top: calc(var(--hdrH) + 12px); right: 14px; width: min(92vw, 440px); z-index: 130; }
+    #brain.hide { display: none !important; }
+    .popover { border-radius: 24px; padding: 12px; background: var(--surface-strong); border: var(--bd); backdrop-filter: blur(var(--blur)); }
+    .menuItem { display: flex; gap: 12px; align-items: center; border: var(--bd); background: var(--surface); border-radius: 16px; padding: 12px; }
+    .menuItem + .menuItem { margin-top: 9px; }
+    .input { display: flex; gap: 8px; align-items: center; background: var(--surface); border: var(--bd); border-radius: 14px; padding: 9px 11px; }
+    .input input, .input select { flex: 1; background: transparent; border: 0; outline: 0; color: var(--fg); font-size: 13px; }
+    .notice { font-size: 12px; color: var(--mut); }
+
+    /* ===== Viewer (Stack) ===== */
+    .session { background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); border: var(--bd); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden }
+    .session .hdr { display: flex; align-items: center; gap: 8px; padding: 10px; background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); border-bottom: 1px solid #ffffff18 }
+    .session .title { font-weight: 850; max-width: 56vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+    .session .tools { margin-left: auto; display: flex; gap: 6px }
+    .session .tools .btn:hover { box-shadow: 0 0 0 1px rgba(255,255,255,.18) inset, 0 8px 22px rgba(0,0,0,.35) }
+    .session iframe { display: block; width: 100%; height: 60vh; border: 0; background: #000 }
+    .session.min iframe { display: none }
+
+    /* Permite redimensionar a altura do iframe dentro das sessões arrastando o canto inferior esquerdo */
+    .session { position: relative; }
+    .session .resize-handle {
+      position: absolute;
+      left: 8px;
+      bottom: 8px;
+      width: 16px;
+      height: 16px;
+      cursor: ns-resize;
+      border-radius: 4px;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.25);
+    }
+    .session .resize-handle:hover { background: rgba(255,255,255,.25); }
+
+    /* ===== Dock + Tabs ===== */
+    .dock { position: fixed; left: 10px; right: 10px; bottom: calc(var(--tabsH) + 8px + env(safe-area-inset-bottom)); display: flex; gap: 8px; flex-wrap: wrap; z-index: 80 }
+    .badge { display: inline-flex; gap: 6px; align-items: center; padding: .38rem .65rem; border: 1px solid #ffffff18; background: #0f1428; border-radius: 999px; font-weight: 800; position: relative }
+    .badge.fx-trans:hover { box-shadow: 0 10px 24px rgba(0,0,0,.5) }
+    nav.tabbar { position: fixed; left: 0; right: 0; bottom: env(safe-area-inset-bottom, 0); height: var(--tabsH); z-index: 90; display: flex; justify-content: center; padding: 6px 14px }
+    .tabbar .inner { width: 100%; max-width: 820px; display: flex; justify-content: space-around; align-items: center; background: var(--surface); border: var(--bd); border-radius: 22px; box-shadow: var(--shadow); padding: 10px 14px }
+    .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--mut); font-size: 11px; font-weight: 800; padding: 8px; border-radius: 14px; cursor: pointer; position: relative }
+    .tab.fx-trans:hover { background: rgba(255,255,255,.06) }
+    .tab.active { color: var(--fg); background: rgba(255,255,255,.10); box-shadow: 0 0 0 2px rgba(255,255,255,.10) }
+
+    /* === Área de Arquétipos (central circle) === */
+    .arch-container {
+      /* Organize o círculo e o seletor em coluna.  Alinhe os elementos ao centro
+         e adicione um pequeno espaçamento vertical.  A propriedade position
+         relative permite posicionar o menu de opções de forma absoluta logo
+         abaixo do círculo. */
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+      /* Dá mais espaço do topo, relativo à altura da viewport */
+      margin-top: 5vh;
+    }
+    .arch-circle {
+      position: relative;
+      width: min(80vw, 560px);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      /* O conteúdo deve permanecer dentro da forma circular para evitar
+         que o iframe quadrado “vaze” e pareça um quadrado. */
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: radial-gradient(60% 60% at 50% 50%, rgba(0,255,255,.1), rgba(255,255,255,.02));
+      box-shadow: var(--shadow, 0 14px 40px rgba(0,0,0,.45));
+      /* Animação de clique: quando a classe .pressed é aplicada via JS, reduza
+         levemente o tamanho para simular pressão. */
+      transition: transform .18s var(--ease);
+    }
+
+    .arch-circle.pressed {
+      transform: scale(0.96);
+    }
+
+    .arch-circle iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: transparent;
+    }
+
+  /* Certifique-se de que o logotipo de ponto e o círculo de arquétipo
+     fiquem sobrepostos ao iframe. O seletor (arch-switcher) é
+     configurado separadamente e fica fora do círculo. */
+  .arch-dotlogo, .arch-circle {
+    position: relative;
+    z-index: 60;
+  }
+    .arch-switcher {
+      /* O seletor fica fora do círculo, como um elemento próprio da
+         coluna.  Não é posicionado de forma absoluta; sua posição é
+         determinada pelo fluxo flex da .arch-container. */
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      background: rgba(15,17,32,.7);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      padding: 4px 8px;
+      backdrop-filter: blur(8px);
+      z-index: 70;
+    }
+    .arch-switcher select {
+      appearance: none;
+      background: rgba(255,255,255,.06);
+      color: var(--fg);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      /* Reduzir padding e tamanho de fonte para caber melhor fora do círculo */
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+  /* Redimensionar botões do seletor de arquétipos para um tamanho mais compacto */
+  .arch-switcher button {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 8px;
+  }
+
+    /* Quando o modo áudio está ativo, destaque o círculo com uma borda sutil */
+    .arch-circle.audio-on {
+      box-shadow: 0 0 0 2px var(--ok), var(--shadow);
+    }
+
+    /* Mensagem exibida fora do círculo do arquétipo.  Ela fica abaixo
+       da bolinha e utiliza um fundo translúcido para garantir
+       legibilidade.  O elemento aparece e desaparece com uma transição
+       de opacidade. */
+    .arch-msg {
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 12px;
+      background: rgba(15,17,32,.72);
+      color: var(--fg);
+      font-size: 13px;
+      max-width: 90%;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .3s ease;
+    }
+    .arch-msg.show { opacity: 1; }
+
+    /* Estilização do menu de arquétipos acionado ao tocar a bola.  O menu
+       exibe opções de navegação (Apps, Stack, Usuário, Arquétipo e Revo)
+       e fica escondido por padrão.  Quando a classe .show é aplicada,
+       ele usa flexbox para alinhar os botões. */
+    .arch-menu {
+      /* O menu é posicionado de forma absoluta abaixo do círculo.  Por
+         padrão, ele fica invisível até que a classe .show seja aplicada.
+         A propriedade transform centraliza o menu horizontalmente em
+         relação ao contêiner. */
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      gap: 10px;
+      z-index: 70;
+    }
+    .arch-menu.show {
+      display: flex;
+    }
+    .arch-menu button {
+      border: var(--bd);
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--fg);
+      font-size: 10px;
+      cursor: pointer;
+    }
+    .arch-menu button:hover {
+      box-shadow: 0 10px 24px rgba(0,0,0,.5);
+    }
+
+    /* Quando o botão de áudio está ativado, destaque-o com a cor "ok" */
+    .arch-menu button.on {
+      background: var(--ok);
+      color: var(--surface-strong);
+    }
+    .arch-menu button.on img {
+      filter: none;
+    }
+    .arch-menu button img {
+      width: 20px;
+      height: 20px;
+      margin-bottom: 2px;
+      filter: invert(1) brightness(1.2);
+    }
+    #arch-fadeCover {
+      position: absolute;
+      inset: 0;
+      background: var(--bg, #0b0f14);
+      opacity: 0;
+      pointer-events: none;
+
+    }
+    #arch-fadeCover.show { opacity: 1; }
+
+    /* Camada para ripples de áudio: fica sobre o conteúdo do círculo e ajusta a opacidade
+       conforme a intensidade capturada pelo microfone. Utilizamos mix-blend-mode
+       para adicionar um brilho sutil sem quebrar a estética minimalista. */
+    .audio-ripple {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      /* A camada de ripple agora serve também como área de clique para ativar o modo áudio. */
+      pointer-events: auto;
+      /* Retire o gradiente, pois o efeito visual passa a ser aplicado via box-shadow no círculo */
+      background: transparent;
+      /* Mantenha um z-index alto para captar cliques acima do iframe */
+      z-index: 70;
+    }
+
+    /* ===== Modal ===== */
+    .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 120; background: rgba(0,0,0,.45); backdrop-filter: blur(6px) }
+    .modal.open { display: flex }
+    .modal .panel { width: min(720px, 92vw); background: var(--surface-strong); border: var(--bd); border-radius: 16px; box-shadow: var(--shadow); padding: 16px }
+    .kbd { border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 6px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px }
+
+    /* ===== Chat (Dual • Chat) ===== */
+    /* Configuração da seção de chat */
+    #v-chat {
+      padding: 0;
+      /* Não defina display aqui; ele será controlado pela classe .view e .active */
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Certifique-se de que a seção de chat seja exibida somente quando ativa.
+       A classe .view define display:none; quando .active é adicionada, tornamos flex para layout vertical. */
+    #v-chat.view.active, #v-chat.active {
+      display: flex;
+    }
+    #chatFeed {
+      /* Mantenha um tamanho mínimo para que mensagens apareçam mesmo sem altura flex */
+      min-height: 120px;
+      overflow-y: auto;
+      max-height: 46svh;
+      background: var(--surface);
+      border: var(--bd);
+      border-radius: var(--r2);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #chatFeed .msg {
+      max-width: 75%;
+      margin: 0;
+      padding: 8px 12px;
+      border-radius: 16px;
+      word-wrap: break-word;
+    }
+    #chatFeed .msg.user {
+      align-self: flex-end;
+      background: rgba(255,255,255,0.10);
+      border-radius: 16px 16px 0 16px;
+    }
+    #chatFeed .msg.ai {
+      align-self: flex-start;
+      background: rgba(57,255,182,0.12);
+      border-radius: 16px 16px 16px 0;
+    }
+    #chatFeed .msg.status {
+      align-self: center;
+      color: var(--mut);
+      font-size: 12px;
+    }
+    /* O formulário #chatForm e o campo #chatInput foram removidos.  O envio
+       de mensagens é feito exclusivamente pelo overlay de texto fixo. */
+    #msgPreview {
+      position: fixed;
+      left: 14px;
+      right: 14px;
+      bottom: calc(var(--tabsH) + 20px + env(safe-area-inset-bottom, 0));
+      background: var(--warn);
+      color: #0b0f14;
+      border-radius: 18px;
+      padding: 10px 14px;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: var(--shadow);
+      z-index: 95;
+      cursor: pointer;
+      display: none;
+  /* Limite de altura para o preview; evita estourar o layout e permite arrastar no chat */
+  max-height: 33px;
+  overflow: hidden;
+    }
+    /* Ajuste para preview quando nav está na lateral direita */
+    body.nav-right #msgPreview {
+      right: calc(88px + 14px);
+      bottom: 14px;
+    }
+
+    /* ===== Overlay de entrada rápida na Home ===== */
+    /* Removido: o botão #homeInputToggle não é mais utilizado; os controles
+       de texto/voz são representados pelas bolinhas de ação. */
+    #homeInputOverlay {
+      position: fixed;
+      left: 14px;
+      right: 14px;
+      bottom: calc(var(--tabsH) + env(safe-area-inset-bottom, 0));
+      background: var(--surface-strong);
+      border-radius: 18px 18px 0 0;
+      border: var(--bd);
+      padding: 12px;
+      box-shadow: var(--shadow);
+      z-index: 97;
+      display: none;
+    }
+    #homeInputOverlay form {
+      display: flex;
+      gap: 8px;
+    }
+    #homeInputOverlay input {
+      flex: 1;
+      background: #0f1426;
+      color: var(--fg);
+      border: var(--bd);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 18px;
+    }
+    #homeInputOverlay input::placeholder {
+      color: var(--mut);
+    }
+    #homeInputOverlay button {
+      background: var(--ok);
+      border: none;
+      border-radius: 12px;
+      padding: 0 16px;
+      color: #0b0f14;
+      font-weight: 700;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* Ajustes quando a navegação está na direita: reposicione o botão e overlay para não colidir com a barra */
+    /* body.nav-right #homeInputToggle removido */
+    body.nav-right #homeInputOverlay {
+      left: 14px;
+      right: calc(88px + 14px);
+      bottom: calc(14px + env(safe-area-inset-bottom, 0));
+    }
+
+    /* ===== Botões duplos (texto/voz) na Home ===== */
+    /* Variante lateral empilhada: os botões ficam no canto direito,
+       empilhados um sobre o outro (coluna) para indicar ações distintas
+       (texto e voz).  Ajustamos a posição para cima da barra de
+       navegação. */
+    .home-btns {
+      position: fixed;
+      right: 14px;
+      left: auto;
+      transform: none;
+      bottom: calc(var(--tabsH) + 30px + env(safe-area-inset-bottom, 0));
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      z-index: 97;
+    }
+    .home-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 21px;
+      background: var(--surface);
+      border: var(--bd);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .home-btn img {
+      width: 20px;
+      height: 20px;
+    }
+    .home-btn.active {
+      background: var(--ok);
+      color: #0b0f14;
+    }
+
+    /* Indica visualmente quando a gravação de voz está ativa */
+    .home-btn.recording {
+      animation: voice-pulse 1.2s infinite;
+      transform-origin: center;
+    }
+    @keyframes voice-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+    /* Layout da barra de abas no modo nav-right */
+    body.nav-right nav.tabbar {
+      left: auto;
+      right: 0;
+      top: var(--hdrH);
+      bottom: env(safe-area-inset-bottom, 0);
+      width: 78px;
+      height: auto;
+      display: flex;
+      justify-content: flex-start;
+      padding: 6px 6px;
+    }
+    body.nav-right .tabbar .inner {
+      width: 100%;
+      max-width: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    body.nav-right .tab {
+      flex: none;
+      width: 100%;
+      margin: 4px 0;
+    }
+    body.nav-right main {
+      padding-right: calc(78px + 14px);
+      padding-bottom: calc(env(safe-area-inset-bottom, 0) + 12px);
+    }
+  
+/* === LS header button: square badge === */
+#btnLS{position:relative; background:linear-gradient(180deg,#11162a,#0b1122)}
+#btnLS .ls-badge{
+  display:grid; place-items:center;
+  width:24px;height:24px; border-radius:8px;
+  background:linear-gradient(180deg,#1a2240,#10162b);
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), 0 4px 14px rgba(0,0,0,.35);
+  font:800 12px/1 ui-monospace,monospace; color:#e6eeff; letter-spacing:.06em;
+}
+
+/* === LS panel polish === */
+#ls-panel header{gap:8px}
+#ls-title{font-weight:900; letter-spacing:.04em}
+#ls-actions button{border-radius:12px}
+#ls-stats .stat{border-radius:12px}
+#ls-new{grid-template-columns: 220px 1fr auto}
+.ls-group{scroll-margin: 12px}
+.ls-head,.ls-row{border-bottom:1px dashed rgba(255,255,255,.12)}
+.ls-row{background: rgba(255,255,255,.02); border-radius:12px; padding:10px 8px}
+.ls-k{font-weight:800}
+.ls-preview{border-radius:12px}
+.ls-a .icon-btn{border-radius:12px}
+/* compact spacing between groups */
+.group-body{display:grid; gap:8px}
+
+/* Highlight search matches */
+mark.ls-hit{background:#3b82f6; color:#0b0f14; border-radius:4px; padding:0 2px}
+
+/* Mobile refinements */
+@media (max-width: 480px){
+  #ls-new{grid-template-columns:1fr; gap:6px}
+  .group-body{gap:6px}
+  .ls-row{padding:8px}
+  #ls-stats .stat{padding:6px 8px}
+}
+</style><style>
+/* Make LS panels column-flex so header/actions don't steal space */
+#ls-panel, #lsx-panel{
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+/* Assume there is a header/actions row; keep it sticky-ish */
+#ls-actions, #lsx-actions, #ls-header, #lsx-header{
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--glass, rgba(0,0,0,.35));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding-top: .25rem;
+  padding-bottom: .25rem;
+}
+
+/* Buttons as compact chips */
+#ls-actions button, #lsx-actions button{
+  gaps: .25rem;
+  margin: .125rem;
+  padding: .4rem .55rem;
+  border-radius: .6rem;
+  font-size: .82rem;
+}
+
+/* The compact toggle button style */
+.ls-compact-toggle{
+  margin-left: .25rem;
+  padding: .35rem .55rem;
+  font-size: .8rem;
+  border-radius: .6rem;
+  opacity: .9;
+}
+
+/* Hide advanced controls when in compact mode */
+#ls-panel.ls-compact #ls-add,
+#ls-panel.ls-compact #ls-export,
+#ls-panel.ls-compact #ls-import-btn,
+#ls-panel.ls-compact #ls-search,
+#ls-panel.ls-compact #ls-stats,
+#ls-panel.ls-compact #ls-clear-idb,
+#lsx-panel.ls-compact #lsx-add,
+#lsx-panel.ls-compact #lsx-export,
+#lsx-panel.ls-compact #lsx-import-btn,
+#lsx-panel.ls-compact #lsx-search,
+#lsx-panel.ls-compact #lsx-stats,
+#lsx-panel.ls-compact #lsx-clear-idb{
+  display: none !important;
+}
+
+/* Always keep these visible in compact mode */
+#ls-panel.ls-compact #ls-refresh,
+#ls-panel.ls-compact #ls-clear-all,
+#ls-panel.ls-compact #ls-hide,
+#lsx-panel.ls-compact #lsx-refresh,
+#lsx-panel.ls-compact #lsx-clear-all,
+#lsx-panel.ls-compact #lsx-hide{
+  display: inline-flex !important;
+}
+
+/* Data/List area candidates get generous height and scrolling */
+#ls-list, #lsx-list, #ls-keys, .ls-list, .ls-keys, .ls-data{
+  max-height: 70vh;
+  overflow: auto;
+}
+
+/* When compact, give even more space to the list */
+#ls-panel.ls-compact #ls-list,
+#ls-panel.ls-compact #ls-keys,
+#ls-panel.ls-compact .ls-list,
+#ls-panel.ls-compact .ls-keys,
+#ls-panel.ls-compact .ls-data,
+#lsx-panel.ls-compact #lsx-list,
+#lsx-panel.ls-compact .ls-list,
+#lsx-panel.ls-compact .ls-keys,
+#lsx-panel.ls-compact .ls-data{
+  max-height: 78vh;
+}
+</style>
+<style>/* PATCH: ocultar logs do Brain */
+#logs{display:none!important}
+</style>
+</head><body><header class="mast"><button class="ib fx-trans fx-press ring" id="btnBack" title="Voltar" aria-label="Voltar"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/arrow-left.svg" alt="Voltar" width="20" height="20" onerror="this.onerror=null;this.src='icons/arrow-left.svg'"><span class="ripple"></span></button><div class="title"><h1>HUB UNO</h1><small>Dual · Trinity</small></div><button class="ib fx-trans fx-press ring" id="btnDownload" title="Baixar HTML"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/download.svg" alt="Download" width="20" height="20" onerror="this.onerror=null;this.src='icons/download.svg'"><span class="ripple"></span></button><button class="ib fx-trans fx-press ring" id="btnHelp" title="Ajuda / Atalhos"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/question-circle.svg" alt="Ajuda" width="20" height="20" onerror="this.onerror=null;this.src='icons/question-circle.svg'"><span class="ripple"></span></button><button class="ib fx-trans fx-press ring" id="btnBrain" title="Brain"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/brain.svg" alt="Brain" width="20" height="20" onerror="this.onerror=null;this.src='icons/brain.svg'"><span class="ripple"></span></button><button class="ib fx-trans fx-press ring" id="btnLS" title="Local Storage (Brain)" aria-label="Local Storage"><span class="ls-badge">LS</span><span class="ripple"></span></button></header><section id="sessionsAnchor"></section><div id="custom-bg" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;overflow:hidden;pointer-events:none"></div><main><section id="v-home" class="view active"><div class="grid"><div id="greetingCard" class="card fx-trans fx-lift" style="display:none"><div id="greetingMsg" style="font-weight:800"></div></div><div id="unoCard" class="card fx-trans fx-lift" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%"><div><div style="font-weight:900;letter-spacing:.08em">UNO • foco e velocidade</div><div class="mut">Monólito: Apps embutidos + Viewer + Dock + Atalhos</div></div><div class="ico"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/bolt.svg" alt="Energia" width="24" height="24" onerror="this.onerror=null;this.src='icons/bolt.svg'"></div></div></div><div class="arch-container"><div class="arch-switcher"><button class="btn fx-trans fx-press ring" id="arch-prev" title="Anterior"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/chevron-left.svg" alt="Anterior" width="16" height="16" onerror="this.onerror=null;this.src='icons/chevron-left.svg'"></button><select id="arch-select" title="Escolher arquétipo"></select><button class="btn fx-trans fx-press ring" id="arch-next" title="Próximo"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/chevron-right.svg" alt="Próximo" width="16" height="16" onerror="this.onerror=null;this.src='icons/chevron-right.svg'"></button></div><div class="arch-circle"><div id="arch-fadeCover"></div><div id="audioRipple" class="audio-ripple"></div><iframe id="arch-frame" title="Archetype Core" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe></div><div id="archMsg" class="arch-msg"></div><div id="archMenu" class="arch-menu"><button data-nav="apps"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/folder-open.svg" alt="Apps" width="20" height="20" onerror="this.onerror=null;this.src='icons/folder-open.svg'"><span>Apps</span></button><button data-nav="stack"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/layer-group.svg" alt="Stack" width="20" height="20" onerror="this.onerror=null;this.src='icons/layer-group.svg'"><span>Stack</span></button><button data-nav="brain"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/user.svg" alt="Usuário" width="20" height="20" onerror="this.onerror=null;this.src='icons/user.svg'"><span>Usuário</span></button><button data-nav="home"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/yin-yang.svg" alt="Arquétipo" width="20" height="20" onerror="this.onerror=null;this.src='icons/yin-yang.svg'"><span>Arquétipo</span></button><button data-nav="chat"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/comments.svg" alt="Chat" width="20" height="20" onerror="this.onerror=null;this.src='icons/comments.svg'"><span>Chat</span></button><button data-audio="true" id="archAudioBtn"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/microphone-lines.svg" alt="Áudio" width="20" height="20" onerror="this.onerror=null;this.src='icons/microphone-lines.svg'"><span>Áudio</span></button></div></div><div id="iaFeed" aria-live="polite" aria-atomic="false"><div class="status">Toque a bolinha para falar com a IA.</div></div><div class="cards"><button class="card fx-trans fx-press ring" data-nav="apps"><div class="ico"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/folder-open.svg" alt="Apps" width="24" height="24" onerror="this.onerror=null;this.src='icons/folder-open.svg'"></div><div><div style="font-weight:800">Apps</div><div class="mut" id="homeAppsStatus">–</div></div><span class="ripple"></span></button><button class="card fx-trans fx-press ring" data-nav="stack"><div class="ico"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/layer-group.svg" alt="Stack" width="24" height="24" onerror="this.onerror=null;this.src='icons/layer-group.svg'"></div><div><div style="font-weight:800">Stack</div><div class="mut" id="homeStackStatus">–</div></div><span class="ripple"></span></button><button class="card fx-trans fx-press ring" data-nav="brain"><div class="ico"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/user.svg" alt="Usuário" width="24" height="24" onerror="this.onerror=null;this.src='icons/user.svg'"></div><div><div style="font-weight:800">Usuário</div><div class="mut" id="homeUserStatus">–</div></div><span class="ripple"></span></button><button class="card fx-trans fx-press ring" data-nav="home"><div class="ico"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/yin-yang.svg" alt="Arquétipo" width="24" height="24" onerror="this.onerror=null;this.src='icons/yin-yang.svg'"></div><div><div style="font-weight:800">Arquétipo</div><div class="mut" id="homeArchStatus">–</div></div><span class="ripple"></span></button></div></div></section><section id="v-apps" class="view"><div class="grid"><div class="card fx-trans fx-lift" style="display:block"><div class="grid" style="gap:8px"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label class="mut" style="display:inline-flex;gap:6px;align-items:center"><input id="openInside" type="checkbox" /> abrir dentro
+              </label><button id="btnToggleLocal" class="btn fx-trans fx-press ring"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/folder-open.svg" alt="Locais" width="16" height="16" onerror="this.onerror=null;this.src='icons/folder-open.svg'" style="margin-right:4px">
+                Mostrar Locais<span class="ripple"></span></button></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="fileLocal" type="file" accept=".html,.htm,.txt,.json" multiple class="input ring" /><button id="btnImport" class="btn fx-trans fx-press ring"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/plus-circle.svg" alt="Adicionar" width="16" height="16" onerror="this.onerror=null;this.src='icons/plus-circle.svg'" style="margin-right:4px">
+                Adicionar Locais<span class="ripple"></span></button><button id="btnExport" class="btn fx-trans fx-press ring"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/file-export.svg" alt="Exportar" width="16" height="16" onerror="this.onerror=null;this.src='icons/file-export.svg'" style="margin-right:4px">
+                Exportar Locais<span class="ripple"></span></button><button id="btnClear" class="btn fx-trans fx-press ring"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/trash.svg" alt="Limpar" width="16" height="16" onerror="this.onerror=null;this.src='icons/trash.svg'" style="margin-right:4px">
+                Limpar Locais<span class="ripple"></span></button></div><div id="appsCount" class="mut">—</div></div></div><div id="appsWrap" class="apps-wrap"></div></div></section><section id="v-stack" class="view"><div class="grid"><div class="card fx-trans fx-lift" style="display:block"><div style="font-weight:800; display:flex; align-items:center; gap:8px">
+            Sessões
+            <button id="btnCloseAll" class="btn fx-trans fx-press ring" title="Fechar todas">Fechar todas<span class="ripple"></span></button></div><div class="mut">Reabra rápido pelo dock abaixo.</div></div><div id="stackWrap" class="grid"></div></div></section><section id="v-brain" class="view"><div class="grid"><div class="card fx-trans fx-lift" style="display:block"><div style="font-weight:800">Usuário</div><div style="display:flex;gap:8px;align-items:center;margin-top:6px"><input id="userName" class="input ring" placeholder="Seu nome" /><button id="saveName" class="btn prime fx-trans fx-press ring">Salvar<span class="ripple"></span></button></div></div><div class="card fx-trans fx-lift" style="display:block"><div style="font-weight:800">OpenRouter</div><div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap"><select id="model" class="input ring" style="max-width:260px"></select><input id="sk" class="input ring" placeholder="sk-or-v1-…" /><button id="saveSK" class="btn fx-trans fx-press ring">Salvar<span class="ripple"></span></button></div><div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap"><input id="customModel" class="input ring" placeholder="Modelo personalizado (ex: openai/gpt-4-custom)" style="flex:1" /><button id="addModel" class="btn fx-trans fx-press ring">Adicionar Modelo<span class="ripple"></span></button></div><div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap"><input id="trainingFile" type="file" accept=".json,.txt,.dxt" class="input ring" style="max-width:260px" /><span class="mut" style="font-size:11px">Treinamento (DXT)</span></div></div><div class="card fx-trans fx-lift" style="display:block"><div style="font-weight:800">Tema &amp; Fundo</div><div style="margin-top:8px;display:flex;flex-direction:column;gap:12px"><label style="display:flex;align-items:center;gap:8px"><span>Escolha o tema:</span><select id="themeSelect" class="input ring" style="max-width:200px"><option value="default">Padrão (colorido)</option><option value="medium">Cinza médio (tecnológico)</option><option value="custom">Personalizado (sua imagem/vídeo)</option></select></label><label style="display:flex;align-items:center;gap:8px"><span>Fundo personalizado:</span><input id="bgUpload" type="file" accept="image/*,video/*" class="input ring" style="max-width:260px" /></label><div class="mut" style="font-size:11px">Envie uma imagem ou vídeo para usar como plano de fundo quando o tema personalizado estiver selecionado. O fundo será salvo automaticamente no seu navegador.</div></div></div><div class="card fx-trans fx-lift" style="display:block"><div style="font-weight:800">CSS Personalizado</div><div style="margin-top:8px"><textarea id="cssCustom" class="input ring" placeholder="CSS personalizado..." rows="4"></textarea><div style="margin-top:6px; display:flex; gap:8px; flex-wrap:wrap"><button id="applyCSS" class="btn fx-trans fx-press ring">Aplicar CSS<span class="ripple"></span></button><button id="clearCSS" class="btn fx-trans fx-press ring">Limpar CSS<span class="ripple"></span></button><button id="downloadCSS" class="btn fx-trans fx-press ring">Baixar CSS<span class="ripple"></span></button></div></div></div><div class="card fx-trans fx-lift" style="display:block"><div style="font-weight:800; margin-bottom:6px">Vozes dos Arquétipos</div><div id="voicesWrap" style="display:grid; gap:10px"></div><div class="card fx-trans fx-lift" style="display:block"><div style="font-weight:800">Performance</div><div style="display:flex;gap:8px;align-items:center;margin-top:6px"><select id="selPerf" class="input ring" style="max-width:200px"><option value="low">Low</option><option value="med">Med</option><option value="high">High</option></select><button id="btnPerf" class="btn fx-trans fx-press ring">Aplicar<span class="ripple"></span></button></div></div><div class="card fx-trans fx-lift" style="display:block"><div style="font-weight:800">Voz</div><div style="display:flex;gap:8px;align-items:center;margin-top:6px"><select id="selVoice" class="input ring" style="max-width:200px"><option>Nova</option><option>Elysha</option><option>Kaion</option><option>Serena</option></select><button id="btnVoice" class="btn fx-trans fx-press ring">Salvar<span class="ripple"></span></button></div></div><div class="card fx-trans fx-lift" style="display:block"><div style="font-weight:800">Logs</div><div class="mut" style="font-size:11px;margin-bottom:4px">Eventos recentes</div><pre id="logs" style="margin:0;font:12px/1.4 ui-monospace,monospace;color:var(--mut);max-height:140px;overflow:auto"></pre></div></div></div></section><section id="v-chat" class="view"><div id="chatFeed"></div></section></main><div id="dock" class="dock"></div><nav class="tabbar"><div class="inner"><button class="tab fx-trans fx-press ring active" data-nav="home"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/house.svg" alt="Home" width="18" height="18" onerror="this.onerror=null;this.src='icons/house.svg'"><span style="display:none">Home</span><span class="ripple"></span></button><button class="tab fx-trans fx-press ring" data-nav="apps"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/folder-open.svg" alt="Apps" width="18" height="18" onerror="this.onerror=null;this.src='icons/folder-open.svg'"><span style="display:none">Apps</span><span class="ripple"></span></button><button class="tab fx-trans fx-press ring" data-nav="stack"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/layer-group.svg" alt="Stack" width="18" height="18" onerror="this.onerror=null;this.src='icons/layer-group.svg'"><span style="display:none">Stack</span><span class="ripple"></span></button><button class="tab fx-trans fx-press ring" data-nav="brain"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/brain.svg" alt="Brain" width="18" height="18" onerror="this.onerror=null;this.src='icons/brain.svg'"><span style="display:none">Brain</span><span class="ripple"></span></button><button class="tab fx-trans fx-press ring" data-nav="chat"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/comments.svg" alt="Chat" width="18" height="18" onerror="this.onerror=null;this.src='icons/comments.svg'"><span style="display:none">Chat</span><span class="ripple"></span></button></div></nav><div id="msgPreview"></div><div id="homeButtons" class="home-btns"><button id="homeTextBtn" class="home-btn"><img src="HubAdlineChat.png" alt="Texto" width="20" height="20" onerror="this.onerror=null;this.src='icons/pen-to-square.svg'"></button><button id="homeVoiceBtn" class="home-btn"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/microphone.svg" alt="Voz" width="20" height="20" onerror="this.onerror=null;this.src='icons/microphone.svg'"></button></div><div id="homeInputOverlay"><form id="homeInputForm" autocomplete="off"><input id="homeInput" type="text" placeholder="Escreva aqui…" autocomplete="off" /><button type="submit"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/paper-plane.svg" alt="Enviar" width="18" height="18" onerror="this.onerror=null;this.src='icons/paper-plane.svg'"></button></form></div><div id="modalHelp" class="modal" aria-hidden="true"><div class="panel"><div style="display:flex;align-items:center;gap:10px;justify-content:space-between"><h3 style="margin:0">Ajuda & Atalhos</h3><button id="closeHelp" class="btn fx-trans fx-press ring">Fechar<span class="ripple"></span></button></div><div class="mut" style="margin-top:8px">Navegue mais rápido:</div><ul><li><span class="kbd">g</span> then <span class="kbd">h</span> → Home</li><li><span class="kbd">g</span> then <span class="kbd">a</span> → Apps</li><li><span class="kbd">g</span> then <span class="kbd">s</span> → Stack</li><li><span class="kbd">g</span> then <span class="kbd">b</span> → Brain</li><li><span class="kbd">g</span> then <span class="kbd">r</span> → Chat</li><li><span class="kbd">Ctrl / Cmd</span> + <span class="kbd">K</span> → Busca</li><li><span class="kbd">Ctrl / Cmd</span> + <span class="kbd">S</span> → Baixar este HTML</li></ul></div></div><script id="APPS_JSON" type="application/json">
+  {
+    "apps": [
+      {"key":"atlas","title":"Atlas · Cartesius","desc":"Planejador estratégico com cronogramas e checklists.","url":"about:blank","icon":"atlas"},
+      {"key":"nova","title":"Nova · Inspira","desc":"Criativa que desbloqueia ideias com mapas mentais e exercícios.","url":"about:blank","icon":"nova"},
+      {"key":"vitalis","title":"Vitalis · Momentum","desc":"Rotinas físicas, hacks biológicos e motivação.","url":"about:blank","icon":"vitalis"},
+      {"key":"pulse","title":"Pulse · Resona","desc":"Trilhas sonoras e ajuste de som emocional.","url":"about:blank","icon":"pulse"},
+      {"key":"artemis","title":"Artemis · Naviga","desc":"Explora conhecimentos e rotas de aprendizado.","url":"about:blank","icon":"artemis"},
+      {"key":"serena","title":"Serena · Ampara","desc":"Acolhimento e suporte emocional.","url":"about:blank","icon":"serena"},
+      {"key":"kaos","title":"Kaos · Disruptor","desc":"Questiona padrões e propõe soluções ousadas.","url":"about:blank","icon":"kaos"},
+      {"key":"genus","title":"Genus · Fabricus","desc":"Protótipos e materialização de ideias.","url":"about:blank","icon":"genus"},
+      {"key":"lumine","title":"Lumine · Brilhare","desc":"Inspiração leve e atividades lúdicas.","url":"about:blank","icon":"lumine"},
+      {"key":"rhea","title":"Rhea · Raízes","desc":"Vínculos e memórias emocionais.","url":"about:blank","icon":"rhea"},
+      {"key":"solus","title":"Solus · Arcana","desc":"Harmonização energética e meditação.","url":"about:blank","icon":"solus"},
+      {"key":"aion","title":"Aion · Evolutia","desc":"Microações estratégicas e evolução.","url":"about:blank","icon":"aion"}
+    ]
+  }
+  </script>
+
+<style>
+  #lsx-mount{position:fixed;inset:auto 12px 12px auto;z-index:2147483000}
+  #lsx-panel{position:fixed;right:12px;bottom:12px;max-width:min(1040px,96vw);max-height:86vh;display:none;
+    overflow:hidden;background:rgba(12,16,24,.98);border:1px solid #ffffff26;border-radius:16px;backdrop-filter:blur(12px);
+    box-shadow:0 18px 48px rgba(0,0,0,.6)}
+  #lsx-panel *{box-sizing:border-box}
+  #lsx-panel header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid #ffffff18;color:#cfe6ff}
+  #lsx-title{font-weight:900;margin-right:auto;letter-spacing:.04em}
+  #lsx-search{min-width:220px;background:#0e1724;border:1px solid #294461;border-radius:10px;color:#d9e6ff;padding:8px 10px;font:12px ui-monospace,monospace}
+  #lsx-actions{display:flex;gap:8px;flex-wrap:wrap}
+  #lsx-actions .btn{all:unset;font:600 12px/1.2 system-ui;color:#cfe6ff;background:#0d1b2a;border:1px solid #254b70;border-radius:10px;padding:6px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  #lsx-body{display:grid;grid-template-rows:auto auto 1fr}
+  #lsx-stats{display:flex;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid #ffffff10}
+  #lsx-stats .stat{background:#0e1724;border:1px solid #294461;border-radius:10px;padding:8px 10px;color:#cfe6ff;font:12px ui-monospace,monospace}
+  #lsx-new{display:grid;grid-template-columns:260px 1fr auto;gap:8px;padding:10px 14px;border-bottom:1px solid #ffffff10}
+  #lsx-new input,#lsx-new textarea{background:#0e1724;border:1px solid #294461;border-radius:10px;color:#d9e6ff;padding:8px 10px;font:12px ui-monospace,monospace}
+  #lsx-new textarea{resize:vertical;min-height:40px;max-height:120px}
+  #lsx-new button{all:unset;display:inline-flex;align-items:center;gap:6px;background:#114d2f;border:1px solid #2c7a58;color:#bfffe0;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
+  #lsx-grid{overflow:auto;max-height:56vh;padding:6px 0}
+  details.lsx-group{border-top:1px dashed #ffffff14}
+  details.lsx-group>summary{list-style:none;cursor:pointer;padding:10px 14px;color:#d7e7ff;display:flex;align-items:center;gap:8px}
+  details.lsx-group>summary .chev{width:12px;height:12px;border:1px solid #567;display:inline-grid;place-items:center;border-radius:4px}
+  .lsx-badge{background:#0d1b2a;border:1px solid #254b70;border-radius:999px;padding:2px 8px;color:#cfe6ff;font:11px ui-monospace,monospace}
+  .lsx-body-inner{padding:0 8px 8px}
+  .lsx-head,.lsx-row{display:grid;grid-template-columns:280px 1fr 170px;gap:8px;padding:8px 6px 8px 8px}
+  .lsx-head{position:sticky;top:0;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0));backdrop-filter:blur(6px);z-index:1;border-bottom:1px solid #ffffff10}
+  .lsx-head div{color:#a9c7ff;font:700 11px/1 ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}
+  .lsx-row{border-bottom:1px dashed #ffffff10;align-items:start}
+  .lsx-k{color:#a9c7ff;font:12px/1.35 ui-monospace,monospace;word-break:break-all}
+  .lsx-v{display:flex;flex-direction:column;gap:6px}
+  .lsx-preview{background:#0e1724;border:1px solid #294461;border-radius:10px;color:#d9e6ff;padding:8px 10px;font:12px/1.35 ui-monospace,monospace;white-space:pre-wrap;word-break:break-word;max-height:60px;overflow:auto}
+  .lsx-expand{display:none;width:100%}
+  .lsx-expand textarea{width:100%;min-height:120px;background:#0e1724;border:1px solid #294461;border-radius:10px;color:#d9e6ff;padding:8px 10px;font:12px/1.35 ui-monospace,monospace;resize:vertical}
+  .lsx-a{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .ic-btn{all:unset;display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;background:#0d1b2a;border:1px solid #254b70;color:#cfe6ff;cursor:pointer}
+  .ic-btn.warn{background:#2a1212;border-color:#703333;color:#ffd0d0}
+  .ic-btn.ok{background:#0f2a1e;border-color:#2f7a56;color:#c9ffe7}
+  mark.lsx-hit{background:#3b82f6;color:#0b0f14;border-radius:4px;padding:0 2px}
+  @media (max-width:960px){ .lsx-head,.lsx-row,#lsx-new{grid-template-columns:220px 1fr 150px} }
+  @media (max-width:720px){ #lsx-panel{left:12px;right:12px;max-width:unset} .lsx-head,.lsx-row,#lsx-new{grid-template-columns:1fr} }
+  /* Logger & Toast */
+  #lsx-logger{position:fixed;left:12px;bottom:12px;max-width:min(420px,92vw);display:none;z-index:2147483001}
+  #lsx-logger .panel{background:rgba(12,16,24,.96);border:1px solid #ffffff26;border-radius:12px;backdrop-filter:blur(10px);padding:10px;box-shadow:0 14px 36px rgba(0,0,0,.5)}
+  #lsx-logger pre{margin:0;max-height:46vh;overflow:auto;font:12px/1.35 ui-monospace,monospace;color:#a9b7d0}
+  #lsx-toastBox{position:fixed;right:14px;bottom:calc(68px + env(safe-area-inset-bottom));display:grid;gap:8px;z-index:2147483002}
+  .lsx-toast{background:linear-gradient(90deg,#1b2a2a,#123c2e);color:#eaf0ff;border:1px solid #ffffff22;padding:.6rem .8rem;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+</style><div id="lsx-mount"></div><template id="tpl-lsx-panel"><div id="lsx-panel" role="dialog" aria-label="LocalStorage • Brain"><header><strong id="lsx-title">LocalStorage • Brain</strong><input id="lsx-search" type="search" placeholder="filtrar (chave/valor)"><div id="lsx-actions"><button class="btn" id="lsx-refresh">Atualizar</button><button class="btn" id="lsx-export">Exportar</button><button class="btn" id="lsx-import-btn">Importar</button><input id="lsx-import" type="file" accept="application/json" style="display:none"><button class="btn" id="lsx-clear-all">Limpar tudo</button><button class="btn" id="lsx-clear-idb">Limpar IDB</button><button class="btn" id="lsx-hide">Fechar</button></div></header><div id="lsx-body"><div id="lsx-stats"><div class="stat">chaves: <b id="lsx-st-keys">0</b></div><div class="stat">localStorage: <b id="lsx-st-bytes">0 KB</b></div><div class="stat">pesados(>50KB): <b id="lsx-st-heavy">0</b></div><div class="stat">origem (quota/uso): <b id="lsx-st-usage">—</b></div></div><div id="lsx-new"><input id="lsx-new-k" placeholder="nova chave (ex.: infodose:userName)"><textarea id="lsx-new-v" placeholder="valor (texto ou JSON)"></textarea><button id="lsx-add">Salvar novo</button></div><div id="lsx-grid"></div></div></div></template><template id="tpl-lsx-logger"><div class="panel"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px"><strong>Logs</strong><button id="lsx-log-close" class="btn">Fechar</button></div><pre id="lsx-logs"></pre></div></template><template id="tpl-lsx-toast"><div class="lsx-toast"></div></template>
+
+
+
+
+
+
+
+
+
+
+
+<style>
+/* PATCH: LS/LSX unified status */
+.ls-statusbar{font:12px/1.3 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:#cfd6e4; background:#1118; border:1px solid #222; border-radius:8px; padding:6px 8px; display:flex; gap:10px; align-items:center}
+.ls-statusbar b{color:#fff}
+.ls-statusbar .dot{width:6px;height:6px;border-radius:50%;background:#6cf;box-shadow:0 0 8px #6cf}
+</style>
+
+
+
+
+
+<!-- Dual Patch: Canonical Brain Keys + dualFetch (v2025-09-21) -->
+
+
+
+<!-- Dual Patch: PowerAI unified chat + sendAIMessage override (v2025-09-21) -->
+
+
+<script type="module" src="hub_appcfg.js"></script>
+<script defer src="Assets/ui_sounds.js"></script>
+<script defer src="uno_voice_prompt_overlay.js"></script>
+</body></html>
