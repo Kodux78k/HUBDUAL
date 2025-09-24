@@ -1530,7 +1530,19 @@ feedPush('status', '⚡ Pulso enviado · recebendo intenção…');
     if(bg){ localStorage.setItem('uno:bg', bg); }
   }catch{}
 
-  // Ensure BG container
+  
+  // Also migrate old identity keys if needed (name/sk/model/training)
+  try{
+    const name = localStorage.getItem('infodose:userName') || localStorage.getItem('dual.name');
+    if(name) localStorage.setItem('infodose:userName', name);
+    const sk = localStorage.getItem('dual.keys.openrouter') || localStorage.getItem('infodose:sk');
+    if(sk) localStorage.setItem('dual.keys.openrouter', sk);
+    const model = localStorage.getItem('dual.openrouter.model') || localStorage.getItem('infodose:model');
+    if(model) localStorage.setItem('dual.openrouter.model', model);
+    const training = localStorage.getItem('dual.openrouter.training') || localStorage.getItem('infodose:training');
+    if(training) localStorage.setItem('dual.openrouter.training', training);
+  }catch{}
+// Ensure BG container
   (function(){
     let bg=document.getElementById('custom-bg');
     if(!bg){
@@ -2046,20 +2058,26 @@ feedPush('status', '⚡ Pulso enviado · recebendo intenção…');
   // ---------- PowerAI: unify chat calls & inject Role/System training ----------
   // Reads optional DXT training from localStorage key 'dual.openrouter.training' ({name,data:dataURL})
   async function loadDXTTraining(){
-    try{
-      const raw = localStorage.getItem('dual.openrouter.training');
-      if(!raw) return '';
-      const obj = JSON.parse(raw);
-      if(!obj || !obj.data) return '';
-      const dataUrl = String(obj.data);
-      const base64 = dataUrl.split(',')[1] || '';
-      if(!base64) return '';
-      const bytes = atob(base64);
-      // Limit to ~64KB to avoid huge prompts
-      if(bytes.length > 64*1024) return bytes.slice(0, 64*1024);
-      return bytes;
-    }catch(e){ return ''; }
-  }
+  try{
+    const raw = localStorage.getItem('dual.openrouter.training');
+    if(!raw) return '';
+    const obj = JSON.parse(raw);
+    if(!obj || !obj.data) return '';
+    const base64 = String(obj.data).split(',')[1] || '';
+    if(!base64) return '';
+    const bin = atob(base64);
+    // Convert binary string to UTF-8 text safely
+    let text = '';
+    try {
+      const bytes = new Uint8Array(Array.from(bin, c => c.charCodeAt(0)));
+      text = new TextDecoder('utf-8', {fatal:false}).decode(bytes);
+    } catch(e){
+      text = bin;
+    }
+    // Limit to ~64KB to avoid huge prompts
+    return text.length > 64*1024 ? text.slice(0, 64*1024) : text;
+  }catch(e){ return ''; }
+}
 
   function activeArchetypePair(){
     // Primary = selected archetype in #arch-select
@@ -2549,7 +2567,7 @@ const K = {
   });
 })();
 
-function getUserName(){ return (localStorage.getItem(K.name) || '').trim(); }
+function getUserName(){ try { const a=(localStorage.getItem('infodose:userName')||'').trim(); if(a) return a; const b=(localStorage.getItem('dual.name')||'').trim(); return b; } catch(e){ return ''; } }
 function getApiKey(){   return (localStorage.getItem(K.sk)   || '').trim(); }
 function getModel(){
   try{
