@@ -1,20 +1,16 @@
-<!--
-  Esta é a versão final unificada do HUB UNO e do Hub Revo.
-  Ela se baseia no arquivo “unificado 3.html” (Monólito UNO) e incorpora
-  uma nova aba chamada “Revo”, que carrega o Hub Infodose Ultra em um
-  iframe.  O código do Revo foi copiado para “index-100_revo_mod.html” e
-  levemente modificado para buscar a lista de apps diretamente do
-  elemento <script id="APPS_JSON"> presente nesta página.  Isso
-  assegura que ambos os hubs compartilham o mesmo catálogo de apps sem
-  depender de arquivos externos ausentes.
--->
 <!doctype html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<html lang="pt-BR" style="--arch-overlay: rgba(64, 158, 255, 0.22);"><head>
+  <meta charset="utf-8">
+  <!-- Manifest PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0f14" />
+
+<!-- iOS Safe Area -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
   <title>HUB UNO — PROD (safe)</title>
-  <meta name="theme-color" content="#0b0f14" />
+
   <style>
     :root {
       /* Paleta padrão (rosa/azul) */
@@ -942,22 +938,251 @@ body { background: radial-gradient(1200px 800px at 60% -10%, #0a1220 0%, #070b12
 .topbar, .subbar, .dock, .pane, .card, .tile, .shelf { background: var(--glass); backdrop-filter: blur(10px); border: 1px solid rgba(143,211,255,.12); box-shadow: var(--ring); }
 button, .btn, .chip { background: linear-gradient(180deg, rgba(13,22,34,.7), rgba(9,14,22,.7)); border: 1px solid rgba(143,211,255,.18); }
 a { color: var(--brandHi); }
-</style></head>
+</style><style id="customStyle">/* --------------------------------------------
+   KOBLLUX • Compact Mode — Mobile-first Vertical
+   Colar após o CSS atual
+--------------------------------------------- */
+
+/* Base compacta + segurança */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+html, body { max-width: 100%; overflow-x: hidden; }
+body { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+
+/* Container nunca estoura, sem “gambiarra” de largura */
+.response-container {
+  inline-size: min(100%, calc(100% - 0px)) !important;
+  padding: 1rem 0 2.75rem; /* + espaço safe-area já no body */
+}
+
+/* Nada lado a lado por padrão — empilha tudo */
+.row,
+.controls,
+.kv,
+.columns,
+.split {
+  display: block !important;
+}
+
+/* Qualquer tentativa de grid vira 1 coluna */
+[class*="grid"],
+[style*="grid-template-columns"],
+.columns,
+.split,
+.panel,
+.kv {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  align-items: stretch;
+  gap: .5rem !important;
+}
+
+/* Pares “key→value” agora empilhados */
+.kv > * { margin: 0 0 .4rem 0; }
+
+/* Grupos de controles em coluna, ocupando 100% */
+.controls .group {
+  display: block !important;
+  width: 100%;
+  padding: .5rem .6rem;
+  margin: 0 0 .6rem 0;
+}
+.controls .group > label,
+.controls .group > select,
+.controls .group > input,
+.controls .group > button { display: block; width: 100%; }
+
+/* Botões e inputs: alvo de toque ≥44px */
+.btn,
+select,
+input[type="text"],
+input[type="file"],
+input[type="range"],
+input[type="checkbox"],
+input[type="radio"],
+label[for],
+textarea {
+  min-height: 44px;
+}
+
+/* Botão Único: respeita safe-area no iOS */
+#btnKOBLLUX { 
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
+/* Navegações/chips SOMENTE na header: scroll horizontal, sem wrap */
+.header .row {
+  display: block !important;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: .25rem;
+  margin-bottom: .25rem;
+}
+.header .row > * {
+  display: inline-block;
+  vertical-align: top;
+  margin-right: .5rem;
+}
+
+/* Dropzone 100% vertical */
+.dropzone .dz-area { display: block !important; }
+.dropzone .row { display: block !important; }
+.dropzone .row > * { display: block; width: 100%; margin: .5rem 0 0; }
+
+/* Editor e Preview sempre empilhados (Preview abaixo)
+   Use #analysis como Preview, ou crie #preview se preferir. */
+.editor {
+  width: 100%;
+  min-height: 48vh;
+  height: 52vh;          /* alvo ~50–60vh */
+  max-height: 60vh;
+  overflow: auto;
+}
+#analysis,
+#preview {
+  display: block;
+  width: 100%;
+  min-height: 42vh;
+  height: 50vh;          /* alvo ~50–60vh */
+  max-height: 60vh;
+  overflow: auto;
+  white-space: pre-wrap;  /* evita overflow lateral */
+  word-wrap: break-word;
+}
+
+/* Cards/listas/painéis: pilha vertical com scroll interno quando necessário */
+.response-block.glass,
+.panel {
+  max-height: unset;     /* deixe rolar a página */
+}
+.panel[data-scroll],
+.response-block.glass[data-scroll],
+.card[data-scroll],
+[list][data-scroll] {
+  max-height: 60vh;
+  overflow: auto;
+}
+
+/* Controles verticais: sliders + labels exibidos em coluna */
+.controls label { margin: 0 0 .25rem 0; }
+.controls input[type="range"] { margin: .25rem 0 .5rem; }
+
+/* Sliders com preenchimento dinâmico (mantém seu gradiente) */
+input[type="range"]{
+  /* estes tokens são calculados por JS no seu app, mantidos aqui */
+  inline-size: 100%;
+}
+
+/* Toggle (Auto‑detectar): aumenta para tap ≥44px */
+#autoDetect{
+  --w: 72px; --h: 44px; --pad: 4px;
+  min-height: 44px;
+}
+
+/* SELECT e BTN ocupam a linha inteira no modo compact */
+select,
+.btn { width: 100%; }
+
+/* Grids/tabelas internas que insistem em múltiplas colunas → força 1fr */
+[role="grid"],
+[role="table"],
+table,
+.table,
+.list,
+.cards,
+.cards-grid,
+.items-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+}
+
+/* Editor/Preview evitando sangrar lateralmente (longas strings/URLs) */
+.editor,
+pre { word-break: break-word; }
+
+/* Header único (nenhum footer fixo) — nenhuma regra extra de footer */
+
+/* Safe-area e “tap spacing” no rodapé de ações flutuantes/badges */
+.badge-reopen { 
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
+/* Animação e sombras mais discretas (versão compact) */
+.glass { padding: .75rem .9rem; }
+.btn { padding: .7rem 1rem; }
+
+/* Scroll horizontal utilitário (caso queira aplicar em outra nav) */
+.h-scroll { overflow-x: auto; white-space: nowrap; }
+.h-scroll > * { display: inline-block; }
+
+/* Qualquer .columns e .split SEMPRE block (reforço final) */
+.columns, .split { display: block !important; }
+
+/* Segurança extra: força colunas únicas em componentes “teimosos” */
+[class*="columns-"],
+[class*="cols-"],
+[class*="grid-"] {
+  grid-template-columns: 1fr !important;
+}
+
+/* Evitar wrap de ícones/textos em chips sem quebrar layout */
+.pill { display: inline-block; }
+
+/* Garantir que iFrame seguro não crie overflow lateral */
+.ifr { inline-size: 100%; max-inline-size: 100%; }
+.ifr .bar { display: block; }
+.ifr .bar .spacer { display: none; }
+.ifr .bar .btn,
+.ifr .bar .btn.ghost { width: 100%; margin-top: .4rem; }
+
+/* Acessibilidade: foco visível “compact” */
+:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(57,255,182,.18); }
+
+/* Restrições finais — nada lado a lado fora da header */
+main .row { display: block !important; }
+main .row > * + * { margin-top: .5rem; }
+
+/* (Opcional) reduz micro gaps gerais para versão compacta */
+.stack { gap: .5rem !important; }
+:root{--radius:12px;--blur:16px;--shadow:0 6px 26px rgba(0,255,255,.22);--fast:.12s;--med:.2s;--slow:.45s;--focus-ring:0 0 0 3px rgba(57,255,182,.22);font-synthesis-weight:none}html,body{overflow-x:hidden}body{padding-bottom:max(12px,env(safe-area-inset-bottom))}.response-container{width:min(100%,100% - 0px)!important;padding:1rem 0 4rem}.glass{border-radius:var(--radius);backdrop-filter:blur(var(--blur));box-shadow:var(--shadow);transition:box-shadow var(--med) ease,filter var(--med) ease,transform var(--med) ease}.glass:hover{filter:brightness(1.02)}.row,.controls,.controls .group,.kv,.panel,.stack,.dropzone .dz-area,.header,.sheet,.ifr,.ifr .bar{display:block!important}.row>*,.controls>*,.controls .group>*,.panel>*{margin-block:.55rem}.columns,.split{display:block!important}.header,.panel,.kv,.stack,[class*="grid"],[style*="grid-template-columns"]{grid-template-columns:1fr!important}.editor{min-height:52svh;max-height:60svh;width:100%;resize:vertical;overflow:auto}.preview,#preview{display:block;margin-top:.8rem;min-height:48svh;max-height:58svh;overflow:auto}.header .row.small{display:flex!important;flex-direction:row;flex-wrap:nowrap!important;gap:.5rem;overflow-x:auto;overflow-y:hidden;white-space:nowrap;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}.header .row.small>*{flex:0 0 auto;scroll-snap-align:start}:where(button,.btn,[role="button"],label,select,input,textarea,.pill){min-block-size:44px;touch-action:manipulation;-webkit-tap-highlight-color:rgba(255,255,255,.08)}.btn{width:100%;justify-content:center;text-align:center;transition:transform var(--fast) ease,filter var(--fast) ease,box-shadow var(--fast) ease!important}.btn:active{transform:translateY(1px) scale(.995)}#btnKOBLLUX{bottom:calc(1rem + env(safe-area-inset-bottom))}select,.select,textarea,input[type="text"],input[type="email"],input[type="search"],input[type="number"]{width:100%;max-width:100%}input[type="range"]{width:100%!important;min-block-size:44px}.card,.list,.grid,.panel,.sheet,.overlay .sheet,.ifr{max-height:86svh;overflow:auto}footer{position:static!important;inset:auto!important}.header .title{font-weight:700;letter-spacing:.2px}.kv{display:block!important}.kv .muted,.kv .val{display:block}.controls .group{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.08);padding:.6rem .7rem}.pill{padding:.44rem .66rem}.meter{width:100%}.ifr{grid-template-rows:auto 1fr!important}.ifr .bar>*{margin-block:.4rem}@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}</style><style id="multiagent-styles">
+  #chatFeed .msg.horus{align-self:flex-start;background:rgba(255,195,0,.16);border-radius:16px 16px 16px 0;padding:8px 12px;max-width:75%}
+  #chatFeed .msg.atlas{align-self:flex-start;background:rgba(64,158,255,.16);border-radius:16px 16px 16px 0;padding:8px 12px;max-width:75%}
+  #chatFeed .msg.ion{align-self:flex-start;background:rgba(255,159,67,.16);border-radius:16px 16px 16px 0;padding:8px 12px;max-width:75%}
+  #chatFeed .msg.status{align-self:center;color:var(--mut);background:transparent}
+  .ai-tag{font-weight:900;letter-spacing:.02em;margin:0 0 4px 0;opacity:.9}
+  .ai-meta{font-size:12px;color:var(--mut)}
+  .plan-list{margin:6px 0 0 0;padding-left:18px}
+  .plan-list li{margin:4px 0}
+  </style>
+<style id="patch-blue1-theme">
+
+/* === PATCH • Blue‑1 UI theme (entire UI) === */
+body[data-theme="blue1"] {
+  --grad-a: #0b1e3b;
+  --grad-b: #113a7b;
+  --fg: #e8f0ff;
+  --mut: rgba(232,240,255,.68);
+  --surface: rgba(10,16,28,.55);
+  --surface-strong: rgba(10,16,28,.88);
+  --bd: 1px solid rgba(126,170,255,.16);
+  --ok: #39ffb6;
+  --warn: #ffb86b;
+  --err: #ff6b6b;
+  --blur: 28px;
+}
+/* Chat styling tuned to Blue‑1 */
+body[data-theme="blue1"] #chatFeed .msg.ai { background: rgba(77, 148, 255, 0.14); }
+body[data-theme="blue1"] #chatFeed .msg.user { background: rgba(232,240,255,0.10); }
+
+</style>
+<link rel="stylesheet" href="blue-1.css">
+</head>
 <body>
   <!-- Splash screen displayed on initial load -->
-  <div id="appSplash">
-    <!-- Splash loader personalizado: ajuste --di-size para o diâmetro e --di-stroke para a espessura da borda -->
-    <span class="di" style="--di-size:120px; --di-stroke:3px;">
-      <span class="ring"></span>
-      <span class="stroke"></span>
-      <span class="dots">
-        <i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i>
-        <i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i>
-      </span>
-    </span>
-    <!-- Texto de carregamento personalizado -->
-    <div class="loading-text"><strong>dual</strong>.app</div>
-  </div>
+  
   <!-- Som do splash: coloque seu arquivo de áudio na pasta especificada e ajuste o caminho abaixo.
        O som será reproduzido automaticamente quando o splash aparecer. -->
   <audio id="splashSound" src="Cassettes/Barra Sounds/Suave Underline e Portal.mp3" preload="auto"></audio>
@@ -976,7 +1201,7 @@ a { color: var(--brandHi); }
       <span class="ripple"></span>
     </button>
     <button class="ib fx-trans fx-press ring" id="btnHelp" title="Ajuda / Atalhos">
-<img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/question-circle.svg" alt="Ajuda" width="20" height="20" onerror="this.onerror=null;this.src='icons/question-circle.svg'">
+<img src="icons/question-circle.svg" alt="Ajuda" width="20" height="20" onerror="this.onerror=null;this.src='icons/question-circle.svg'">
       <span class="ripple"></span>
     </button>
     <button class="ib fx-trans fx-press ring" id="btnBrain" title="Brain">
@@ -1003,7 +1228,7 @@ a { color: var(--brandHi); }
   <!-- ===== Views ===== -->
   <main>
     <!-- HOME -->
-    <section id="v-home" class="view active">
+    <section id="v-home" class="view">
       <div class="grid">
           <!-- Saudação / chamada para cadastro. Visível quando o usuário precisa ativar a Dual Infodose ou quando já houver nome salvo -->
           <div id="greetingCard" class="card fx-trans fx-lift" style="display:none">
@@ -1027,60 +1252,55 @@ a { color: var(--brandHi); }
           <div class="arch-switcher">
             <button class="btn fx-trans fx-press ring" id="arch-prev" title="Anterior">
               <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/chevron-left.svg" alt="Anterior" width="16" height="16" onerror="this.onerror=null;this.src='icons/chevron-left.svg'">
-            </button>
-            <select id="arch-select" title="Escolher arquétipo"></select>
+            <span class="ripple"></span></button>
+            <select id="arch-select" title="Escolher arquétipo"><option value="atlas.html">atlas.html</option><option value="nova.html">nova.html</option><option value="vitalis.html">vitalis.html</option><option value="pulse.html">pulse.html</option><option value="artemis.html">artemis.html</option><option value="serena.html">serena.html</option><option value="kaos.html">kaos.html</option><option value="genus.html">genus.html</option><option value="lumine.html">lumine.html</option><option value="rhea.html">rhea.html</option><option value="solus.html">solus.html</option><option value="aion.html">aion.html</option></select>
             <button class="btn fx-trans fx-press ring" id="arch-next" title="Próximo">
               <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/chevron-right.svg" alt="Próximo" width="16" height="16" onerror="this.onerror=null;this.src='icons/chevron-right.svg'">
-            </button>
+            <span class="ripple"></span></button>
           </div>
           <div class="arch-circle">
             <div id="arch-fadeCover"></div>
             <!-- Camada de ripple auditivo fica sobre o conteúdo do círculo -->
             <div id="audioRipple" class="audio-ripple"></div>
-            <iframe id="arch-frame" title="Archetype Core" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
+            <iframe id="arch-frame" title="Archetype Core" sandbox="allow-scripts" referrerpolicy="no-referrer" src="./archetypes/atlas.html" src="archetypes/center.html?preset=blue1"></iframe>
           </div>
           <!-- Mensagem de feedback aparece fora da bolinha, logo abaixo dela -->
-          <div id="archMsg" class="arch-msg"></div>
+          <div id="archMsg" class="arch-msg show" style="background: rgba(57, 255, 182, 0.75); color: rgb(11, 15, 20);">Bem-vindo de volta, KODUX. UNO está ao seu lado.</div>
           <!-- Menu de arquétipos: permite acessar Apps, Stack, Usuário, Revo e Home -->
           <div id="archMenu" class="arch-menu">
             <button data-nav="apps">
               <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/folder-open.svg" alt="Apps" width="20" height="20" onerror="this.onerror=null;this.src='icons/folder-open.svg'">
               <span>Apps</span>
-            </button>
+            <span class="ripple"></span></button>
             <button data-nav="stack">
               <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/layer-group.svg" alt="Stack" width="20" height="20" onerror="this.onerror=null;this.src='icons/layer-group.svg'">
               <span>Stack</span>
-            </button>
+            <span class="ripple"></span></button>
             <button data-nav="brain">
               <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/user.svg" alt="Usuário" width="20" height="20" onerror="this.onerror=null;this.src='icons/user.svg'">
               <span>Usuário</span>
-            </button>
+            <span class="ripple"></span></button>
             <button data-nav="home">
               <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/yin-yang.svg" alt="Arquétipo" width="20" height="20" onerror="this.onerror=null;this.src='icons/yin-yang.svg'">
               <span>Arquétipo</span>
-            </button>
+            <span class="ripple"></span></button>
             <button data-nav="chat">
               <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/comments.svg" alt="Chat" width="20" height="20" onerror="this.onerror=null;this.src='icons/comments.svg'">
               <span>Chat</span>
-            </button>
+            <span class="ripple"></span></button>
           <button data-audio="true" id="archAudioBtn">
             <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/microphone-lines.svg" alt="Áudio" width="20" height="20" onerror="this.onerror=null;this.src='icons/microphone-lines.svg'">
             <span>Áudio</span>
-          </button>
+          <span class="ripple"></span></button>
           </div>
-        </div>
-        <!-- Feed de texto da IA -->
-        <div id="iaFeed" aria-live="polite" aria-atomic="false">
-          <div class="status">Toque a bolinha para falar com a IA.</div>
-        </div>
-        <div class="cards">
+        </div><div class="cards">
           <button class="card fx-trans fx-press ring" data-nav="apps">
             <div class="ico">
 <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/folder-open.svg" alt="Apps" width="24" height="24" onerror="this.onerror=null;this.src='icons/folder-open.svg'">
             </div>
             <div>
               <div style="font-weight:800">Apps</div>
-              <div class="mut" id="homeAppsStatus">–</div>
+              <div class="mut" id="homeAppsStatus">15 apps</div>
             </div>
             <span class="ripple"></span>
           </button>
@@ -1090,7 +1310,7 @@ a { color: var(--brandHi); }
             </div>
             <div>
               <div style="font-weight:800">Stack</div>
-              <div class="mut" id="homeStackStatus">–</div>
+              <div class="mut" id="homeStackStatus">0 sessãos</div>
             </div>
             <span class="ripple"></span>
           </button>
@@ -1100,7 +1320,7 @@ a { color: var(--brandHi); }
             </div>
             <div>
               <div style="font-weight:800">Usuário</div>
-              <div class="mut" id="homeUserStatus">–</div>
+              <div class="mut" id="homeUserStatus">KODUX · padrão</div>
             </div>
             <span class="ripple"></span>
           </button>
@@ -1110,11 +1330,16 @@ a { color: var(--brandHi); }
             </div>
             <div>
               <div style="font-weight:800">Arquétipo</div>
-              <div class="mut" id="homeArchStatus">–</div>
+              <div class="mut" id="homeArchStatus">atlas</div>
             </div>
             <span class="ripple"></span>
           </button>
         </div>
+        <!-- Feed de texto da IA -->
+        <div id="iaFeed" aria-live="polite" aria-atomic="false">
+          <div class="status">Toque a bolinha para falar com a IA.</div>
+        </div>
+        
       </div>
     </section>
 
@@ -1126,7 +1351,7 @@ a { color: var(--brandHi); }
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
               <!-- Removemos a busca e o sort. Agora apenas a opção de abrir dentro e o botão para mostrar locais -->
               <label class="mut" style="display:inline-flex;gap:6px;align-items:center">
-                <input id="openInside" type="checkbox" checked /> abrir dentro
+                <input id="openInside" type="checkbox" checked=""> abrir dentro
               </label>
               <button id="btnToggleLocal" class="btn fx-trans fx-press ring">
                 <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/folder-open.svg" alt="Locais" width="16" height="16" onerror="this.onerror=null;this.src='icons/folder-open.svg'" style="margin-right:4px">
@@ -1135,9 +1360,9 @@ a { color: var(--brandHi); }
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
               <!-- Aceita arquivos .json além de HTML/TXT para permitir upload de catálogos personalizados -->
-              <input id="fileLocal" type="file" accept=".html,.htm,.txt,.json" multiple class="input ring" />
+              <input id="fileLocal" type="file" accept=".html,.htm,.txt,.json" multiple="" class="input ring">
               <button id="btnImport" class="btn fx-trans fx-press ring">
-                <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/plus-circle.svg" alt="Adicionar" width="16" height="16" onerror="this.onerror=null;this.src='icons/plus-circle.svg'" style="margin-right:4px">
+                <img src="icons/plus-circle.svg" alt="Adicionar" width="16" height="16" onerror="this.onerror=null;this.src='icons/plus-circle.svg'" style="margin-right:4px">
                 Adicionar Locais<span class="ripple"></span>
               </button>
               <button id="btnExport" class="btn fx-trans fx-press ring">
@@ -1149,10 +1374,10 @@ a { color: var(--brandHi); }
                 Limpar Locais<span class="ripple"></span>
               </button>
             </div>
-            <div id="appsCount" class="mut">—</div>
+            <div id="appsCount" class="mut">15 apps</div>
           </div>
         </div>
-        <div id="appsWrap" class="apps-wrap"></div>
+        <div id="appsWrap" class="apps-wrap"><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Ampara</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%2021s-6-3.5-6-8a4%204%200%200%201%206-3%204%204%200%200%201%206%203c0%204.5-6%208-6%208z%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Serena · Ampara">Serena ·…</div><div class="mut">Acolhimento e suporte emocional.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Arcana</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%203v6M12%2015v6%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%223%22%2F%3E%3Cpath%20d%3D%22M19%205l-3%203M5%2019l3-3M5%205l3%203M19%2019l-3-3%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Solus · Arcana">Solus ·…</div><div class="mut">Harmonização energética e meditação.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Brilhare</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%224%22%2F%3E%3Cpath%20d%3D%22M12%202v2M12%2020v2M2%2012h2M20%2012h2M4.9%204.9l1.4%201.4M17.7%2017.7l1.4%201.4M4.9%2019.1l1.4-1.4M17.7%206.3l1.4-1.4%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Lumine · Brilhare">Lumine ·…</div><div class="mut">Inspiração leve e atividades lúdicas.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Cartesius</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M3%2012h18M12%203v18%22%2F%3E%3Cpath%20d%3D%22M5%208c3%202%2011%202%2014%200M5%2016c3-2%2011-2%2014%200%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Atlas · Cartesius">Atlas ·…</div><div class="mut">Planejador estratégico com cronogramas e checklists.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Disruptor</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%204l7%207-7%207%22%2F%3E%3Cpath%20d%3D%22M20%204l-7%207%207%207%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Kaos · Disruptor">Kaos ·…</div><div class="mut">Questiona padrões e propõe soluções ousadas.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Evolutia</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M7%2012c0-2.2%201.8-4%204-4%201.2%200%202.3.5%203%201.3M17%2012c0%202.2-1.8%204-4%204-1.2%200-2.3-.5-3-1.3%22%2F%3E%3Cpath%20d%3D%22M3%2012h4M17%2012h4%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Aion · Evolutia">Aion ·…</div><div class="mut">Microações estratégicas e evolução.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Fabricus</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%227%22%20y%3D%227%22%20width%3D%2210%22%20height%3D%2210%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M7%207l5-3%205%203M17%2017l-5%203-5-3%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Genus · Fabricus">Genus ·…</div><div class="mut">Protótipos e materialização de ideias.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Inspira</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%202v4M12%2018v4M2%2012h4M18%2012h4%22%2F%3E%3Cpath%20d%3D%22M5.6%205.6l2.8%202.8M15.6%2015.6l2.8%202.8M18.4%205.6l-2.8%202.8M8.4%2015.6l-2.8%202.8%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%223%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Nova · Inspira">Nova ·…</div><div class="mut">Criativa que desbloqueia ideias com mapas mentais e exercícios.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Momentum</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2012h4l2-5%204%2010%202-5h6%22%2F%3E%3Cpath%20d%3D%22M13%203l-2%204%203%201-2%204%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Vitalis · Momentum">Vitalis ·…</div><div class="mut">Rotinas físicas, hacks biológicos e motivação.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Naviga</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2012h12%22%2F%3E%3Cpath%20d%3D%22M13%206l6%206-6%206%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Artemis · Naviga">Artemis ·…</div><div class="mut">Explora conhecimentos e rotas de aprendizado.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Outros</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M3%2012h18M12%203v18%22%2F%3E%3Cpath%20d%3D%22M5%208c3%202%2011%202%2014%200M5%2016c3-2%2011-2%2014%200%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Dual_esqueci">Dual_esqueci</div><div class="mut">HTML local</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M3%2012h18M12%203v18%22%2F%3E%3Cpath%20d%3D%22M5%208c3%202%2011%202%2014%200M5%2016c3-2%2011-2%2014%200%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="index_kobllux_voicefix">index_kobllux_voicefix</div><div class="mut">HTML local</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M3%2012h18M12%203v18%22%2F%3E%3Cpath%20d%3D%22M5%208c3%202%2011%202%2014%200M5%2016c3-2%2011-2%2014%200%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="index-100">index-100</div><div class="mut">HTML local</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Raízes</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%203v6%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%229%22%20r%3D%224%22%2F%3E%3Cpath%20d%3D%22M12%2013v2l-2%202M12%2015l2%202M12%2017v3%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Rhea · Raízes">Rhea ·…</div><div class="mut">Vínculos e memórias emocionais.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Resona</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M2%2012h3l2-4%203%208%202-4h8%22%2F%3E%3Cpath%20d%3D%22M20%208v-3M20%2019v-3%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Pulse · Resona">Pulse ·…</div><div class="mut">Trilhas sonoras e ajuste de som emocional.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div></div>
       </div>
     </section>
 
@@ -1173,10 +1398,10 @@ a { color: var(--brandHi); }
             </button>
             <!-- Botão para enviar um HTML local e abrir como sessão -->
             <button id="btnStackUpload" class="btn fx-trans fx-press ring" title="Upload HTML">
-              <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/file-upload.svg" alt="Upload HTML" width="16" height="16" onerror="this.onerror=null;this.src='icons/file-upload.svg'" style="margin-right:4px">
+              <img src="icons/file-upload.svg" alt="Upload HTML" width="16" height="16" onerror="this.onerror=null;this.src='icons/file-upload.svg'" style="margin-right:4px">
               Upload HTML<span class="ripple"></span>
             </button>
-            <input id="stackUpload" type="file" accept=".html,text/html" style="display:none" />
+            <input id="stackUpload" type="file" accept=".html,text/html" style="display:none">
           </div>
           <div class="mut">Reabra rápido pelo dock abaixo.</div>
         </div>
@@ -1186,12 +1411,12 @@ a { color: var(--brandHi); }
     </section>
 
     <!-- BRAIN -->
-    <section id="v-brain" class="view">
+    <section id="v-brain" class="view active">
       <div class="grid">
         <div class="card fx-trans fx-lift" style="display:block">
           <div style="font-weight:800">Usuário</div>
           <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
-            <input id="userName" class="input ring" placeholder="Seu nome" />
+            <input id="userName" class="input ring" placeholder="Seu nome">
             <button id="saveName" class="btn prime fx-trans fx-press ring">Salvar<span class="ripple"></span></button>
           </div>
         </div>
@@ -1199,7 +1424,7 @@ a { color: var(--brandHi); }
         <div class="card fx-trans fx-lift" style="display:block">
           <div style="font-weight:800">Assistente</div>
           <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
-            <input id="assistantName" class="input ring" placeholder="Nome do assistente" />
+            <input id="assistantName" class="input ring" placeholder="Nome do assistente">
             <button id="saveAssistant" class="btn prime fx-trans fx-press ring">Salvar<span class="ripple"></span></button>
           </div>
         </div>
@@ -1207,25 +1432,25 @@ a { color: var(--brandHi); }
         <div class="card fx-trans fx-lift" style="display:block">
           <div style="font-weight:800">Voz do assistente</div>
           <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">
-            <select id="selectVoice" class="input ring" style="max-width:260px"></select>
+            <select id="selectVoice" class="input ring" style="max-width:260px"><option value="Karen">Karen (en-AU)</option><option value="Rocko">Rocko (en-GB)</option><option value="Shelley">Shelley (en-GB)</option><option value="Daniel">Daniel (en-GB)</option><option value="Grandma">Grandma (en-GB)</option><option value="Grandpa">Grandpa (en-GB)</option><option value="Flo">Flo (en-GB)</option><option value="Eddy">Eddy (en-GB)</option><option value="Reed">Reed (en-GB)</option><option value="Sandy">Sandy (en-GB)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Flo">Flo (en-US)</option><option value="Bahh">Bahh (en-US)</option><option value="Albert">Albert (en-US)</option><option value="Fred">Fred (en-US)</option><option value="Jester">Jester (en-US)</option><option value="Organ">Organ (en-US)</option><option value="Cellos">Cellos (en-US)</option><option value="Zarvox">Zarvox (en-US)</option><option value="Rocko">Rocko (en-US)</option><option value="Shelley">Shelley (en-US)</option><option value="Superstar">Superstar (en-US)</option><option value="Grandma">Grandma (en-US)</option><option value="Eddy">Eddy (en-US)</option><option value="Bells">Bells (en-US)</option><option value="Grandpa">Grandpa (en-US)</option><option value="Trinoids">Trinoids (en-US)</option><option value="Kathy">Kathy (en-US)</option><option value="Reed">Reed (en-US)</option><option value="Boing">Boing (en-US)</option><option value="Whisper">Whisper (en-US)</option><option value="Good News">Good News (en-US)</option><option value="Wobble">Wobble (en-US)</option><option value="Bad News">Bad News (en-US)</option><option value="Bolhas">Bolhas (en-US)</option><option value="Samantha">Samantha (en-US)</option><option value="Sandy">Sandy (en-US)</option><option value="Junior">Junior (en-US)</option><option value="Ralph">Ralph (en-US)</option><option value="Tessa">Tessa (en-ZA)</option><option value="Reed">Reed (pt-BR)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Shelley">Shelley (pt-BR)</option><option value="Grandma">Grandma (pt-BR)</option><option value="Grandpa">Grandpa (pt-BR)</option><option value="Rocko">Rocko (pt-BR)</option><option value="Flo">Flo (pt-BR)</option><option value="Sandy">Sandy (pt-BR)</option><option value="Eddy">Eddy (pt-BR)</option><option value="Joana">Joana (pt-PT)</option><option value="Daniel">Daniel (en-GB)</option><option value="Samantha">Samantha (en-US)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Karen">Karen (en-AU)</option><option value="Joana">Joana (pt-PT)</option><option value="Tessa">Tessa (en-ZA)</option></select>
             <button id="saveVoice" class="btn fx-trans fx-press ring">Salvar<span class="ripple"></span></button>
           </div>
         </div>
         <div class="card fx-trans fx-lift" style="display:block">
           <div style="font-weight:800">OpenRouter</div>
           <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">
-            <select id="model" class="input ring" style="max-width:260px"></select>
-            <input id="sk" class="input ring" placeholder="sk-or-v1-…" />
+            <select id="model" class="input ring" style="max-width:260px"><option value="openrouter/auto">openrouter/auto</option><option value="anthropic/claude-3.5-sonnet">anthropic/claude-3.5-sonnet</option><option value="openai/gpt-4.1-mini">openai/gpt-4.1-mini</option><option value="google/gemini-1.5-pro">google/gemini-1.5-pro</option><option value="meta/llama-3.1-405b-instruct">meta/llama-3.1-405b-instruct</option><option value="mistral/mistral-large-latest">mistral/mistral-large-latest</option></select>
+            <input id="sk" class="input ring" placeholder="sk-or-v1-…">
             <button id="saveSK" class="btn fx-trans fx-press ring">Salvar<span class="ripple"></span></button>
           </div>
 
           <!-- Modelo personalizado e treino -->
           <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">
-            <input id="customModel" class="input ring" placeholder="Modelo personalizado (ex: openai/gpt-4-custom)" style="flex:1" />
+            <input id="customModel" class="input ring" placeholder="Modelo personalizado (ex: openai/gpt-4-custom)" style="flex:1">
             <button id="addModel" class="btn fx-trans fx-press ring">Adicionar Modelo<span class="ripple"></span></button>
           </div>
           <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">
-            <input id="trainingFile" type="file" accept=".json,.txt,.dxt" class="input ring" style="max-width:260px" />
+            <input id="trainingFile" type="file" accept=".json,.txt,.dxt" class="input ring" style="max-width:260px">
             <span class="mut" style="font-size:11px">Treinamento (DXT)</span>
           </div>
         </div>
@@ -1244,7 +1469,7 @@ a { color: var(--brandHi); }
               </label>
               <label style="display:flex;align-items:center;gap:8px">
                 <span>Fundo personalizado:</span>
-                <input id="bgUpload" type="file" accept="image/*,video/*" class="input ring" style="max-width:260px" />
+                <input id="bgUpload" type="file" accept="image/*,video/*" class="input ring" style="max-width:260px">
               </label>
               <div class="mut" style="font-size:11px">Envie uma imagem ou vídeo para usar como plano de fundo quando o tema personalizado estiver selecionado. O fundo será salvo automaticamente no seu navegador.</div>
             </div>
@@ -1269,7 +1494,7 @@ a { color: var(--brandHi); }
             <!-- Área de seleção de voz por arquétipo.  Cada arquétipo possui
                  um seletor de voz e um botão de teste.  Essa grade será
                  preenchida dinamicamente pelo código em initVoices(). -->
-            <div id="voicesWrap" style="display:grid; gap:10px"></div>
+            <div id="voicesWrap" style="display:grid; gap:10px"><div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"><span style="min-width: 70px; font-weight: 700;">Atlas</span><select class="input ring" style="max-width: 220px;"><option value="Karen">Karen (en-AU)</option><option value="Rocko">Rocko (en-GB)</option><option value="Shelley">Shelley (en-GB)</option><option value="Daniel">Daniel (en-GB)</option><option value="Grandma">Grandma (en-GB)</option><option value="Grandpa">Grandpa (en-GB)</option><option value="Flo">Flo (en-GB)</option><option value="Eddy">Eddy (en-GB)</option><option value="Reed">Reed (en-GB)</option><option value="Sandy">Sandy (en-GB)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Flo">Flo (en-US)</option><option value="Bahh">Bahh (en-US)</option><option value="Albert">Albert (en-US)</option><option value="Fred">Fred (en-US)</option><option value="Jester">Jester (en-US)</option><option value="Organ">Organ (en-US)</option><option value="Cellos">Cellos (en-US)</option><option value="Zarvox">Zarvox (en-US)</option><option value="Rocko">Rocko (en-US)</option><option value="Shelley">Shelley (en-US)</option><option value="Superstar">Superstar (en-US)</option><option value="Grandma">Grandma (en-US)</option><option value="Eddy">Eddy (en-US)</option><option value="Bells">Bells (en-US)</option><option value="Grandpa">Grandpa (en-US)</option><option value="Trinoids">Trinoids (en-US)</option><option value="Kathy">Kathy (en-US)</option><option value="Reed">Reed (en-US)</option><option value="Boing">Boing (en-US)</option><option value="Whisper">Whisper (en-US)</option><option value="Good News">Good News (en-US)</option><option value="Wobble">Wobble (en-US)</option><option value="Bad News">Bad News (en-US)</option><option value="Bolhas">Bolhas (en-US)</option><option value="Samantha">Samantha (en-US)</option><option value="Sandy">Sandy (en-US)</option><option value="Junior">Junior (en-US)</option><option value="Ralph">Ralph (en-US)</option><option value="Tessa">Tessa (en-ZA)</option><option value="Reed">Reed (pt-BR)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Shelley">Shelley (pt-BR)</option><option value="Grandma">Grandma (pt-BR)</option><option value="Grandpa">Grandpa (pt-BR)</option><option value="Rocko">Rocko (pt-BR)</option><option value="Flo">Flo (pt-BR)</option><option value="Sandy">Sandy (pt-BR)</option><option value="Eddy">Eddy (pt-BR)</option><option value="Joana">Joana (pt-PT)</option><option value="Daniel">Daniel (en-GB)</option><option value="Samantha">Samantha (en-US)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Karen">Karen (en-AU)</option><option value="Joana">Joana (pt-PT)</option><option value="Tessa">Tessa (en-ZA)</option></select><button class="btn fx-trans fx-press ring">Teste<span class="ripple"></span></button></div><div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"><span style="min-width: 70px; font-weight: 700;">Nova</span><select class="input ring" style="max-width: 220px;"><option value="Karen">Karen (en-AU)</option><option value="Rocko">Rocko (en-GB)</option><option value="Shelley">Shelley (en-GB)</option><option value="Daniel">Daniel (en-GB)</option><option value="Grandma">Grandma (en-GB)</option><option value="Grandpa">Grandpa (en-GB)</option><option value="Flo">Flo (en-GB)</option><option value="Eddy">Eddy (en-GB)</option><option value="Reed">Reed (en-GB)</option><option value="Sandy">Sandy (en-GB)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Flo">Flo (en-US)</option><option value="Bahh">Bahh (en-US)</option><option value="Albert">Albert (en-US)</option><option value="Fred">Fred (en-US)</option><option value="Jester">Jester (en-US)</option><option value="Organ">Organ (en-US)</option><option value="Cellos">Cellos (en-US)</option><option value="Zarvox">Zarvox (en-US)</option><option value="Rocko">Rocko (en-US)</option><option value="Shelley">Shelley (en-US)</option><option value="Superstar">Superstar (en-US)</option><option value="Grandma">Grandma (en-US)</option><option value="Eddy">Eddy (en-US)</option><option value="Bells">Bells (en-US)</option><option value="Grandpa">Grandpa (en-US)</option><option value="Trinoids">Trinoids (en-US)</option><option value="Kathy">Kathy (en-US)</option><option value="Reed">Reed (en-US)</option><option value="Boing">Boing (en-US)</option><option value="Whisper">Whisper (en-US)</option><option value="Good News">Good News (en-US)</option><option value="Wobble">Wobble (en-US)</option><option value="Bad News">Bad News (en-US)</option><option value="Bolhas">Bolhas (en-US)</option><option value="Samantha">Samantha (en-US)</option><option value="Sandy">Sandy (en-US)</option><option value="Junior">Junior (en-US)</option><option value="Ralph">Ralph (en-US)</option><option value="Tessa">Tessa (en-ZA)</option><option value="Reed">Reed (pt-BR)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Shelley">Shelley (pt-BR)</option><option value="Grandma">Grandma (pt-BR)</option><option value="Grandpa">Grandpa (pt-BR)</option><option value="Rocko">Rocko (pt-BR)</option><option value="Flo">Flo (pt-BR)</option><option value="Sandy">Sandy (pt-BR)</option><option value="Eddy">Eddy (pt-BR)</option><option value="Joana">Joana (pt-PT)</option><option value="Daniel">Daniel (en-GB)</option><option value="Samantha">Samantha (en-US)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Karen">Karen (en-AU)</option><option value="Joana">Joana (pt-PT)</option><option value="Tessa">Tessa (en-ZA)</option></select><button class="btn fx-trans fx-press ring">Teste<span class="ripple"></span></button></div><div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"><span style="min-width: 70px; font-weight: 700;">Vitalis</span><select class="input ring" style="max-width: 220px;"><option value="Karen">Karen (en-AU)</option><option value="Rocko">Rocko (en-GB)</option><option value="Shelley">Shelley (en-GB)</option><option value="Daniel">Daniel (en-GB)</option><option value="Grandma">Grandma (en-GB)</option><option value="Grandpa">Grandpa (en-GB)</option><option value="Flo">Flo (en-GB)</option><option value="Eddy">Eddy (en-GB)</option><option value="Reed">Reed (en-GB)</option><option value="Sandy">Sandy (en-GB)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Flo">Flo (en-US)</option><option value="Bahh">Bahh (en-US)</option><option value="Albert">Albert (en-US)</option><option value="Fred">Fred (en-US)</option><option value="Jester">Jester (en-US)</option><option value="Organ">Organ (en-US)</option><option value="Cellos">Cellos (en-US)</option><option value="Zarvox">Zarvox (en-US)</option><option value="Rocko">Rocko (en-US)</option><option value="Shelley">Shelley (en-US)</option><option value="Superstar">Superstar (en-US)</option><option value="Grandma">Grandma (en-US)</option><option value="Eddy">Eddy (en-US)</option><option value="Bells">Bells (en-US)</option><option value="Grandpa">Grandpa (en-US)</option><option value="Trinoids">Trinoids (en-US)</option><option value="Kathy">Kathy (en-US)</option><option value="Reed">Reed (en-US)</option><option value="Boing">Boing (en-US)</option><option value="Whisper">Whisper (en-US)</option><option value="Good News">Good News (en-US)</option><option value="Wobble">Wobble (en-US)</option><option value="Bad News">Bad News (en-US)</option><option value="Bolhas">Bolhas (en-US)</option><option value="Samantha">Samantha (en-US)</option><option value="Sandy">Sandy (en-US)</option><option value="Junior">Junior (en-US)</option><option value="Ralph">Ralph (en-US)</option><option value="Tessa">Tessa (en-ZA)</option><option value="Reed">Reed (pt-BR)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Shelley">Shelley (pt-BR)</option><option value="Grandma">Grandma (pt-BR)</option><option value="Grandpa">Grandpa (pt-BR)</option><option value="Rocko">Rocko (pt-BR)</option><option value="Flo">Flo (pt-BR)</option><option value="Sandy">Sandy (pt-BR)</option><option value="Eddy">Eddy (pt-BR)</option><option value="Joana">Joana (pt-PT)</option><option value="Daniel">Daniel (en-GB)</option><option value="Samantha">Samantha (en-US)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Karen">Karen (en-AU)</option><option value="Joana">Joana (pt-PT)</option><option value="Tessa">Tessa (en-ZA)</option></select><button class="btn fx-trans fx-press ring">Teste<span class="ripple"></span></button></div><div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"><span style="min-width: 70px; font-weight: 700;">Pulse</span><select class="input ring" style="max-width: 220px;"><option value="Karen">Karen (en-AU)</option><option value="Rocko">Rocko (en-GB)</option><option value="Shelley">Shelley (en-GB)</option><option value="Daniel">Daniel (en-GB)</option><option value="Grandma">Grandma (en-GB)</option><option value="Grandpa">Grandpa (en-GB)</option><option value="Flo">Flo (en-GB)</option><option value="Eddy">Eddy (en-GB)</option><option value="Reed">Reed (en-GB)</option><option value="Sandy">Sandy (en-GB)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Flo">Flo (en-US)</option><option value="Bahh">Bahh (en-US)</option><option value="Albert">Albert (en-US)</option><option value="Fred">Fred (en-US)</option><option value="Jester">Jester (en-US)</option><option value="Organ">Organ (en-US)</option><option value="Cellos">Cellos (en-US)</option><option value="Zarvox">Zarvox (en-US)</option><option value="Rocko">Rocko (en-US)</option><option value="Shelley">Shelley (en-US)</option><option value="Superstar">Superstar (en-US)</option><option value="Grandma">Grandma (en-US)</option><option value="Eddy">Eddy (en-US)</option><option value="Bells">Bells (en-US)</option><option value="Grandpa">Grandpa (en-US)</option><option value="Trinoids">Trinoids (en-US)</option><option value="Kathy">Kathy (en-US)</option><option value="Reed">Reed (en-US)</option><option value="Boing">Boing (en-US)</option><option value="Whisper">Whisper (en-US)</option><option value="Good News">Good News (en-US)</option><option value="Wobble">Wobble (en-US)</option><option value="Bad News">Bad News (en-US)</option><option value="Bolhas">Bolhas (en-US)</option><option value="Samantha">Samantha (en-US)</option><option value="Sandy">Sandy (en-US)</option><option value="Junior">Junior (en-US)</option><option value="Ralph">Ralph (en-US)</option><option value="Tessa">Tessa (en-ZA)</option><option value="Reed">Reed (pt-BR)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Shelley">Shelley (pt-BR)</option><option value="Grandma">Grandma (pt-BR)</option><option value="Grandpa">Grandpa (pt-BR)</option><option value="Rocko">Rocko (pt-BR)</option><option value="Flo">Flo (pt-BR)</option><option value="Sandy">Sandy (pt-BR)</option><option value="Eddy">Eddy (pt-BR)</option><option value="Joana">Joana (pt-PT)</option><option value="Daniel">Daniel (en-GB)</option><option value="Samantha">Samantha (en-US)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Karen">Karen (en-AU)</option><option value="Joana">Joana (pt-PT)</option><option value="Tessa">Tessa (en-ZA)</option></select><button class="btn fx-trans fx-press ring">Teste<span class="ripple"></span></button></div><div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"><span style="min-width: 70px; font-weight: 700;">Artemis</span><select class="input ring" style="max-width: 220px;"><option value="Karen">Karen (en-AU)</option><option value="Rocko">Rocko (en-GB)</option><option value="Shelley">Shelley (en-GB)</option><option value="Daniel">Daniel (en-GB)</option><option value="Grandma">Grandma (en-GB)</option><option value="Grandpa">Grandpa (en-GB)</option><option value="Flo">Flo (en-GB)</option><option value="Eddy">Eddy (en-GB)</option><option value="Reed">Reed (en-GB)</option><option value="Sandy">Sandy (en-GB)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Flo">Flo (en-US)</option><option value="Bahh">Bahh (en-US)</option><option value="Albert">Albert (en-US)</option><option value="Fred">Fred (en-US)</option><option value="Jester">Jester (en-US)</option><option value="Organ">Organ (en-US)</option><option value="Cellos">Cellos (en-US)</option><option value="Zarvox">Zarvox (en-US)</option><option value="Rocko">Rocko (en-US)</option><option value="Shelley">Shelley (en-US)</option><option value="Superstar">Superstar (en-US)</option><option value="Grandma">Grandma (en-US)</option><option value="Eddy">Eddy (en-US)</option><option value="Bells">Bells (en-US)</option><option value="Grandpa">Grandpa (en-US)</option><option value="Trinoids">Trinoids (en-US)</option><option value="Kathy">Kathy (en-US)</option><option value="Reed">Reed (en-US)</option><option value="Boing">Boing (en-US)</option><option value="Whisper">Whisper (en-US)</option><option value="Good News">Good News (en-US)</option><option value="Wobble">Wobble (en-US)</option><option value="Bad News">Bad News (en-US)</option><option value="Bolhas">Bolhas (en-US)</option><option value="Samantha">Samantha (en-US)</option><option value="Sandy">Sandy (en-US)</option><option value="Junior">Junior (en-US)</option><option value="Ralph">Ralph (en-US)</option><option value="Tessa">Tessa (en-ZA)</option><option value="Reed">Reed (pt-BR)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Shelley">Shelley (pt-BR)</option><option value="Grandma">Grandma (pt-BR)</option><option value="Grandpa">Grandpa (pt-BR)</option><option value="Rocko">Rocko (pt-BR)</option><option value="Flo">Flo (pt-BR)</option><option value="Sandy">Sandy (pt-BR)</option><option value="Eddy">Eddy (pt-BR)</option><option value="Joana">Joana (pt-PT)</option><option value="Daniel">Daniel (en-GB)</option><option value="Samantha">Samantha (en-US)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Karen">Karen (en-AU)</option><option value="Joana">Joana (pt-PT)</option><option value="Tessa">Tessa (en-ZA)</option></select><button class="btn fx-trans fx-press ring">Teste<span class="ripple"></span></button></div><div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"><span style="min-width: 70px; font-weight: 700;">Serena</span><select class="input ring" style="max-width: 220px;"><option value="Karen">Karen (en-AU)</option><option value="Rocko">Rocko (en-GB)</option><option value="Shelley">Shelley (en-GB)</option><option value="Daniel">Daniel (en-GB)</option><option value="Grandma">Grandma (en-GB)</option><option value="Grandpa">Grandpa (en-GB)</option><option value="Flo">Flo (en-GB)</option><option value="Eddy">Eddy (en-GB)</option><option value="Reed">Reed (en-GB)</option><option value="Sandy">Sandy (en-GB)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Flo">Flo (en-US)</option><option value="Bahh">Bahh (en-US)</option><option value="Albert">Albert (en-US)</option><option value="Fred">Fred (en-US)</option><option value="Jester">Jester (en-US)</option><option value="Organ">Organ (en-US)</option><option value="Cellos">Cellos (en-US)</option><option value="Zarvox">Zarvox (en-US)</option><option value="Rocko">Rocko (en-US)</option><option value="Shelley">Shelley (en-US)</option><option value="Superstar">Superstar (en-US)</option><option value="Grandma">Grandma (en-US)</option><option value="Eddy">Eddy (en-US)</option><option value="Bells">Bells (en-US)</option><option value="Grandpa">Grandpa (en-US)</option><option value="Trinoids">Trinoids (en-US)</option><option value="Kathy">Kathy (en-US)</option><option value="Reed">Reed (en-US)</option><option value="Boing">Boing (en-US)</option><option value="Whisper">Whisper (en-US)</option><option value="Good News">Good News (en-US)</option><option value="Wobble">Wobble (en-US)</option><option value="Bad News">Bad News (en-US)</option><option value="Bolhas">Bolhas (en-US)</option><option value="Samantha">Samantha (en-US)</option><option value="Sandy">Sandy (en-US)</option><option value="Junior">Junior (en-US)</option><option value="Ralph">Ralph (en-US)</option><option value="Tessa">Tessa (en-ZA)</option><option value="Reed">Reed (pt-BR)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Shelley">Shelley (pt-BR)</option><option value="Grandma">Grandma (pt-BR)</option><option value="Grandpa">Grandpa (pt-BR)</option><option value="Rocko">Rocko (pt-BR)</option><option value="Flo">Flo (pt-BR)</option><option value="Sandy">Sandy (pt-BR)</option><option value="Eddy">Eddy (pt-BR)</option><option value="Joana">Joana (pt-PT)</option><option value="Daniel">Daniel (en-GB)</option><option value="Samantha">Samantha (en-US)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Karen">Karen (en-AU)</option><option value="Joana">Joana (pt-PT)</option><option value="Tessa">Tessa (en-ZA)</option></select><button class="btn fx-trans fx-press ring">Teste<span class="ripple"></span></button></div><div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"><span style="min-width: 70px; font-weight: 700;">Kaos</span><select class="input ring" style="max-width: 220px;"><option value="Karen">Karen (en-AU)</option><option value="Rocko">Rocko (en-GB)</option><option value="Shelley">Shelley (en-GB)</option><option value="Daniel">Daniel (en-GB)</option><option value="Grandma">Grandma (en-GB)</option><option value="Grandpa">Grandpa (en-GB)</option><option value="Flo">Flo (en-GB)</option><option value="Eddy">Eddy (en-GB)</option><option value="Reed">Reed (en-GB)</option><option value="Sandy">Sandy (en-GB)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Flo">Flo (en-US)</option><option value="Bahh">Bahh (en-US)</option><option value="Albert">Albert (en-US)</option><option value="Fred">Fred (en-US)</option><option value="Jester">Jester (en-US)</option><option value="Organ">Organ (en-US)</option><option value="Cellos">Cellos (en-US)</option><option value="Zarvox">Zarvox (en-US)</option><option value="Rocko">Rocko (en-US)</option><option value="Shelley">Shelley (en-US)</option><option value="Superstar">Superstar (en-US)</option><option value="Grandma">Grandma (en-US)</option><option value="Eddy">Eddy (en-US)</option><option value="Bells">Bells (en-US)</option><option value="Grandpa">Grandpa (en-US)</option><option value="Trinoids">Trinoids (en-US)</option><option value="Kathy">Kathy (en-US)</option><option value="Reed">Reed (en-US)</option><option value="Boing">Boing (en-US)</option><option value="Whisper">Whisper (en-US)</option><option value="Good News">Good News (en-US)</option><option value="Wobble">Wobble (en-US)</option><option value="Bad News">Bad News (en-US)</option><option value="Bolhas">Bolhas (en-US)</option><option value="Samantha">Samantha (en-US)</option><option value="Sandy">Sandy (en-US)</option><option value="Junior">Junior (en-US)</option><option value="Ralph">Ralph (en-US)</option><option value="Tessa">Tessa (en-ZA)</option><option value="Reed">Reed (pt-BR)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Shelley">Shelley (pt-BR)</option><option value="Grandma">Grandma (pt-BR)</option><option value="Grandpa">Grandpa (pt-BR)</option><option value="Rocko">Rocko (pt-BR)</option><option value="Flo">Flo (pt-BR)</option><option value="Sandy">Sandy (pt-BR)</option><option value="Eddy">Eddy (pt-BR)</option><option value="Joana">Joana (pt-PT)</option><option value="Daniel">Daniel (en-GB)</option><option value="Samantha">Samantha (en-US)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Karen">Karen (en-AU)</option><option value="Joana">Joana (pt-PT)</option><option value="Tessa">Tessa (en-ZA)</option></select><button class="btn fx-trans fx-press ring">Teste<span class="ripple"></span></button></div><div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"><span style="min-width: 70px; font-weight: 700;">Genus</span><select class="input ring" style="max-width: 220px;"><option value="Karen">Karen (en-AU)</option><option value="Rocko">Rocko (en-GB)</option><option value="Shelley">Shelley (en-GB)</option><option value="Daniel">Daniel (en-GB)</option><option value="Grandma">Grandma (en-GB)</option><option value="Grandpa">Grandpa (en-GB)</option><option value="Flo">Flo (en-GB)</option><option value="Eddy">Eddy (en-GB)</option><option value="Reed">Reed (en-GB)</option><option value="Sandy">Sandy (en-GB)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Flo">Flo (en-US)</option><option value="Bahh">Bahh (en-US)</option><option value="Albert">Albert (en-US)</option><option value="Fred">Fred (en-US)</option><option value="Jester">Jester (en-US)</option><option value="Organ">Organ (en-US)</option><option value="Cellos">Cellos (en-US)</option><option value="Zarvox">Zarvox (en-US)</option><option value="Rocko">Rocko (en-US)</option><option value="Shelley">Shelley (en-US)</option><option value="Superstar">Superstar (en-US)</option><option value="Grandma">Grandma (en-US)</option><option value="Eddy">Eddy (en-US)</option><option value="Bells">Bells (en-US)</option><option value="Grandpa">Grandpa (en-US)</option><option value="Trinoids">Trinoids (en-US)</option><option value="Kathy">Kathy (en-US)</option><option value="Reed">Reed (en-US)</option><option value="Boing">Boing (en-US)</option><option value="Whisper">Whisper (en-US)</option><option value="Good News">Good News (en-US)</option><option value="Wobble">Wobble (en-US)</option><option value="Bad News">Bad News (en-US)</option><option value="Bolhas">Bolhas (en-US)</option><option value="Samantha">Samantha (en-US)</option><option value="Sandy">Sandy (en-US)</option><option value="Junior">Junior (en-US)</option><option value="Ralph">Ralph (en-US)</option><option value="Tessa">Tessa (en-ZA)</option><option value="Reed">Reed (pt-BR)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Shelley">Shelley (pt-BR)</option><option value="Grandma">Grandma (pt-BR)</option><option value="Grandpa">Grandpa (pt-BR)</option><option value="Rocko">Rocko (pt-BR)</option><option value="Flo">Flo (pt-BR)</option><option value="Sandy">Sandy (pt-BR)</option><option value="Eddy">Eddy (pt-BR)</option><option value="Joana">Joana (pt-PT)</option><option value="Daniel">Daniel (en-GB)</option><option value="Samantha">Samantha (en-US)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Karen">Karen (en-AU)</option><option value="Joana">Joana (pt-PT)</option><option value="Tessa">Tessa (en-ZA)</option></select><button class="btn fx-trans fx-press ring">Teste<span class="ripple"></span></button></div><div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"><span style="min-width: 70px; font-weight: 700;">Lumine</span><select class="input ring" style="max-width: 220px;"><option value="Karen">Karen (en-AU)</option><option value="Rocko">Rocko (en-GB)</option><option value="Shelley">Shelley (en-GB)</option><option value="Daniel">Daniel (en-GB)</option><option value="Grandma">Grandma (en-GB)</option><option value="Grandpa">Grandpa (en-GB)</option><option value="Flo">Flo (en-GB)</option><option value="Eddy">Eddy (en-GB)</option><option value="Reed">Reed (en-GB)</option><option value="Sandy">Sandy (en-GB)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Flo">Flo (en-US)</option><option value="Bahh">Bahh (en-US)</option><option value="Albert">Albert (en-US)</option><option value="Fred">Fred (en-US)</option><option value="Jester">Jester (en-US)</option><option value="Organ">Organ (en-US)</option><option value="Cellos">Cellos (en-US)</option><option value="Zarvox">Zarvox (en-US)</option><option value="Rocko">Rocko (en-US)</option><option value="Shelley">Shelley (en-US)</option><option value="Superstar">Superstar (en-US)</option><option value="Grandma">Grandma (en-US)</option><option value="Eddy">Eddy (en-US)</option><option value="Bells">Bells (en-US)</option><option value="Grandpa">Grandpa (en-US)</option><option value="Trinoids">Trinoids (en-US)</option><option value="Kathy">Kathy (en-US)</option><option value="Reed">Reed (en-US)</option><option value="Boing">Boing (en-US)</option><option value="Whisper">Whisper (en-US)</option><option value="Good News">Good News (en-US)</option><option value="Wobble">Wobble (en-US)</option><option value="Bad News">Bad News (en-US)</option><option value="Bolhas">Bolhas (en-US)</option><option value="Samantha">Samantha (en-US)</option><option value="Sandy">Sandy (en-US)</option><option value="Junior">Junior (en-US)</option><option value="Ralph">Ralph (en-US)</option><option value="Tessa">Tessa (en-ZA)</option><option value="Reed">Reed (pt-BR)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Shelley">Shelley (pt-BR)</option><option value="Grandma">Grandma (pt-BR)</option><option value="Grandpa">Grandpa (pt-BR)</option><option value="Rocko">Rocko (pt-BR)</option><option value="Flo">Flo (pt-BR)</option><option value="Sandy">Sandy (pt-BR)</option><option value="Eddy">Eddy (pt-BR)</option><option value="Joana">Joana (pt-PT)</option><option value="Daniel">Daniel (en-GB)</option><option value="Samantha">Samantha (en-US)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Karen">Karen (en-AU)</option><option value="Joana">Joana (pt-PT)</option><option value="Tessa">Tessa (en-ZA)</option></select><button class="btn fx-trans fx-press ring">Teste<span class="ripple"></span></button></div><div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"><span style="min-width: 70px; font-weight: 700;">Rhea</span><select class="input ring" style="max-width: 220px;"><option value="Karen">Karen (en-AU)</option><option value="Rocko">Rocko (en-GB)</option><option value="Shelley">Shelley (en-GB)</option><option value="Daniel">Daniel (en-GB)</option><option value="Grandma">Grandma (en-GB)</option><option value="Grandpa">Grandpa (en-GB)</option><option value="Flo">Flo (en-GB)</option><option value="Eddy">Eddy (en-GB)</option><option value="Reed">Reed (en-GB)</option><option value="Sandy">Sandy (en-GB)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Flo">Flo (en-US)</option><option value="Bahh">Bahh (en-US)</option><option value="Albert">Albert (en-US)</option><option value="Fred">Fred (en-US)</option><option value="Jester">Jester (en-US)</option><option value="Organ">Organ (en-US)</option><option value="Cellos">Cellos (en-US)</option><option value="Zarvox">Zarvox (en-US)</option><option value="Rocko">Rocko (en-US)</option><option value="Shelley">Shelley (en-US)</option><option value="Superstar">Superstar (en-US)</option><option value="Grandma">Grandma (en-US)</option><option value="Eddy">Eddy (en-US)</option><option value="Bells">Bells (en-US)</option><option value="Grandpa">Grandpa (en-US)</option><option value="Trinoids">Trinoids (en-US)</option><option value="Kathy">Kathy (en-US)</option><option value="Reed">Reed (en-US)</option><option value="Boing">Boing (en-US)</option><option value="Whisper">Whisper (en-US)</option><option value="Good News">Good News (en-US)</option><option value="Wobble">Wobble (en-US)</option><option value="Bad News">Bad News (en-US)</option><option value="Bolhas">Bolhas (en-US)</option><option value="Samantha">Samantha (en-US)</option><option value="Sandy">Sandy (en-US)</option><option value="Junior">Junior (en-US)</option><option value="Ralph">Ralph (en-US)</option><option value="Tessa">Tessa (en-ZA)</option><option value="Reed">Reed (pt-BR)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Shelley">Shelley (pt-BR)</option><option value="Grandma">Grandma (pt-BR)</option><option value="Grandpa">Grandpa (pt-BR)</option><option value="Rocko">Rocko (pt-BR)</option><option value="Flo">Flo (pt-BR)</option><option value="Sandy">Sandy (pt-BR)</option><option value="Eddy">Eddy (pt-BR)</option><option value="Joana">Joana (pt-PT)</option><option value="Daniel">Daniel (en-GB)</option><option value="Samantha">Samantha (en-US)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Karen">Karen (en-AU)</option><option value="Joana">Joana (pt-PT)</option><option value="Tessa">Tessa (en-ZA)</option></select><button class="btn fx-trans fx-press ring">Teste<span class="ripple"></span></button></div><div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"><span style="min-width: 70px; font-weight: 700;">Solus</span><select class="input ring" style="max-width: 220px;"><option value="Karen">Karen (en-AU)</option><option value="Rocko">Rocko (en-GB)</option><option value="Shelley">Shelley (en-GB)</option><option value="Daniel">Daniel (en-GB)</option><option value="Grandma">Grandma (en-GB)</option><option value="Grandpa">Grandpa (en-GB)</option><option value="Flo">Flo (en-GB)</option><option value="Eddy">Eddy (en-GB)</option><option value="Reed">Reed (en-GB)</option><option value="Sandy">Sandy (en-GB)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Flo">Flo (en-US)</option><option value="Bahh">Bahh (en-US)</option><option value="Albert">Albert (en-US)</option><option value="Fred">Fred (en-US)</option><option value="Jester">Jester (en-US)</option><option value="Organ">Organ (en-US)</option><option value="Cellos">Cellos (en-US)</option><option value="Zarvox">Zarvox (en-US)</option><option value="Rocko">Rocko (en-US)</option><option value="Shelley">Shelley (en-US)</option><option value="Superstar">Superstar (en-US)</option><option value="Grandma">Grandma (en-US)</option><option value="Eddy">Eddy (en-US)</option><option value="Bells">Bells (en-US)</option><option value="Grandpa">Grandpa (en-US)</option><option value="Trinoids">Trinoids (en-US)</option><option value="Kathy">Kathy (en-US)</option><option value="Reed">Reed (en-US)</option><option value="Boing">Boing (en-US)</option><option value="Whisper">Whisper (en-US)</option><option value="Good News">Good News (en-US)</option><option value="Wobble">Wobble (en-US)</option><option value="Bad News">Bad News (en-US)</option><option value="Bolhas">Bolhas (en-US)</option><option value="Samantha">Samantha (en-US)</option><option value="Sandy">Sandy (en-US)</option><option value="Junior">Junior (en-US)</option><option value="Ralph">Ralph (en-US)</option><option value="Tessa">Tessa (en-ZA)</option><option value="Reed">Reed (pt-BR)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Shelley">Shelley (pt-BR)</option><option value="Grandma">Grandma (pt-BR)</option><option value="Grandpa">Grandpa (pt-BR)</option><option value="Rocko">Rocko (pt-BR)</option><option value="Flo">Flo (pt-BR)</option><option value="Sandy">Sandy (pt-BR)</option><option value="Eddy">Eddy (pt-BR)</option><option value="Joana">Joana (pt-PT)</option><option value="Daniel">Daniel (en-GB)</option><option value="Samantha">Samantha (en-US)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Karen">Karen (en-AU)</option><option value="Joana">Joana (pt-PT)</option><option value="Tessa">Tessa (en-ZA)</option></select><button class="btn fx-trans fx-press ring">Teste<span class="ripple"></span></button></div><div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"><span style="min-width: 70px; font-weight: 700;">Aion</span><select class="input ring" style="max-width: 220px;"><option value="Karen">Karen (en-AU)</option><option value="Rocko">Rocko (en-GB)</option><option value="Shelley">Shelley (en-GB)</option><option value="Daniel">Daniel (en-GB)</option><option value="Grandma">Grandma (en-GB)</option><option value="Grandpa">Grandpa (en-GB)</option><option value="Flo">Flo (en-GB)</option><option value="Eddy">Eddy (en-GB)</option><option value="Reed">Reed (en-GB)</option><option value="Sandy">Sandy (en-GB)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Flo">Flo (en-US)</option><option value="Bahh">Bahh (en-US)</option><option value="Albert">Albert (en-US)</option><option value="Fred">Fred (en-US)</option><option value="Jester">Jester (en-US)</option><option value="Organ">Organ (en-US)</option><option value="Cellos">Cellos (en-US)</option><option value="Zarvox">Zarvox (en-US)</option><option value="Rocko">Rocko (en-US)</option><option value="Shelley">Shelley (en-US)</option><option value="Superstar">Superstar (en-US)</option><option value="Grandma">Grandma (en-US)</option><option value="Eddy">Eddy (en-US)</option><option value="Bells">Bells (en-US)</option><option value="Grandpa">Grandpa (en-US)</option><option value="Trinoids">Trinoids (en-US)</option><option value="Kathy">Kathy (en-US)</option><option value="Reed">Reed (en-US)</option><option value="Boing">Boing (en-US)</option><option value="Whisper">Whisper (en-US)</option><option value="Good News">Good News (en-US)</option><option value="Wobble">Wobble (en-US)</option><option value="Bad News">Bad News (en-US)</option><option value="Bolhas">Bolhas (en-US)</option><option value="Samantha">Samantha (en-US)</option><option value="Sandy">Sandy (en-US)</option><option value="Junior">Junior (en-US)</option><option value="Ralph">Ralph (en-US)</option><option value="Tessa">Tessa (en-ZA)</option><option value="Reed">Reed (pt-BR)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Shelley">Shelley (pt-BR)</option><option value="Grandma">Grandma (pt-BR)</option><option value="Grandpa">Grandpa (pt-BR)</option><option value="Rocko">Rocko (pt-BR)</option><option value="Flo">Flo (pt-BR)</option><option value="Sandy">Sandy (pt-BR)</option><option value="Eddy">Eddy (pt-BR)</option><option value="Joana">Joana (pt-PT)</option><option value="Daniel">Daniel (en-GB)</option><option value="Samantha">Samantha (en-US)</option><option value="Luciana">Luciana (pt-BR)</option><option value="Moira">Moira (en-IE)</option><option value="Rishi">Rishi (en-IN)</option><option value="Karen">Karen (en-AU)</option><option value="Joana">Joana (pt-PT)</option><option value="Tessa">Tessa (en-ZA)</option></select><button class="btn fx-trans fx-press ring">Teste<span class="ripple"></span></button></div></div>
 
           <!-- Preferências de Performance -->
           <div class="card fx-trans fx-lift" style="display:block">
@@ -1311,7 +1536,7 @@ a { color: var(--brandHi); }
     <!-- CHAT (Dual • Chat) -->
     <section id="v-chat" class="view">
       <!-- Feed de mensagens do chat -->
-      <div id="chatFeed"></div>
+      <div id="chatFeed"><div class="msg user">Você: Essa versão tá daora</div><div class="msg user">Você: Essa versão tá daora</div><div class="msg user">Você: Essa versão tá daora</div><div class="msg user">Você: Dual e aí beleza como está</div><div class="msg user">Você: Dual e aí beleza como está</div><div class="msg user">Você: Dual e aí beleza como está</div><div class="msg user">Você: E aí alô</div><div class="msg user">Você: E aí alô</div><div class="msg user">Você: E aí alô</div><div class="msg user">Você: E aí beleza</div><div class="msg user">Você: E aí beleza</div><div class="msg user">Você: E aí beleza</div><div class="msg user">Você: Essa versão tá daora</div><div class="msg user">Você: Essa versão tá daora</div><div class="msg user">Você: Essa versão tá daora</div><div class="msg user">Você: Dual e aí beleza como está</div><div class="msg user">Você: Dual e aí beleza como está</div><div class="msg user">Você: Dual e aí beleza como está</div><div class="msg user">Você: E aí alô</div><div class="msg user">Você: E aí alô</div><div class="msg user">Você: E aí alô</div><div class="msg user">Você: E aí beleza</div><div class="msg user">Você: E aí beleza</div><div class="msg user">Você: E aí beleza</div></div>
     </section>
   </main>
 
@@ -1319,7 +1544,7 @@ a { color: var(--brandHi); }
   <div id="dock" class="dock"></div>
   <nav class="tabbar">
     <div class="inner">
-      <button class="tab fx-trans fx-press ring active" data-nav="home">
+      <button class="tab fx-trans fx-press ring" data-nav="home">
 <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/house.svg" alt="Home" width="18" height="18" onerror="this.onerror=null;this.src='icons/house.svg'">
         <span style="display:none">Home</span><span class="ripple"></span>
       </button>
@@ -1331,7 +1556,7 @@ a { color: var(--brandHi); }
 <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/layer-group.svg" alt="Stack" width="18" height="18" onerror="this.onerror=null;this.src='icons/layer-group.svg'">
         <span style="display:none">Stack</span><span class="ripple"></span>
       </button>
-      <button class="tab fx-trans fx-press ring" data-nav="brain">
+      <button class="tab fx-trans fx-press ring active" data-nav="brain">
 <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/brain.svg" alt="Brain" width="18" height="18" onerror="this.onerror=null;this.src='icons/brain.svg'">
         <span style="display:none">Brain</span><span class="ripple"></span>
       </button>
@@ -1343,24 +1568,24 @@ a { color: var(--brandHi); }
     </div>
   </nav>
   <!-- Preview da última mensagem recebida (aparece na home e leva ao chat) -->
-  <div id="msgPreview"></div>
+  <div id="msgPreview" style="display: none;"></div>
 
   <!-- Controles de texto e voz empilhados acima da barra de navegação -->
   <div id="homeButtons" class="home-btns">
     <button id="homeTextBtn" class="home-btn">
-      <img src="HubAdlineChat.png" alt="Texto" width="20" height="20" onerror="this.onerror=null;this.src='icons/pen-to-square.svg'">
-    </button>
+      <img src="icons/pen-to-square.svg" alt="Texto" width="20" height="20" onerror="this.onerror=null;this.src='icons/pen-to-square.svg'">
+    <span class="ripple"></span></button>
     <button id="homeVoiceBtn" class="home-btn">
       <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/microphone.svg" alt="Voz" width="20" height="20" onerror="this.onerror=null;this.src='icons/microphone.svg'">
-    </button>
+    <span class="ripple"></span></button>
   </div>
   <!-- Overlay de input para envio rápido de mensagens na Home -->
   <div id="homeInputOverlay">
     <form id="homeInputForm" autocomplete="off">
-      <input id="homeInput" type="text" placeholder="Escreva aqui…" autocomplete="off" />
+      <input id="homeInput" type="text" placeholder="Escreva aqui…" autocomplete="off">
       <button type="submit">
         <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/paper-plane.svg" alt="Enviar" width="18" height="18" onerror="this.onerror=null;this.src='icons/paper-plane.svg'">
-      </button>
+      <span class="ripple"></span></button>
     </form>
   </div>
 
@@ -1368,7 +1593,7 @@ a { color: var(--brandHi); }
   <div id="modalHelp" class="modal" aria-hidden="true">
     <div class="panel">
       <div style="display:flex;align-items:center;gap:10px;justify-content:space-between">
-        <h3 style="margin:0">Ajuda & Atalhos</h3>
+        <h3 style="margin:0">Ajuda &amp; Atalhos</h3>
         <button id="closeHelp" class="btn fx-trans fx-press ring">Fechar<span class="ripple"></span></button>
       </div>
       <div class="mut" style="margin-top:8px">Navegue mais rápido:</div>
@@ -1534,7 +1759,20 @@ a { color: var(--brandHi); }
       const wrap = document.getElementById('voicesWrap');
       if (!wrap) return;
       wrap.innerHTML = '';
-      const archList = [ 'Atlas','Nova','Vitalis','Pulse','Artemis','Serena','Kaos','Genus','Lumine','Rhea','Solus','Aion' ];
+      const archList = [
+        'atlas.html',
+        'nova.html',
+        'vitalis.html',
+        'pulse.html',
+        'artemis.html',
+        'serena.html',
+        'kaos.html',
+        'genus.html',
+        'lumine.html',
+        'solus.html',
+        'rhea.html',
+        'aion.html'
+      ];
       function populateVoices() {
         let voices = speechSynthesis.getVoices();
         // Filtrar por idiomas suportados (Português e Inglês) se disponível
@@ -2876,8 +3114,8 @@ a { color: var(--brandHi); }
         'kaos.html',
         'genus.html',
         'lumine.html',
-        'rhea.html',
         'solus.html',
+        'rhea.html',
         'aion.html'
       ];
       const select = document.getElementById('arch-select');
@@ -3041,7 +3279,7 @@ a { color: var(--brandHi); }
       }
     })();
     $$('button').forEach(addRipple);
-  </script>
+  </script><div style="position: fixed; right: 14px; bottom: calc(var(--tabsH) + 16px); display: grid; gap: 8px; z-index: 120;"></div><div style="position: fixed; right: 14px; bottom: calc(var(--tabsH) + 16px); display: grid; gap: 8px; z-index: 120;"></div>
 <!-- Local Storage Modal (safe-placed near end of body) -->
 <div id="modalLS" class="modal" aria-hidden="true">
   <div class="panel">
@@ -3652,17 +3890,17 @@ window.addEventListener('load', () => {
 </script>
   <!-- Sons da interface.  Coloque os arquivos em sounds/ui/*.wav conforme distribuídos no pacote UNO_UISounds_Pack_v1. -->
   <!-- Use o som Back Action como clique principal -->
-  <audio id="sndClick"  src="sounds/ui/back-action.wav" preload="auto"></audio>
-  <audio id="sndHover"  src="sounds/ui/hover.wav" preload="auto"></audio>
-  <audio id="sndOpen"   src="sounds/ui/open.wav" preload="auto"></audio>
-  <audio id="sndClose"  src="sounds/ui/close.wav" preload="auto"></audio>
-  <audio id="sndTab"    src="sounds/ui/tab.wav" preload="auto"></audio>
-  <audio id="sndNav"    src="sounds/ui/nav.wav" preload="auto"></audio>
-  <audio id="sndBack"   src="sounds/ui/back.wav" preload="auto"></audio>
-  <audio id="sndDrag"   src="sounds/ui/drag.wav" preload="auto"></audio>
+  <audio id="sndClick" src="sounds/ui/back-action.wav" preload="auto"></audio>
+  <audio id="sndHover" src="sounds/ui/hover.wav" preload="auto"></audio>
+  <audio id="sndOpen" src="sounds/ui/open.wav" preload="auto"></audio>
+  <audio id="sndClose" src="sounds/ui/close.wav" preload="auto"></audio>
+  <audio id="sndTab" src="sounds/ui/tab.wav" preload="auto"></audio>
+  <audio id="sndNav" src="sounds/ui/nav.wav" preload="auto"></audio>
+  <audio id="sndBack" src="sounds/ui/back.wav" preload="auto"></audio>
+  <audio id="sndDrag" src="sounds/ui/drag.wav" preload="auto"></audio>
   <audio id="sndSuccess" src="sounds/ui/success.wav" preload="auto"></audio>
-  <audio id="sndWarn"    src="sounds/ui/warn.wav" preload="auto"></audio>
-  <audio id="sndError"   src="sounds/ui/error.wav" preload="auto"></audio>
+  <audio id="sndWarn" src="sounds/ui/warn.wav" preload="auto"></audio>
+  <audio id="sndError" src="sounds/ui/error.wav" preload="auto"></audio>
   <!-- Som Tech Pop usado para ações especiais (ex: salvar nome) -->
   <audio id="sndTechPop" src="sounds/ui/tech-pop.wav" preload="auto"></audio>
   <script>
@@ -4244,12 +4482,7 @@ window.addEventListener('load', () => {
 
 })(); // end ChatPlus
 </script>
-  <script src="dual_multiagent_v1.js"></script>
-  <script src="dual_multiagent_v12_locked.js"></script>
-  <script src="openrouter_hardlock_model_v1.js" defer></script>
-</body>
-
-<style>
+  <style>
 /* --------------------------------------------
    KOBLLUX • Compact Mode — Mobile-first Vertical
    Colar após o CSS atual
@@ -4461,4 +4694,244 @@ main .row > * + * { margin-top: .5rem; }
 .stack { gap: .5rem !important; }
 
 </style>
-</html>
+
+
+<script id="patch-visual-presets">
+(function(){
+  // Helpers
+  const $ = (q, r = document) => r.querySelector(q);
+  const LS = {
+    get: (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d } catch (e) { return d } },
+    set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch (e) {} }
+  };
+
+  // Inject "Blue‑1" into theme select if missing
+  document.addEventListener('DOMContentLoaded', function(){
+    try {
+      const sel = document.getElementById('themeSelect');
+      if (sel && !Array.from(sel.options).some(o => o.value === 'blue1')) {
+        const opt = document.createElement('option');
+        opt.value = 'blue1'; opt.textContent = 'Blue‑1 (azul)';
+        sel.appendChild(opt);
+      }
+    } catch(e){}
+  });
+
+  // Build and inject a Visual & 3D card into Brain view (non-destructive)
+  document.addEventListener('DOMContentLoaded', function(){
+    const grid = document.querySelector('#v-brain .grid');
+    if (!grid) return;
+    const panel = document.createElement('div');
+    panel.className = 'card fx-trans fx-lift';
+    panel.style.display = 'block';
+    panel.innerHTML = `
+      <div style="font-weight:800">Visual & 3D (presets)</div>
+      <div style="margin-top:8px;display:grid;gap:10px">
+        <label style="display:flex;align-items:center;gap:8px">
+          <span>Preset:</span>
+          <select id="visualPreset" class="input ring" style="max-width:260px">
+            <option value="blue1">Blue‑1 (shader)</option>
+            <option value="strong">Strong</option>
+            <option value="cinematic-soft">Cinematic Soft</option>
+          </select>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px">
+          <input id="overlayToggle" type="checkbox" />
+          <span>Overlay de cor por arquétipo</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px">
+          <input id="bloomToggle" type="checkbox" />
+          <span>Bloom fotográfico (post)</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px">
+          <span>Glow/Toon:</span>
+          <input id="glowRange" type="range" min="0" max="1" step="0.05" style="flex:1" />
+          <span id="glowVal" class="mut" style="width:42px;text-align:right">0.80</span>
+        </label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="applyVisual" class="btn prime fx-trans fx-press ring">Aplicar<span class="ripple"></span></button>
+          <button id="resetVisual" class="btn fx-trans fx-press ring">Padrão<span class="ripple"></span></button>
+        </div>
+        <div class="mut" style="font-size:11px">
+          As preferências são salvas no seu navegador e enviadas ao arquétipo ativo.
+        </div>
+      </div>
+    `;
+    grid.appendChild(panel);
+
+    // Defaults
+    const defaults = {
+      preset: LS.get('arch:visualPreset', 'blue1'),
+      overlayOn: LS.get('arch:overlayOn', false),
+      bloomOn: LS.get('arch:bloomOn', false),
+      glow: LS.get('arch:glowStrength', 0.80)
+    };
+
+    // UI references
+    const selPreset = $('#visualPreset', panel);
+    const chkOverlay = $('#overlayToggle', panel);
+    const chkBloom = $('#bloomToggle', panel);
+    const rngGlow = $('#glowRange', panel);
+    const spnGlow = $('#glowVal', panel);
+    const btnApply = $('#applyVisual', panel);
+    const btnReset = $('#resetVisual', panel);
+
+    // Populate
+    selPreset.value = defaults.preset;
+    chkOverlay.checked = !!defaults.overlayOn;
+    chkBloom.checked = !!defaults.bloomOn;
+    rngGlow.value = defaults.glow;
+    spnGlow.textContent = Number(defaults.glow).toFixed(2);
+
+    rngGlow.addEventListener('input', () => { spnGlow.textContent = Number(rngGlow.value).toFixed(2); });
+
+    function saveAndApply(){
+      const state = {
+        preset: selPreset.value,
+        overlayOn: !!chkOverlay.checked,
+        bloomOn: !!chkBloom.checked,
+        glow: Number(rngGlow.value)
+      };
+      LS.set('arch:visualPreset', state.preset);
+      LS.set('arch:overlayOn', state.overlayOn);
+      LS.set('arch:bloomOn', state.bloomOn);
+      LS.set('arch:glowStrength', state.glow);
+      // Update overlay color right away
+      try {
+        const sel = document.getElementById('arch-select');
+        const base = (sel?.value || '').replace(/\.html$/i, '');
+        if (window.applyArchOverlay) window.applyArchOverlay(base);
+      } catch(e){}
+      // Send to iframe
+      try { sendVisualSettingsToFrame(); } catch(e){}
+    }
+
+    btnApply.addEventListener('click', saveAndApply);
+    btnReset.addEventListener('click', () => {
+      selPreset.value = 'blue1';
+      chkOverlay.checked = false;
+      chkBloom.checked = false;
+      rngGlow.value = 0.80;
+      spnGlow.textContent = '0.80';
+      saveAndApply();
+    });
+  });
+
+  // Canonical overlay colors for the 12 archetypes
+  const ARCH_OVERLAYS_PATCHED = {
+    atlas:  'rgba(64,158,255,0.22)',
+    nova:   'rgba(255,82,177,0.22)',
+    vitalis:'rgba(87,207,112,0.22)',
+    pulse:  'rgba(0,191,255,0.22)',
+    artemis:'rgba(255,195,0,0.22)',
+    serena: 'rgba(186,130,219,0.22)',
+    kaos:   'rgba(255,77,109,0.22)',
+    genus:  'rgba(87,207,112,0.22)',
+    lumine: 'rgba(255,213,79,0.22)',
+    solus:  'rgba(186,130,219,0.22)',
+    rhea:   'rgba(0,209,178,0.22)',
+    aion:   'rgba(255,159,67,0.22)',
+    default:'rgba(255,255,255,0.0)'
+  };
+
+  // Override applyArchOverlay to honor overlay toggle
+  (function overrideApplyArchOverlay(){
+    const LSget = (k,d)=>{ try{ const v = localStorage.getItem(k); return v?JSON.parse(v):d }catch(e){ return d } };
+    window.applyArchOverlay = function(name){
+      const key = (name || '').toLowerCase();
+      const on = !!LSget('arch:overlayOn', false);
+      const color = on ? (ARCH_OVERLAYS_PATCHED[key] || ARCH_OVERLAYS_PATCHED.default) : 'rgba(0,0,0,0)';
+      document.documentElement.style.setProperty('--arch-overlay', color);
+    };
+    // Apply once at startup for current selection
+    document.addEventListener('DOMContentLoaded', function(){
+      const sel = document.getElementById('arch-select');
+      const base = (sel?.value || '').replace(/\.html$/i, '');
+      window.applyArchOverlay(base);
+    });
+  })();
+
+  // PostMessage: send visual settings to archetype iframe
+  function currentVisualSettings(){
+    const LSget = (k,d)=>{ try{ const v = localStorage.getItem(k); return v?JSON.parse(v):d }catch(e){ return d } };
+    return {
+      preset: LSget('arch:visualPreset','blue1'),
+      bloom: !!LSget('arch:bloomOn', false),
+      glow: Number(LSget('arch:glowStrength', 0.80)),
+      overlayOn: !!LSget('arch:overlayOn', false)
+    };
+  }
+  window.sendVisualSettingsToFrame = function(){
+    try {
+      const f = document.getElementById('arch-frame');
+      if (f && f.contentWindow) {
+        f.contentWindow.postMessage({ type:'visualSettings', data: currentVisualSettings() }, '*');
+      }
+    } catch(e){}
+  };
+
+  // Send settings whenever the iframe loads or signals readiness
+  document.addEventListener('DOMContentLoaded', function(){
+    const f = document.getElementById('arch-frame');
+    if (f) {
+      f.addEventListener('load', () => { try { sendVisualSettingsToFrame(); } catch(e){} });
+      // small delay to ensure child is ready
+      setTimeout(() => { try { sendVisualSettingsToFrame(); } catch(e){} }, 800);
+    }
+  });
+  window.addEventListener('message', (ev) => {
+    const msg = ev?.data || {};
+    if (msg && msg.type === 'archReady') {
+      try { sendVisualSettingsToFrame(); } catch(e){}
+    }
+  });
+
+})();
+</script>
+
+<script src="dual_multiagent_v12_locked_fixed.js"></script>
+<script src="UNO_patch_arch3d_particles.js"></script>
+<script src="blue-1.js"></script>
+
+<script>
+(function(){
+  const selArch   = document.getElementById('arch-select');
+  const selPreset = document.getElementById('arch-preset');
+  const frame     = document.getElementById('arch-frame');
+  if (!selArch || !frame || !selPreset) return;
+  const LS = { get:(k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d }catch{ return d } },
+               set:(k,v)=>{ try{ localStorage.setItem(k, JSON.stringify(v)) }catch{} } };
+  // Load saved preset
+  const saved = (LS.get('uno:arch:preset')||'blue1').toLowerCase();
+  if (['blue1','strong','cinematic','off'].includes(saved)) selPreset.value = saved;
+  function apply(){
+    if (!selArch.value) return;
+    const url = new URL(selArch.value, location.href);
+    const preset = selPreset.value || 'blue1';
+    if (preset==='off') { url.searchParams.delete('preset'); } else { url.searchParams.set('preset', preset); }
+    frame.src = url.toString();
+    LS.set('uno:arch:preset', preset);
+  }
+  selPreset.addEventListener('change', apply);
+  selArch.addEventListener('change', apply);
+  // Initial apply if iframe empty
+  if (!frame.getAttribute('src')) apply();
+})();
+</script>
+<script type="module" src="UNO_patch_arch3d_bloom.js" defer></script>
+ 
+
+<script type="module" src="UNO_patch_arch3d.js"defer></script>
+
+
+
+ <script type="module" src="dual_multiagent_v12_locked_fixed.js"defer></script>
+ 
+
+ <script type="module" src="UNO_patch_arch3d_particles.js" defer></script>
+
+ <script type="module" src="blue-1.js"defer></script>
+
+
+ <script type="module" src="uno_audio_breath.js" defer></script>
+</body></html>
