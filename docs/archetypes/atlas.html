@@ -1,219 +1,173 @@
 <!doctype html>
 <html lang="pt-BR">
-<meta charset="utf-8">
-<title>Atlas • Cubo</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-  :root {
-    --bg: transparent;        /* fundo transparente para integrar com overlay do host */
-    --line: #8fd3ff;          /* cor principal Blue‑1 */
-    --glow: 24px;             /* força de glow base */
-    --bloom: 1;               /* multiplica o blur/sombra para um look mais fotográfico */
-    --lineWidth: 1.6;         /* espessura */
-    --rotateSpeed: 0.6;       /* rotações por segundo */
-  }
-  html,body {height:100%}
-  body { margin:0; background:var(--bg); overflow:hidden; color:#eaf6ff; font:14px/1.4 ui-sans-serif, system-ui; }
-  canvas { position:fixed; inset:0; width:100%; height:100%; display:block; }
-  .label {
-     position:fixed; left:0; right:0; bottom:10px; text-align:center; 
-     letter-spacing:.08em; text-transform:uppercase; font-weight:600; opacity:.8;
-     text-shadow:0 0 8px #35b6ff, 0 0 20px #35b6ff;
-     pointer-events:none;
-  }
-</style>
-<canvas id="solid"></canvas>
-<div class="label">Atlas — Cubo</div>
-<script>
-(function() {
-  // ========= util =========
-  const TAU = Math.PI*2;
-  const φ = (1+Math.sqrt(5))/2;
-  const canvas = document.getElementById('solid');
-  const ctx = canvas.getContext('2d');
+<head>
+  <meta charset="utf-8">
+  <title>Atlas • Cubo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root {
+      --bg: transparent;                 /* transparente para casar com o HUB */
+      --line: #409eff;                    /* cor principal (arquetipo) */
+      --ballOpacity: 0.68;               /* opacidade da “bolinha” (mesh/wireframe) */
+      --bloomStrength: 0.85;             /* 0.0–2.0 (força do bloom) */
+      --bloomRadius: 0.22;               /* 0.0–1.0 (raio do bloom) */
+      --bloomThreshold: 0.24;            /* 0.0–1.0 (limiar do bloom) */
+      --rotateSpeed: 0.55;               /* rotações/seg (base) */
+      --breath: 0.08;                    /* intensidade de “respiração” (0–0.2) */
+      --wireOpacity: 0.35;               /* opacidade do contorno */
+    }
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);overflow:hidden;color:#eaf6ff;font:14px/1.4 ui-sans-serif,system-ui}
+    canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+    .label{
+      position:fixed;left:0;right:0;bottom:10px;text-align:center;
+      letter-spacing:.08em;text-transform:uppercase;font-weight:600;opacity:.78;
+      text-shadow:0 0 8px #409eff, 0 0 20px #409eff;
+      pointer-events:none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="view"></canvas>
+  <div class="label">Atlas • Cubo</div>
 
-  function size() {
-    const dpr = window.devicePixelRatio||1;
-    canvas.width  = Math.floor(innerWidth*dpr);
-    canvas.height = Math.floor(innerHeight*dpr);
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
-    return dpr;
-  }
-  let DPR = size();
-  addEventListener('resize', () => DPR = size());
-
-  // ========= geometry =========
-  function solidData(kind) {
-    // returns {verts: [x,y,z][], edges: [i,j][]}
-    if (kind==='tetra') {
-      const v = [
-        [ 1, 1, 1],
-        [-1,-1, 1],
-        [-1, 1,-1],
-        [ 1,-1,-1]
-      ];
-      const e = [[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]];
-      return {verts:v, edges:e};
-    }
-    if (kind==='hexa') { // cube
-      const v = [];
-      for (let x of [-1,1]) for (let y of [-1,1]) for (let z of [-1,1]) v.push([x,y,z]);
-      const id = (x,y,z)=> (x+1)/2*4 + (y+1)/2*2 + (z+1)/2;
-      const e = [];
-      const xs=[-1,1], ys=[-1,1], zs=[-1,1];
-      for (let xi=0; xi<2; xi++) for (let yi=0; yi<2; yi++) {
-        e.push([id(xs[xi],ys[yi],-1), id(xs[xi],ys[yi],1)]);
-      }
-      for (let xi=0; xi<2; xi++) for (let zi=0; zi<2; zi++) {
-        e.push([id(xs[xi],-1,zs[zi]), id(xs[xi],1,zs[zi])]);
-      }
-      for (let yi=0; yi<2; yi++) for (let zi=0; zi<2; zi++) {
-        e.push([id(-1,ys[yi],zs[zi]), id(1,ys[yi],zs[zi])]);
-      }
-      return {verts:v, edges:e};
-    }
-    if (kind==='octa') {
-      const v = [
-        [ 1, 0, 0],[-1, 0, 0],
-        [ 0, 1, 0],[ 0,-1, 0],
-        [ 0, 0, 1],[ 0, 0,-1]
-      ];
-      const e = [[0,2],[0,3],[0,4],[0,5],[1,2],[1,3],[1,4],[1,5],[2,4],[2,5],[3,4],[3,5]];
-      return {verts:v, edges:e};
-    }
-    if (kind==='icosa') {
-      const t = φ;
-      const v = [
-        [-1, t, 0],[ 1, t, 0],[-1,-t, 0],[ 1,-t, 0],
-        [ 0,-1, t],[ 0, 1, t],[ 0,-1,-t],[ 0, 1,-t],
-        [ t, 0,-1],[ t, 0, 1],[-t, 0,-1],[-t, 0, 1]
-      ];
-      // normalized
-      for(let i=0;i<v.length;i++) {
-        const [x,y,z]=v[i]; const m=Math.hypot(x,y,z); v[i]=[x/m,y/m,z/m];
-      }
-      const e = [
-        [0,1],[0,5],[0,7],[0,10],[0,11],
-        [1,5],[1,7],[1,8],[1,9],
-        [2,3],[2,4],[2,6],[2,10],[2,11],
-        [3,4],[3,6],[3,8],[3,9],
-        [4,5],[4,9],[4,11],
-        [5,9],[5,11],
-        [6,7],[6,8],[6,10],
-        [7,8],[7,10],
-        [8,9],[10,11]
-      ];
-      return {verts:v, edges:e};
-    }
-    if (kind==='dodeca') {
-      const t = φ;
-      // Build from icosa dual. Dodeca vertices are permutations of (±1, ±1, ±1), (0, ±1/φ, ±φ), (±1/φ, ±φ, 0), (±φ, 0, ±1/φ)
-      const a = 1/ t;
-      const b = t;
-      const v = [];
-      // (±1, ±1, ±1)
-      for (let x of [-1,1]) for (let y of [-1,1]) for (let z of [-1,1]) v.push([x,y,z]);
-      // (0, ±a, ±b)
-      for (let y of [-a,a]) for (let z of [-b,b]) v.push([0,y,z]);
-      for (let y of [-b,b]) for (let z of [-a,a]) v.push([0,y,z]); // (0, ±b, ±a)
-      // (±a, ±b, 0)
-      for (let x of [-a,a]) for (let y of [-b,b]) v.push([x,y,0]);
-      for (let x of [-b,b]) for (let y of [-a,a]) v.push([x,y,0]); // (±b, ±a,0)
-      // (±a,0,±b)
-      for (let x of [-a,a]) for (let z of [-b,b]) v.push([x,0,z]);
-      for (let x of [-b,b]) for (let z of [-a,a]) v.push([x,0,z]); // (±b,0,±a)
-      // normalize a bit
-      for(let i=0;i<v.length;i++) { const [x,y,z]=v[i]; const m=Math.hypot(x,y,z); v[i]=[x/m,y/m,z/m]; }
-      // edges from standard dodeca connectivity (approximate selection to keep wireframe coherent)
-      // We'll compute edges by connecting vertices whose distance is close for a dodecahedron.
-      const edges=[]; 
-      for(let i=0;i<v.length;i++) for(let j=i+1;j<v.length;j++) {
-        const [x1,y1,z1]=v[i], [x2,y2,z2]=v[j];
-        const d = Math.hypot(x1-x2,y1-y2,z1-z2);
-        if (d>0.9 && d<1.35) edges.push([i,j]); // heuristic
-      }
-      // Limit to a manageable number by removing far edges when too many
-      if (edges.length>100) edges.length=100;
-      return {verts:v, edges:edges};
-    }
-    return solidData('octa');
-  }
+  <!-- Shader 3D (Three + Toon + Bloom). Import JSM de CDN; fallback sem bloom se falhar. -->
+  <script type="module">import { SSAOPass } from 'https://unpkg.com/three@0.155.0/examples/jsm/postprocessing/SSAOPass.js';
 
   const params = new URLSearchParams(location.search);
-  const kind = (params.get('solid') || 'hexa').toLowerCase();
-  const glow = Math.max(0, Math.min(1.5, parseFloat(params.get('glow')||'0.8')));
-  const bloom = Math.max(0, Math.min(3, parseFloat(params.get('bloom')||'1.0')));
-  const lineW = Math.max(0.5, Math.min(4, parseFloat(params.get('lw')||getComputedStyle(document.documentElement).getPropertyValue('--lineWidth'))));
-  const rotateSpeed = parseFloat(params.get('rs')||getComputedStyle(document.documentElement).getPropertyValue('--rotateSpeed'));
-  const {verts, edges} = solidData(kind);
+  const SOLID_PARAM = (params.get('solid')||'cube').toLowerCase();
+  const ALPHA = parseFloat(params.get('alpha')||getComputedStyle(document.documentElement).getPropertyValue('--ballOpacity')) || 0.68;
+  const ROT_S = parseFloat(params.get('rs')||getComputedStyle(document.documentElement).getPropertyValue('--rotateSpeed')) || 0.55;
+  const BREATH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--breath')) || 0.08;
+  const BLOOM_STRENGTH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bloomStrength')) || 0.85;
+  const BLOOM_RADIUS   = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bloomRadius')) || 0.22;
+  const BLOOM_THRESH   = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bloomThreshold')) || 0.24;
+  const COLOR = '#409eff';
 
-  // ========= camera & project =========
-  let angleX=0, angleY=0;
-  function rot([x,y,z], ax, ay) {
-    // rotate first around Y (ay), then X (ax)
-    const cy=Math.cos(ay), sy=Math.sin(ay), cx=Math.cos(ax), sx=Math.sin(ax);
-    let nx =  cy*x + sy*z;
-    let nz = -sy*x + cy*z;
-    let ny =  cx*y - sx*nz;
-    nz =  sx*y + cx*nz;
-    return [nx,ny,nz];
-  }
   let audioLevel = 0;
-  window.addEventListener('message', (e)=>{
-     if (e && e.data && typeof e.data.audioLevel==='number') audioLevel = e.data.audioLevel;
-  });
+  window.addEventListener('message', (e)=>{ if(e?.data && typeof e.data.audioLevel==='number'){ audioLevel = e.data.audioLevel }});
 
-  // ========= draw =========
-  function draw(t) {
-    const w=canvas.width, h=canvas.height;
-    ctx.clearRect(0,0,w,h);
-    // breathing scale
-    const baseS = Math.min(w,h)*0.32;
-    const breathe = 1 + 0.10*Math.sin(t*0.002) + 0.35*audioLevel;
-    const s = baseS * breathe;
+  const canvas = document.getElementById('view');
+  const DPR = Math.min(2, window.devicePixelRatio||1);
 
-    angleX = t*0.001*TAU*rotateSpeed*0.2;
-    angleY = t*0.001*TAU*rotateSpeed*0.3;
-
-    // project
-    const proj = [];
-    for (let i=0; i<verts.length; i++) {
-      const [x,y,z] = rot(verts[i], angleX, angleY);
-      const d = 3/(z+3.8); // simple perspective
-      proj.push([ w/2 + x*s*d, h/2 + y*s*d, d ]);
-    }
-
-    // glow layers
-    ctx.lineCap='round';
-    ctx.lineJoin='round';
-    const baseAlpha = 0.85;
-    const layers = 4;
-    for (let L=layers; L>=1; L--) {
-      ctx.beginPath();
-      for (const [i,j] of edges) {
-        const [x1,y1] = proj[i], [x2,y2] = proj[j];
-        ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
-      }
-      ctx.strokeStyle = 'rgba(143,211,255,'+(baseAlpha*(L/layers))+')';
-      ctx.lineWidth = (lineW + (L-1)*1.2) * DPR;
-      ctx.shadowColor = 'rgba(53,182,255,'+(0.45*glow*(L/layers))+')';
-      ctx.shadowBlur = (10 + 18*L) * glow * bloom * DPR;
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-    }
-    // core crisp lines
-    ctx.beginPath();
-    for (const [i,j] of edges) {
-      const [x1,y1] = proj[i], [x2,y2] = proj[j];
-      ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
-    }
-    ctx.strokeStyle = 'rgba(220,245,255,0.92)';
-    ctx.lineWidth = lineW * DPR;
-    ctx.stroke();
-
-    requestAnimationFrame(draw);
+  function size(renderer,camera) {
+    const w = innerWidth, h = innerHeight;
+    renderer.setPixelRatio(DPR);
+    renderer.setSize(w,h,false);
+    camera.aspect = w/h; camera.updateProjectionMatrix();
   }
-  requestAnimationFrame(draw);
-})();
-</script>
+
+  function makeGeometry(kind, THREE) {
+    switch(kind){
+      case 'cube': case 'hexa': return new THREE.BoxGeometry(1,1,1, 1,1,1);
+      case 'tetra': return new THREE.TetrahedronGeometry(1);
+      case 'octa': return new THREE.OctahedronGeometry(1);
+      case 'dodeca': return new THREE.DodecahedronGeometry(1);
+      case 'icosa': return new THREE.IcosahedronGeometry(1);
+      default: return new THREE.BoxGeometry(1,1,1);
+    }
+  }
+
+  function gradientMap(THREE) {
+    // 5 band toon gradient
+    const steps = 5;
+    const data = new Uint8Array(steps*3);
+    for(let i=0;i<steps;i++) {
+      const v = Math.round((i/(steps-1))*255);
+      data[i*3+0] = v; data[i*3+1] = v; data[i*3+2] = v;
+    }
+    const tex = new THREE.DataTexture(data, steps, 1, THREE.RGBFormat);
+    tex.needsUpdate = true;
+    return tex;
+  }
+
+  async function init() {
+    // Import core + postprocessing (try, then fallback)
+    const THREE = await import('https://unpkg.com/three@0.155.0/build/three.module.js');
+    let POST = null;
+    try {
+      const [
+        { EffectComposer },
+        { RenderPass },
+        { UnrealBloomPass }
+      ] = await Promise.all([
+        import('https://unpkg.com/three@0.155.0/examples/jsm/postprocessing/EffectComposer.js'),
+        import('https://unpkg.com/three@0.155.0/examples/jsm/postprocessing/RenderPass.js'),
+        import('https://unpkg.com/three@0.155.0/examples/jsm/postprocessing/UnrealBloomPass.js'),
+      ]);
+      POST = { EffectComposer, RenderPass, UnrealBloomPass };
+    } catch(err) {
+      console.warn('[Archetype]', 'Postprocessing indisponível; executando sem bloom.', err);
+    }
+
+    // Scene
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 50);
+    camera.position.set(0,0,3.4);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:true, powerPreference:'high-performance' });
+    size(renderer,camera);
+    addEventListener('resize', ()=> size(renderer,camera));
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const keyL = new THREE.DirectionalLight(0xffffff, 0.85); keyL.position.set(3,2,4); scene.add(keyL);
+    const rimL = new THREE.DirectionalLight(0x66b3ff, 0.35); rimL.position.set(-3,-2,-4); scene.add(rimL);
+
+    // Solid
+    const geo = makeGeometry(SOLID_PARAM, THREE);
+    const mat = new THREE.MeshToonMaterial({
+      color: COLOR, transparent:true, opacity: ALPHA,
+      gradientMap: gradientMap(THREE),
+      emissive: COLOR, emissiveIntensity: 0.12
+    });
+    const mesh = new THREE.Mesh(geo, mat); scene.add(mesh);
+
+    // Wireframe/edges
+    const wire = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({
+      color: 0xffffff, transparent:true, opacity: Math.min(1, ALPHA*0.6)
+    }));
+    scene.add(wire);
+
+    // Composer (optional bloom)
+    let composer = null, bloomPass = null;
+    if (POST) {
+      const { EffectComposer, RenderPass, UnrealBloomPass } = POST;
+      composer = new EffectComposer(renderer);
+      composer.addPass(new RenderPass(scene, camera));
+      bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), BLOOM_STRENGTH, BLOOM_RADIUS, BLOOM_THRESH);
+      composer.addPass(bloomPass);
+      addEventListener('resize', ()=> bloomPass.setSize(innerWidth, innerHeight));
+    }
+
+    // Animate
+    let t0 = performance.now()*0.001;
+    function tick() {
+      const t = performance.now()*0.001;
+      const dt = t - t0; t0 = t;
+      // rotation + breath (audio reactive)
+      const breathe = 1 + (BREATH * (0.25 + Math.min(1, audioLevel*2.0)));
+      mesh.rotation.x += dt * (ROT_S*0.8);
+      mesh.rotation.y += dt * (ROT_S*1.1);
+      wire.rotation.copy(mesh.rotation);
+      const s = 1.0 * breathe;
+      mesh.scale.setScalar(s);
+      wire.scale.setScalar(s);
+
+      if (composer) composer.render();
+      else renderer.render(scene, camera);
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  init().catch(err=>{
+    console.error('[Archetype] falhou ao iniciar', err);
+    // Mostra um fallback simples
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'rgba(255,255,255,.1)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  });
+  </script>
+</body>
+</html>
