@@ -1,59 +1,219 @@
-<!doctype html><meta charset="utf-8"><title>Ritual Atlas</title>
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<title>Atlas • Cubo</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-  :root{ --acc:#9bb3ff; --acc2:#29d3ff; --ok:#8a5cff; --speed:4s; }
-  html,body{height:100%}
-  body{margin:0;background:#0a0b13;color:#ecf0ff;font:16px/1.4 system-ui;overflow:hidden}
-  .stage{position:fixed;inset:0;display:grid;place-items:center;contain:paint}
-  .core{width:260px;height:260px;border-radius:50%;position:relative;
-        background:radial-gradient(circle at 30% 30%, var(--ok), var(--acc) 60%, transparent 62%),
-                   conic-gradient(var(--acc), var(--acc2), var(--ok), var(--acc));
-        filter:drop-shadow(0 0 24px var(--acc)) drop-shadow(0 0 42px var(--acc2));
-        animation:spin var(--speed) linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .p{position:absolute; width:8px;height:8px; border-radius:50%; background:var(--ok); opacity:.9}
-  .p:nth-child(odd){ background:var(--acc2) }
-  .label{position:fixed; inset:auto 0 22px; text-align:center; opacity:.75}
-
-  .fx-flare .core{ animation: spin var(--speed) linear infinite, flare 2.5s ease-in-out infinite }
-  @keyframes flare{ 0%{filter:drop-shadow(0 0 18px var(--acc))} 50%{filter:drop-shadow(0 0 36px var(--acc2))} 100%{filter:drop-shadow(0 0 18px var(--acc))} }
-  .fx-iris .core{ box-shadow: inset 0 0 40px #000; background:
-     radial-gradient(circle at 50% 50%, #0006 0% 20%, transparent 20%),
-     conic-gradient(var(--acc), var(--acc2), var(--ok), var(--acc)); }
-  .fx-warp .p{ animation: warp 2.8s ease-in-out infinite }
-  @keyframes warp{0%{transform:translate(0,0) scale(.7)}50%{transform:translate(24px,-24px) scale(1.1)}100%{transform:translate(0,0) scale(.7)}}
+  :root {
+    --bg: transparent;        /* fundo transparente para integrar com overlay do host */
+    --line: #8fd3ff;          /* cor principal Blue‑1 */
+    --glow: 24px;             /* força de glow base */
+    --bloom: 1;               /* multiplica o blur/sombra para um look mais fotográfico */
+    --lineWidth: 1.6;         /* espessura */
+    --rotateSpeed: 0.6;       /* rotações por segundo */
+  }
+  html,body {height:100%}
+  body { margin:0; background:var(--bg); overflow:hidden; color:#eaf6ff; font:14px/1.4 ui-sans-serif, system-ui; }
+  canvas { position:fixed; inset:0; width:100%; height:100%; display:block; }
+  .label {
+     position:fixed; left:0; right:0; bottom:10px; text-align:center; 
+     letter-spacing:.08em; text-transform:uppercase; font-weight:600; opacity:.8;
+     text-shadow:0 0 8px #35b6ff, 0 0 20px #35b6ff;
+     pointer-events:none;
+  }
 </style>
-<div class="stage fx-warp">
-  <div class="core"></div>
-</div>
-<div class="label">Ritual • Atlas</div>
-
-
+<canvas id="solid"></canvas>
+<div class="label">Atlas — Cubo</div>
 <script>
-// Added interactive features: cycle animation effects and speak description.
-(function(){
-  const archetypes = {"luxara": {"desc": "Luxara incentiva você a energizar sua luz interior e harmonizar opostos.", "tips": ["Explore novas perspectivas com curiosidade.", "Use sua luz para iluminar desafios ao seu redor.", "Procure equilíbrio entre ação e reflexão."], "effects": ["fx-flare", "fx-iris", "fx-warp", "fx-fade"]}, "aion": {"desc": "Aion convida à contemplação do tempo, ciclos e ritmos pessoais.", "tips": ["Reserve momentos para refletir sobre suas jornadas.", "Sincronize metas com o ritmo natural do seu corpo.", "Valorize cada segundo – a percepção de tempo é flexível."], "effects": ["fx-iris", "fx-warp", "fx-flare", "fx-fade"]}, "atlas": {"desc": "Atlas inspira planejamento, estrutura e construção de caminhos.", "tips": ["Divida objetivos grandes em ações menores e alcançáveis.", "Mapa mental: desenhe as etapas de sua próxima conquista.", "Reflita sobre o que sustenta suas responsabilidades."], "effects": ["fx-warp", "fx-flare", "fx-iris", "fx-fade"]}, "nova": {"desc": "Nova incentiva a geração de ideias e conexões criativas.", "tips": ["Escreva uma lista de dez ideias sem julgá-las.", "Assista ou leia algo fora da sua área para ter insights.", "Combine conceitos distantes para inovar."], "effects": ["fx-fade", "fx-flare", "fx-iris", "fx-warp"]}, "genus": {"desc": "Genus lembra você de explorar origens, identidade e propósito.", "tips": ["Reflita sobre sua história e como ela molda seus objetivos.", "Converse com alguém sobre heranças culturais.", "Escreva um manifesto pessoal de valores."], "effects": ["fx-iris", "fx-flare", "fx-warp", "fx-fade"]}, "rhea": {"desc": "Rhea destaca o cuidado, a nutrição e a conexão com o coletivo.", "tips": ["Pratique um ato de gentileza hoje.", "Cuidar de si é fundamental para cuidar dos outros.", "Construa redes de apoio mútuo."], "effects": ["fx-fade", "fx-iris", "fx-flare", "fx-warp"]}, "elysha": {"desc": "Elysha desperta intuições e estimula insights criativos.", "tips": ["Medite por cinco minutos em silêncio.", "Faça um desenho livre sem objetivo definido.", "Confie no primeiro pensamento que surgir."], "effects": ["fx-flare", "fx-fade", "fx-iris", "fx-warp"]}, "horus": {"desc": "Horus simboliza visão, proteção e perspectiva ampla.", "tips": ["Observe seu dia de cima, como um pássaro.", "Planeje estratégias levando em conta o longo prazo.", "Proteja seus projetos definindo limites claros."], "effects": ["fx-iris", "fx-flare", "fx-warp", "fx-fade"]}, "kaion": {"desc": "Kaion harmoniza equilíbrio e transformação constante.", "tips": ["Reconheça ciclos em sua vida e abrace mudanças.", "Equilibre obrigações e prazeres de maneira saudável.", "Pratique flexibilidade frente ao inesperado."], "effects": ["fx-warp", "fx-iris", "fx-flare", "fx-fade"]}, "kaos": {"desc": "Kaos incentiva a abraçar a desordem como fonte de criatividade.", "tips": ["Liberte-se de rotinas rígidas por um dia.", "Transforme erros em oportunidades de aprendizado.", "Experimente algo que te tire da zona de conforto."], "effects": ["fx-warp", "fx-flare", "fx-iris", "fx-fade"]}, "ignyra": {"desc": "Ignyra acende paixão, energia e impulso criativo.", "tips": ["Defina uma meta ousada e dê o primeiro passo agora.", "Pratique um exercício físico breve para energizar-se.", "Concentre-se no que te faz vibrar."], "effects": ["fx-flare", "fx-warp", "fx-iris", "fx-fade"]}, "lumine": {"desc": "Lumine traz claridade, otimismo e iluminação pessoal.", "tips": ["Liste três coisas pelas quais você é grato hoje.", "Abra as janelas e deixe a luz entrar.", "Ilumine o caminho de alguém com um elogio sincero."], "effects": ["fx-flare", "fx-fade", "fx-iris", "fx-warp"]}};
-  const name = (document.title.replace(/Ritual\s+/i,'') || '').trim().toLowerCase();
-  const stage = document.querySelector('.stage');
-  const label = document.querySelector('.label');
-  if(!stage || !label) return;
-  const data = archetypes[name] || {desc:'',tips:[],effects:['fx-flare','fx-iris','fx-warp','fx-fade']};
-  const tip = data.tips.length ? data.tips[Math.floor(Math.random()*data.tips.length)] : '';
-  label.textContent = label.textContent + (tip ? ' — '+tip : '');
-  let idx = 0;
-  stage.addEventListener('click',()=>{
-    data.effects.forEach(cls=> stage.classList.remove(cls));
-    idx = (idx + 1) % data.effects.length;
-    stage.classList.add(data.effects[idx]);
+(function() {
+  // ========= util =========
+  const TAU = Math.PI*2;
+  const φ = (1+Math.sqrt(5))/2;
+  const canvas = document.getElementById('solid');
+  const ctx = canvas.getContext('2d');
+
+  function size() {
+    const dpr = window.devicePixelRatio||1;
+    canvas.width  = Math.floor(innerWidth*dpr);
+    canvas.height = Math.floor(innerHeight*dpr);
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    return dpr;
+  }
+  let DPR = size();
+  addEventListener('resize', () => DPR = size());
+
+  // ========= geometry =========
+  function solidData(kind) {
+    // returns {verts: [x,y,z][], edges: [i,j][]}
+    if (kind==='tetra') {
+      const v = [
+        [ 1, 1, 1],
+        [-1,-1, 1],
+        [-1, 1,-1],
+        [ 1,-1,-1]
+      ];
+      const e = [[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]];
+      return {verts:v, edges:e};
+    }
+    if (kind==='hexa') { // cube
+      const v = [];
+      for (let x of [-1,1]) for (let y of [-1,1]) for (let z of [-1,1]) v.push([x,y,z]);
+      const id = (x,y,z)=> (x+1)/2*4 + (y+1)/2*2 + (z+1)/2;
+      const e = [];
+      const xs=[-1,1], ys=[-1,1], zs=[-1,1];
+      for (let xi=0; xi<2; xi++) for (let yi=0; yi<2; yi++) {
+        e.push([id(xs[xi],ys[yi],-1), id(xs[xi],ys[yi],1)]);
+      }
+      for (let xi=0; xi<2; xi++) for (let zi=0; zi<2; zi++) {
+        e.push([id(xs[xi],-1,zs[zi]), id(xs[xi],1,zs[zi])]);
+      }
+      for (let yi=0; yi<2; yi++) for (let zi=0; zi<2; zi++) {
+        e.push([id(-1,ys[yi],zs[zi]), id(1,ys[yi],zs[zi])]);
+      }
+      return {verts:v, edges:e};
+    }
+    if (kind==='octa') {
+      const v = [
+        [ 1, 0, 0],[-1, 0, 0],
+        [ 0, 1, 0],[ 0,-1, 0],
+        [ 0, 0, 1],[ 0, 0,-1]
+      ];
+      const e = [[0,2],[0,3],[0,4],[0,5],[1,2],[1,3],[1,4],[1,5],[2,4],[2,5],[3,4],[3,5]];
+      return {verts:v, edges:e};
+    }
+    if (kind==='icosa') {
+      const t = φ;
+      const v = [
+        [-1, t, 0],[ 1, t, 0],[-1,-t, 0],[ 1,-t, 0],
+        [ 0,-1, t],[ 0, 1, t],[ 0,-1,-t],[ 0, 1,-t],
+        [ t, 0,-1],[ t, 0, 1],[-t, 0,-1],[-t, 0, 1]
+      ];
+      // normalized
+      for(let i=0;i<v.length;i++) {
+        const [x,y,z]=v[i]; const m=Math.hypot(x,y,z); v[i]=[x/m,y/m,z/m];
+      }
+      const e = [
+        [0,1],[0,5],[0,7],[0,10],[0,11],
+        [1,5],[1,7],[1,8],[1,9],
+        [2,3],[2,4],[2,6],[2,10],[2,11],
+        [3,4],[3,6],[3,8],[3,9],
+        [4,5],[4,9],[4,11],
+        [5,9],[5,11],
+        [6,7],[6,8],[6,10],
+        [7,8],[7,10],
+        [8,9],[10,11]
+      ];
+      return {verts:v, edges:e};
+    }
+    if (kind==='dodeca') {
+      const t = φ;
+      // Build from icosa dual. Dodeca vertices are permutations of (±1, ±1, ±1), (0, ±1/φ, ±φ), (±1/φ, ±φ, 0), (±φ, 0, ±1/φ)
+      const a = 1/ t;
+      const b = t;
+      const v = [];
+      // (±1, ±1, ±1)
+      for (let x of [-1,1]) for (let y of [-1,1]) for (let z of [-1,1]) v.push([x,y,z]);
+      // (0, ±a, ±b)
+      for (let y of [-a,a]) for (let z of [-b,b]) v.push([0,y,z]);
+      for (let y of [-b,b]) for (let z of [-a,a]) v.push([0,y,z]); // (0, ±b, ±a)
+      // (±a, ±b, 0)
+      for (let x of [-a,a]) for (let y of [-b,b]) v.push([x,y,0]);
+      for (let x of [-b,b]) for (let y of [-a,a]) v.push([x,y,0]); // (±b, ±a,0)
+      // (±a,0,±b)
+      for (let x of [-a,a]) for (let z of [-b,b]) v.push([x,0,z]);
+      for (let x of [-b,b]) for (let z of [-a,a]) v.push([x,0,z]); // (±b,0,±a)
+      // normalize a bit
+      for(let i=0;i<v.length;i++) { const [x,y,z]=v[i]; const m=Math.hypot(x,y,z); v[i]=[x/m,y/m,z/m]; }
+      // edges from standard dodeca connectivity (approximate selection to keep wireframe coherent)
+      // We'll compute edges by connecting vertices whose distance is close for a dodecahedron.
+      const edges=[]; 
+      for(let i=0;i<v.length;i++) for(let j=i+1;j<v.length;j++) {
+        const [x1,y1,z1]=v[i], [x2,y2,z2]=v[j];
+        const d = Math.hypot(x1-x2,y1-y2,z1-z2);
+        if (d>0.9 && d<1.35) edges.push([i,j]); // heuristic
+      }
+      // Limit to a manageable number by removing far edges when too many
+      if (edges.length>100) edges.length=100;
+      return {verts:v, edges:edges};
+    }
+    return solidData('octa');
+  }
+
+  const params = new URLSearchParams(location.search);
+  const kind = (params.get('solid') || 'hexa').toLowerCase();
+  const glow = Math.max(0, Math.min(1.5, parseFloat(params.get('glow')||'0.8')));
+  const bloom = Math.max(0, Math.min(3, parseFloat(params.get('bloom')||'1.0')));
+  const lineW = Math.max(0.5, Math.min(4, parseFloat(params.get('lw')||getComputedStyle(document.documentElement).getPropertyValue('--lineWidth'))));
+  const rotateSpeed = parseFloat(params.get('rs')||getComputedStyle(document.documentElement).getPropertyValue('--rotateSpeed'));
+  const {verts, edges} = solidData(kind);
+
+  // ========= camera & project =========
+  let angleX=0, angleY=0;
+  function rot([x,y,z], ax, ay) {
+    // rotate first around Y (ay), then X (ax)
+    const cy=Math.cos(ay), sy=Math.sin(ay), cx=Math.cos(ax), sx=Math.sin(ax);
+    let nx =  cy*x + sy*z;
+    let nz = -sy*x + cy*z;
+    let ny =  cx*y - sx*nz;
+    nz =  sx*y + cx*nz;
+    return [nx,ny,nz];
+  }
+  let audioLevel = 0;
+  window.addEventListener('message', (e)=>{
+     if (e && e.data && typeof e.data.audioLevel==='number') audioLevel = e.data.audioLevel;
   });
-  label.style.cursor = 'pointer';
-  label.addEventListener('click',()=>{
-    try{
-      const u = new SpeechSynthesisUtterance(data.desc);
-      const voices = speechSynthesis.getVoices().filter(v=>v.lang.startsWith('pt')||v.lang.startsWith('en'));
-      if(voices.length) u.voice = voices[0];
-      speechSynthesis.cancel();
-      speechSynthesis.speak(u);
-    }catch(e){}
-  });
+
+  // ========= draw =========
+  function draw(t) {
+    const w=canvas.width, h=canvas.height;
+    ctx.clearRect(0,0,w,h);
+    // breathing scale
+    const baseS = Math.min(w,h)*0.32;
+    const breathe = 1 + 0.10*Math.sin(t*0.002) + 0.35*audioLevel;
+    const s = baseS * breathe;
+
+    angleX = t*0.001*TAU*rotateSpeed*0.2;
+    angleY = t*0.001*TAU*rotateSpeed*0.3;
+
+    // project
+    const proj = [];
+    for (let i=0; i<verts.length; i++) {
+      const [x,y,z] = rot(verts[i], angleX, angleY);
+      const d = 3/(z+3.8); // simple perspective
+      proj.push([ w/2 + x*s*d, h/2 + y*s*d, d ]);
+    }
+
+    // glow layers
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+    const baseAlpha = 0.85;
+    const layers = 4;
+    for (let L=layers; L>=1; L--) {
+      ctx.beginPath();
+      for (const [i,j] of edges) {
+        const [x1,y1] = proj[i], [x2,y2] = proj[j];
+        ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+      }
+      ctx.strokeStyle = 'rgba(143,211,255,'+(baseAlpha*(L/layers))+')';
+      ctx.lineWidth = (lineW + (L-1)*1.2) * DPR;
+      ctx.shadowColor = 'rgba(53,182,255,'+(0.45*glow*(L/layers))+')';
+      ctx.shadowBlur = (10 + 18*L) * glow * bloom * DPR;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+    // core crisp lines
+    ctx.beginPath();
+    for (const [i,j] of edges) {
+      const [x1,y1] = proj[i], [x2,y2] = proj[j];
+      ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+    }
+    ctx.strokeStyle = 'rgba(220,245,255,0.92)';
+    ctx.lineWidth = lineW * DPR;
+    ctx.stroke();
+
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
 })();
 </script>

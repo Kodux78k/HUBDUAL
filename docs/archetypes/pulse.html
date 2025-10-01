@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR">
 <meta charset="utf-8">
-<title>Aion • Icosaedro</title>
+<title>Pulse • Tetraedro</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
   :root {
@@ -23,7 +23,7 @@
   }
 </style>
 <canvas id="solid"></canvas>
-<div class="label">Aion — Icosaedro</div>
+<div class="label">Pulse — Tetraedro</div>
 <script>
 (function() {
   // ========= util =========
@@ -141,7 +141,7 @@
   }
 
   const params = new URLSearchParams(location.search);
-  const kind = (params.get('solid') || 'icosa').toLowerCase();
+  const kind = (params.get('solid') || 'tetra').toLowerCase();
   const glow = Math.max(0, Math.min(1.5, parseFloat(params.get('glow')||'0.8')));
   const bloom = Math.max(0, Math.min(3, parseFloat(params.get('bloom')||'1.0')));
   const lineW = Math.max(0.5, Math.min(4, parseFloat(params.get('lw')||getComputedStyle(document.documentElement).getPropertyValue('--lineWidth'))));
