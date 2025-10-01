@@ -1,16 +1,9 @@
 <!doctype html>
 <html lang="pt-BR" style="--arch-overlay: rgba(64, 158, 255, 0.22);"><head>
   <meta charset="utf-8">
-  <!-- Manifest PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0b0f14" />
-
-<!-- iOS Safe Area -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
   <title>HUB UNO — PROD (safe)</title>
-
+  <meta name="theme-color" content="#0b0f14">
   <style>
     :root {
       /* Paleta padrão (rosa/azul) */
@@ -1178,7 +1171,6 @@ body[data-theme="blue1"] #chatFeed .msg.ai { background: rgba(77, 148, 255, 0.14
 body[data-theme="blue1"] #chatFeed .msg.user { background: rgba(232,240,255,0.10); }
 
 </style>
-<link rel="stylesheet" href="blue-1.css">
 </head>
 <body>
   <!-- Splash screen displayed on initial load -->
@@ -1262,7 +1254,7 @@ body[data-theme="blue1"] #chatFeed .msg.user { background: rgba(232,240,255,0.10
             <div id="arch-fadeCover"></div>
             <!-- Camada de ripple auditivo fica sobre o conteúdo do círculo -->
             <div id="audioRipple" class="audio-ripple"></div>
-            <iframe id="arch-frame" title="Archetype Core" sandbox="allow-scripts" referrerpolicy="no-referrer" src="./archetypes/atlas.html" src="archetypes/center.html?preset=blue1"></iframe>
+            <iframe id="arch-frame" title="Archetype Core" sandbox="allow-scripts" referrerpolicy="no-referrer" src="./archetypes/atlas.html"></iframe>
           </div>
           <!-- Mensagem de feedback aparece fora da bolinha, logo abaixo dela -->
           <div id="archMsg" class="arch-msg show" style="background: rgba(57, 255, 182, 0.75); color: rgb(11, 15, 20);">Bem-vindo de volta, KODUX. UNO está ao seu lado.</div>
@@ -4482,7 +4474,12 @@ window.addEventListener('load', () => {
 
 })(); // end ChatPlus
 </script>
-  <style>
+  <script src="dual_multiagent_v1.js"></script>
+  <script src="dual_multiagent_v12_locked.js"></script>
+  <script src="openrouter_hardlock_model_v1.js" defer=""></script>
+
+
+<style>
 /* --------------------------------------------
    KOBLLUX • Compact Mode — Mobile-first Vertical
    Colar após o CSS atual
@@ -4889,49 +4886,455 @@ main .row > * + * { margin-top: .5rem; }
 })();
 </script>
 
-<script src="dual_multiagent_v12_locked_fixed.js"></script>
-<script src="UNO_patch_arch3d_particles.js"></script>
-<script src="blue-1.js"></script>
 
-<script>
+<!-- ECBG Showcase Patch -->
+<script id="ecbg-patch" type="module">
+
 (function(){
-  const selArch   = document.getElementById('arch-select');
-  const selPreset = document.getElementById('arch-preset');
-  const frame     = document.getElementById('arch-frame');
-  if (!selArch || !frame || !selPreset) return;
-  const LS = { get:(k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d }catch{ return d } },
-               set:(k,v)=>{ try{ localStorage.setItem(k, JSON.stringify(v)) }catch{} } };
-  // Load saved preset
-  const saved = (LS.get('uno:arch:preset')||'blue1').toLowerCase();
-  if (['blue1','strong','cinematic','off'].includes(saved)) selPreset.value = saved;
-  function apply(){
-    if (!selArch.value) return;
-    const url = new URL(selArch.value, location.href);
-    const preset = selPreset.value || 'blue1';
-    if (preset==='off') { url.searchParams.delete('preset'); } else { url.searchParams.set('preset', preset); }
-    frame.src = url.toString();
-    LS.set('uno:arch:preset', preset);
+  if (window.__ECBG_INIT__) return; window.__ECBG_INIT__ = true;
+
+  const log = (...a)=> { try { console.debug('[ECBG]', ...a) } catch(_) {} };
+  const qs = (sel, el=document)=> el.querySelector(sel);
+  const qsa = (sel, el=document)=> Array.from(el.querySelectorAll(sel));
+  const byId = (id)=> document.getElementById(id);
+  const LS_KEY = 'UNO.ecbg.state.v1';
+
+  function ensureHeadStyle(){
+    if (!byId('ecbg-style')) {
+      const st=document.createElement('style');
+      st.id='ecbg-style'; st.textContent = `/* === ECBG (Editable Custom Background) — Showcase + Live BG === */
+#custom-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+#custom-bg > .ecbg-layer { position: absolute; inset: 0; width: 100%; height: 100%; }
+#custom-bg video.ecbg-layer,
+#custom-bg img.ecbg-layer,
+#custom-bg iframe.ecbg-layer { object-fit: cover; background:#000; }
+#custom-bg iframe.ecbg-layer { pointer-events: none; border:0; }
+#custom-bg .ecbg-layer { filter: var(--ecbg-filter, none); opacity: var(--ecbg-opacity, 1); mix-blend-mode: var(--ecbg-blend, normal); }
+
+/* Brain → ECBG Card */
+#ecbgCard .preview {
+  position: relative; width: 100%; aspect-ratio: 16/9;
+  background: #000; border: var(--bd); border-radius: 16px; overflow: hidden;
+}
+#ecbgCard .preview .overlay-note {
+  position: absolute; right: 8px; bottom: 8px; font-size: 11px;
+  background: rgba(255,255,255,.08); border: var(--bd); border-radius: 999px;
+  padding: 4px 8px; color: var(--fg);
+}
+#ecbgCard video, #ecbgCard img, #ecbgCard iframe, #ecbgCard canvas {
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#000; border:0;
+}
+#ecbgCard .row { display:flex; flex-wrap:wrap; gap:8px; align-items:center }
+#ecbgCard .row > * { flex:1 1 160px }
+#ecbgCard .input, #ecbgCard select, #ecbgCard input[type="file"] {
+  background:#0f1426; color:var(--fg); border:var(--bd); border-radius:12px; padding:9px 10px;
+}
+#ecbgCard .slider { display:grid; grid-template-columns: 120px 1fr 56px; gap:8px; align-items:center }
+#ecbgCard .slider output { text-align:right; }`;
+      document.head.appendChild(st);
+    }
   }
-  selPreset.addEventListener('change', apply);
-  selArch.addEventListener('change', apply);
-  // Initial apply if iframe empty
-  if (!frame.getAttribute('src')) apply();
+
+  function getBGRoot(){
+    let root = byId('custom-bg');
+    if (!root){
+      root = document.createElement('div');
+      root.id = 'custom-bg';
+      root.style.cssText = 'position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none';
+      document.body.prepend(root);
+    }
+    return root;
+  }
+
+  function killSiblings(exceptEl){
+    const root = getBGRoot();
+    qsa('.ecbg-layer', root).forEach(el => { if (el!==exceptEl){ try {
+      if (el.tagName === 'VIDEO'){ try { el.pause(); } catch(_){}; el.srcObject = null; el.removeAttribute('src'); }
+    } catch(_){}; el.remove(); } });
+  }
+
+  function applyFiltersTo(el, filters){
+    const f = filters || {};
+    const filterStr = `blur(${f.blur||0}px) brightness(${f.brightness||100}%) contrast(${f.contrast||100}%) saturate(${f.saturate||100}%) hue-rotate(${f.hue||0}deg)`;
+    const opacity = (typeof f.opacity === 'number') ? f.opacity : 1;
+    const blend = f.blend || 'normal';
+    const root = getBGRoot();
+    root.style.setProperty('--ecbg-filter', filterStr);
+    root.style.setProperty('--ecbg-opacity', opacity);
+    root.style.setProperty('--ecbg-blend', blend);
+    if (el){ el.style.filter = 'none'; el.style.opacity = '1'; } // filters live at root
+  }
+
+  function persist(state){
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(_) {}
+  }
+  function restore(){
+    try { const s = localStorage.getItem(LS_KEY); return s ? JSON.parse(s) : null; } catch(_){ return null }
+  }
+
+  function buildCard(){
+    const grid = qs('#v-brain .grid');
+    if (!grid) return;
+
+    // Avoid duplicate card
+    if (byId('ecbgCard')) return;
+
+    const card = document.createElement('div');
+    card.className = 'card fx-trans fx-lift';
+    card.id = 'ecbgCard';
+    card.innerHTML = `
+      <div style="font-weight:800;display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <span>ECBG Showcase · Fundo ao vivo</span>
+        <div class="mut" style="font-size:11px">webcam • vídeo • imagem • iFrame</div>
+      </div>
+
+      <div class="preview" style="margin-top:8px">
+        <div id="ecbgPreview" style="position:relative;inset:0;width:100%;height:100%">
+          <div id="ecbgPreviewEmpty" style="position:absolute;inset:0;display:grid;place-items:center;color:var(--mut);font-size:12px">Sem fonte — selecione um modo abaixo</div>
+        </div>
+        <div class="overlay-note">Preview (não interativo)</div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <label style="flex:1">
+          <span class="mut" style="display:block;font-size:11px;margin-bottom:4px">Modo</span>
+          <select id="ecbgMode" class="input">
+            <option value="none">Off</option>
+            <option value="image">Imagem</option>
+            <option value="video">Vídeo</option>
+            <option value="webcam">Webcam</option>
+            <option value="iframe">iFrame</option>
+          </select>
+        </label>
+
+        <label id="wrapFile" style="display:none">
+          <span class="mut" style="display:block;font-size:11px;margin-bottom:4px">Arquivo</span>
+          <input id="ecbgFile" type="file" accept="image/*,video/*" />
+        </label>
+
+        <label id="wrapUrl" style="display:none">
+          <span class="mut" style="display:block;font-size:11px;margin-bottom:4px">URL (iFrame)</span>
+          <input id="ecbgUrl" class="input" placeholder="https://…" />
+        </label>
+
+        <label id="wrapCam" style="display:none">
+          <span class="mut" style="display:block;font-size:11px;margin-bottom:4px">Câmera</span>
+          <select id="ecbgCam" class="input"><option value="">Auto</option></select>
+        </label>
+      </div>
+
+      <div class="row">
+        <label style="display:flex;align-items:center;gap:6px;flex:0 0 auto">
+          <input type="checkbox" id="ecbgApply" />
+          <span class="mut" style="font-size:12px">Aplicar como BG da página</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;flex:0 0 auto" id="wrapLoop">
+          <input type="checkbox" id="ecbgLoop" checked />
+          <span class="mut" style="font-size:12px">Loop</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;flex:0 0 auto" id="wrapMute">
+          <input type="checkbox" id="ecbgMute" checked />
+          <span class="mut" style="font-size:12px">Mudo</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;flex:0 0 auto">
+          <select id="ecbgFit" class="input">
+            <option value="cover" selected>Cover</option>
+            <option value="contain">Contain</option>
+            <option value="fill">Fill</option>
+          </select>
+        </label>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button id="ecbgStart" class="btn fx-trans fx-press ring">Iniciar</button>
+          <button id="ecbgStop" class="btn fx-trans fx-press ring">Parar</button>
+          <button id="ecbgSave" class="btn prime fx-trans fx-press ring">Salvar</button>
+        </div>
+      </div>
+
+      <div class="stack" style="margin-top:10px;gap:8px">
+        <div class="slider">
+          <label class="mut">Blur</label>
+          <input id="sBlur" type="range" min="0" max="40" step="1" value="0" />
+          <output id="oBlur">0px</output>
+        </div>
+        <div class="slider">
+          <label class="mut">Brightness</label>
+          <input id="sBright" type="range" min="20" max="200" step="1" value="100" />
+          <output id="oBright">100%</output>
+        </div>
+        <div class="slider">
+          <label class="mut">Contrast</label>
+          <input id="sContrast" type="range" min="20" max="200" step="1" value="100" />
+          <output id="oContrast">100%</output>
+        </div>
+        <div class="slider">
+          <label class="mut">Saturate</label>
+          <input id="sSat" type="range" min="0" max="200" step="1" value="100" />
+          <output id="oSat">100%</output>
+        </div>
+        <div class="slider">
+          <label class="mut">Hue</label>
+          <input id="sHue" type="range" min="0" max="360" step="1" value="0" />
+          <output id="oHue">0°</output>
+        </div>
+        <div class="slider">
+          <label class="mut">Opacity</label>
+          <input id="sOp" type="range" min="0" max="100" step="1" value="100" />
+          <output id="oOp">100%</output>
+        </div>
+        <div class="row">
+          <label style="flex:0 0 160px" class="mut">Blend</label>
+          <select id="sBlend" class="input" style="max-width:240px">
+            <option value="normal" selected>normal</option>
+            <option value="screen">screen</option>
+            <option value="overlay">overlay</option>
+            <option value="soft-light">soft-light</option>
+            <option value="hard-light">hard-light</option>
+            <option value="multiply">multiply</option>
+            <option value="color-dodge">color-dodge</option>
+            <option value="color-burn">color-burn</option>
+          </select>
+          <button id="ecbgReset" class="btn fx-trans fx-press ring" style="flex:0 0 auto">Reset</button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  }
+
+  function ui(){
+    const st = restore() || {};
+    const mode = byId('ecbgMode');
+    const wrapFile = byId('wrapFile');
+    const wrapUrl  = byId('wrapUrl');
+    const wrapCam  = byId('wrapCam');
+    const file = byId('ecbgFile');
+    const url  = byId('ecbgUrl');
+    const cam  = byId('ecbgCam');
+    const apply = byId('ecbgApply');
+    const loop = byId('ecbgLoop');
+    const mute = byId('ecbgMute');
+    const fit  = byId('ecbgFit');
+
+    const sBlur = byId('sBlur'), oBlur = byId('oBlur');
+    const sBright = byId('sBright'), oBright = byId('oBright');
+    const sContrast = byId('sContrast'), oContrast = byId('oContrast');
+    const sSat = byId('sSat'), oSat = byId('oSat');
+    const sHue = byId('sHue'), oHue = byId('oHue');
+    const sOp = byId('sOp'), oOp = byId('oOp');
+    const sBlend = byId('sBlend');
+    const preview = byId('ecbgPreview');
+    const empty = byId('ecbgPreviewEmpty');
+
+    // Initialize UI from state
+    mode.value = st.mode || 'none';
+    apply.checked = !!st.apply;
+    loop.checked = (st.loop !== false);
+    mute.checked = (st.mute !== false);
+    fit.value = st.fit || 'cover';
+
+    const filters = st.filters || {};
+    sBlur.value = filters.blur ?? 0; oBlur.value = sBlur.value + 'px';
+    sBright.value = filters.brightness ?? 100; oBright.value = sBright.value + '%';
+    sContrast.value = filters.contrast ?? 100; oContrast.value = sContrast.value + '%';
+    sSat.value = filters.saturate ?? 100; oSat.value = sSat.value + '%';
+    sHue.value = filters.hue ?? 0; oHue.value = sHue.value + '°';
+    sOp.value = Math.round((filters.opacity ?? 1) * 100); oOp.value = sOp.value + '%';
+    sBlend.value = filters.blend || 'normal';
+    applyFiltersTo(null, { blur:+sBlur.value, brightness:+sBright.value, contrast:+sContrast.value, saturate:+sSat.value, hue:+sHue.value, opacity:+sOp.value/100, blend:sBlend.value });
+
+    // Show/hide inputs by mode
+    function updateInputs(){
+      wrapFile.style.display = (mode.value==='image' || mode.value==='video') ? '' : 'none';
+      wrapUrl.style.display  = (mode.value==='iframe') ? '' : 'none';
+      wrapCam.style.display  = (mode.value==='webcam') ? '' : 'none';
+    }
+    updateInputs();
+
+    // Device enumeration
+    async function fillCams(){
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cams = devices.filter(d => d.kind === 'videoinput');
+        cam.innerHTML = '<option value="">Auto</option>' + cams.map(d => `<option value="${d.deviceId}">${d.label || 'Camera'}</option>`).join('');
+        if (st.deviceId){ cam.value = st.deviceId; }
+      } catch(e){ log('enumerateDevices fail', e); }
+    }
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) fillCams();
+
+    // Helpers to build preview layer
+    function clearPreview(){
+      qsa('video,img,iframe,canvas', preview).forEach(n => { try {
+        if (n.tagName==='VIDEO'){ try { n.pause() } catch{}; n.srcObject=null; n.removeAttribute('src') }
+      } catch{}; n.remove() });
+      empty.style.display='grid';
+    }
+    function buildEl(tag){
+      empty.style.display='none';
+      const el = document.createElement(tag);
+      preview.appendChild(el);
+      return el;
+    }
+
+    let streamRef = null;
+
+    async function start(){
+      clearPreview();
+      const m = mode.value;
+      if (m==='none') return;
+      if (m==='image'){
+        if (file.files && file.files[0]){
+          const img = buildEl('img');
+          img.src = URL.createObjectURL(file.files[0]);
+        }
+      } else if (m==='video'){
+        if (file.files && file.files[0]){
+          const v = buildEl('video');
+          v.autoplay = true; v.playsInline = true; v.loop = loop.checked; v.muted = true;
+          v.src = URL.createObjectURL(file.files[0]);
+          v.addEventListener('loadedmetadata', ()=> { try { v.play() } catch(_){} });
+        }
+      } else if (m==='webcam'){
+        try {
+          const constraints = { video: { facingMode: 'user' } };
+          if (cam.value) constraints.video.deviceId = { exact: cam.value };
+          streamRef = await navigator.mediaDevices.getUserMedia(constraints);
+          const v = buildEl('video');
+          v.autoplay = true; v.playsInline = true; v.muted = true; v.srcObject = streamRef;
+          v.addEventListener('loadedmetadata', ()=> { try { v.play() } catch(_){} });
+        } catch(e){ log('getUserMedia error', e); alert('Falha ao acessar webcam: ' + e.message); }
+      } else if (m==='iframe'){
+        if (url.value && /^https?:\/\//i.test(url.value)){
+          const fr = buildEl('iframe');
+          fr.src = url.value;
+        }
+      }
+    }
+
+    function stop(){
+      // stop preview
+      clearPreview();
+      if (streamRef){ try { streamRef.getTracks().forEach(t=>t.stop()); } catch(_){}; streamRef=null; }
+    }
+
+    function toState(){
+      return {
+        mode: mode.value,
+        apply: apply.checked,
+        loop: loop.checked,
+        mute: mute.checked,
+        fit: fit.value,
+        deviceId: cam.value || null,
+        url: url.value || '',
+        filters: {
+          blur: +sBlur.value,
+          brightness: +sBright.value,
+          contrast: +sContrast.value,
+          saturate: +sSat.value,
+          hue: +sHue.value,
+          opacity: +sOp.value/100,
+          blend: sBlend.value
+        }
+      }
+    }
+
+    function applyAsBG(){
+      const state = toState();
+      const root = getBGRoot();
+      applyFiltersTo(null, state.filters);
+
+      const fitMap = { cover:'cover', contain:'contain', fill:'fill' };
+
+      if (state.mode==='none'){
+        killSiblings(null);
+        return;
+      }
+      if (state.mode==='image' && file.files && file.files[0]){
+        const el = document.createElement('img');
+        el.className = 'ecbg-layer'; el.style.objectFit = fitMap[state.fit]||'cover';
+        el.src = URL.createObjectURL(file.files[0]);
+        killSiblings(el); root.appendChild(el);
+      }
+      else if (state.mode==='video' && file.files && file.files[0]){
+        const el = document.createElement('video');
+        el.className = 'ecbg-layer'; el.style.objectFit = fitMap[state.fit]||'cover';
+        el.autoplay = true; el.playsInline = true; el.muted = !!state.mute; el.loop = !!state.loop; el.preload = 'auto';
+        el.src = URL.createObjectURL(file.files[0]);
+        el.addEventListener('loadedmetadata', ()=> { try { el.play() } catch(_){} });
+        killSiblings(el); root.appendChild(el);
+      }
+      else if (state.mode==='webcam'){
+        const el = document.createElement('video');
+        el.className = 'ecbg-layer'; el.style.objectFit = fitMap[state.fit]||'cover';
+        const constraints = { video: { facingMode: 'user' } };
+        if (state.deviceId) constraints.video.deviceId = { exact: state.deviceId };
+        navigator.mediaDevices.getUserMedia(constraints).then(stream => {
+          el.autoplay = true; el.playsInline = true; el.muted = true; el.srcObject = stream;
+          el.addEventListener('loadedmetadata', ()=> { try { el.play() } catch(_){} });
+        }).catch(e => { alert('Webcam BG falhou: '+e.message) });
+        killSiblings(el); root.appendChild(el);
+      }
+      else if (state.mode==='iframe' && state.url && /^https?:\/\//i.test(state.url)){
+        const el = document.createElement('iframe');
+        el.className = 'ecbg-layer';
+        el.src = state.url;
+        killSiblings(el); root.appendChild(el);
+      }
+    }
+
+    // Wire inputs
+    mode.addEventListener('change', ()=>{ updateInputs(); });
+    file.addEventListener('change', ()=>{});
+    url.addEventListener('input', ()=>{});
+    [sBlur,sBright,sContrast,sSat,sHue,sOp,sBlend].forEach(inp=>{
+      const update = ()=>{
+        oBlur.value = sBlur.value + 'px';
+        oBright.value = sBright.value + '%';
+        oContrast.value = sContrast.value + '%';
+        oSat.value = sSat.value + '%';
+        oHue.value = sHue.value + '°';
+        oOp.value = sOp.value + '%';
+        applyFiltersTo(null, {
+          blur:+sBlur.value, brightness:+sBright.value, contrast:+sContrast.value,
+          saturate:+sSat.value, hue:+sHue.value, opacity:+sOp.value/100, blend:sBlend.value
+        });
+        if (apply.checked) applyAsBG();
+      };
+      inp.addEventListener('input', update);
+    });
+
+    byId('ecbgStart').addEventListener('click', start);
+    byId('ecbgStop').addEventListener('click', stop);
+    byId('ecbgSave').addEventListener('click', ()=>{ const state = toState(); persist(state); if (apply.checked) applyAsBG(); });
+
+    byId('ecbgReset').addEventListener('click', ()=>{
+      sBlur.value=0; sBright.value=100; sContrast.value=100; sSat.value=100; sHue.value=0; sOp.value=100; sBlend.value='normal';
+      oBlur.value='0px'; oBright.value='100%'; oContrast.value='100%'; oSat.value='100%'; oHue.value='0°'; oOp.value='100%';
+      applyFiltersTo(null, { blur:0, brightness:100, contrast:100, saturate:100, hue:0, opacity:1, blend:'normal' });
+      if (apply.checked) applyAsBG();
+    });
+
+    // Restore persisted BG (silent)
+    if (st.apply && st.mode){
+      // we cannot resurrect file blobs; only url/iframe/webcam can auto-restore
+      if (st.mode==='iframe' && st.url){
+        url.value = st.url; mode.value = 'iframe';
+        updateInputs(); byId('ecbgStart').click();
+        apply.checked = true; applyAsBG();
+      } else if (st.mode==='webcam'){
+        mode.value = 'webcam'; updateInputs(); byId('ecbgStart').click(); apply.checked = true; applyAsBG();
+      }
+    }
+  }
+
+  function init(){
+    ensureHeadStyle();
+    buildCard();
+    ui();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once:true });
+  else init();
+
 })();
+
 </script>
-<script type="module" src="UNO_patch_arch3d_bloom.js" defer></script>
- 
-
-<script type="module" src="UNO_patch_arch3d.js"defer></script>
-
-
-
- <script type="module" src="dual_multiagent_v12_locked_fixed.js"defer></script>
- 
-
- <script type="module" src="UNO_patch_arch3d_particles.js" defer></script>
-
- <script type="module" src="blue-1.js"defer></script>
-
-
- <script type="module" src="uno_audio_breath.js" defer></script>
 </body></html>
