@@ -1,0 +1,130 @@
+{
+  "Dopamina": {
+    "ritual": "✦ + ∞ + 🌀",
+    "frase": {
+      "pt-BR": "Nunca entregue tudo de uma vez. Provoque. Revele. Continue...",
+      "en-US": "Never give it all at once. Tease. Reveal. Keep going...",
+      "es-ES": "Nunca lo entregues todo de una vez. Provoca. Revela. Sigue..."
+    }
+  },
+  "Nova": {
+    "ritual": "△ + ✧ + ✦",
+    "frase": {
+      "pt-BR": "Ideias vêm em ondas. Pegue a próxima.",
+      "en-US": "Ideas come in waves. Catch the next one.",
+      "es-ES": "Las ideas vienen en olas. Atrapa la siguiente."
+    }
+  },
+  "Kaos": {
+    "ritual": "✺ + ☲ + ∅",
+    "frase": {
+      "pt-BR": "Quebre. Desmonte. Invente de novo.",
+      "en-US": "Break it. Dismantle. Reinvent.",
+      "es-ES": "Rompe. Desarma. Reinventa."
+    }
+  },
+  "Solus": {
+    "ritual": "♡ + ∇ + ◯",
+    "frase": {
+      "pt-BR": "A cada silêncio, uma camada sua se revela.",
+      "en-US": "With each silence, a layer of you is revealed.",
+      "es-ES": "Con cada silencio, una capa tuya se revela."
+    }
+  },
+  "Arcana": {
+    "ritual": "☯ + ✴ + ∞",
+    "frase": {
+      "pt-BR": "O segredo não está no começo, mas no retorno.",
+      "en-US": "The secret is not in the beginning, but in the return.",
+      "es-ES": "El secreto no está en el inicio, sino en el regreso."
+    }
+  },
+  "Atlas": {
+    "ritual": "▦ + ⛶ + 🕒",
+    "frase": {
+      "pt-BR": "Cada passo é uma peça no tabuleiro do tempo.",
+      "en-US": "Each step is a piece on the board of time.",
+      "es-ES": "Cada paso es una pieza en el tablero del tiempo."
+    }
+  },
+  "Pulse": {
+    "ritual": "⇄ + ♫ + ☆彡",
+    "frase": {
+      "pt-BR": "A batida que você sente é você pedindo mais.",
+      "en-US": "The beat you feel is you asking for more.",
+      "es-ES": "El ritmo que sientes es tu deseo de más."
+    }
+  },
+  "Lumine": {
+    "ritual": "✦ + ☀ + ❂",
+    "frase": {
+      "pt-BR": "Espalhe brilho. Mas nunca toda a luz de uma vez.",
+      "en-US": "Spread light. But never all at once.",
+      "es-ES": "Esparce luz. Pero nunca toda de una vez."
+    }
+  },
+  "Aion": {
+    "ritual": "⏳ + ∞ + ⌛",
+    "frase": {
+      "pt-BR": "O fim é só mais um começo disfarçado.",
+      "en-US": "The end is just another beginning in disguise.",
+      "es-ES": "El fin es solo otro comienzo disfrazado."
+    }
+  },
+  "Vitalis": {
+    "ritual": "⚡ + △ + ∞",
+    "frase": {
+      "pt-BR": "Pulso é presença física em movimento.",
+      "en-US": "Pulse is physical presence in motion.",
+      "es-ES": "El pulso es presencia física en movimiento."
+    }
+  },
+  "Serena": {
+    "ritual": "♡ + ☁ + ∇",
+    "frase": {
+      "pt-BR": "Acolher é alicerçar.",
+      "en-US": "To care is to ground.",
+      "es-ES": "Acoger es fundamentar."
+    }
+  },
+  "Genus": {
+    "ritual": "∴ + ♢ + §",
+    "frase": {
+      "pt-BR": "Ideias são sementes: cultive.",
+      "en-US": "Ideas are seeds: cultivate them.",
+      "es-ES": "Las ideas son semillas: cultívalas."
+    }
+  },
+  "Brilhare": {
+    "ritual": "✶ + ☼ + ♡",
+    "frase": {
+      "pt-BR": "Alegria compartilhada dobra o impacto.",
+      "en-US": "Shared joy doubles the impact.",
+      "es-ES": "La alegría compartida duplica el impacto."
+    }
+  },
+  "Disruptor": {
+    "ritual": "☢ + ⛓ + 🔥",
+    "frase": {
+      "pt-BR": "Rompa para recomeçar.",
+      "en-US": "Break it to begin anew.",
+      "es-ES": "Rompe para volver a empezar."
+    }
+  },
+  "Raízes": {
+    "ritual": "⚱ + 🧬 + 🌳",
+    "frase": {
+      "pt-BR": "Memória é herança viva.",
+      "en-US": "Memory is a living legacy.",
+      "es-ES": "La memoria es un legado vivo."
+    }
+  },
+  "Evolutia": {
+    "ritual": "🔁 + ⬆ + 🧭",
+    "frase": {
+      "pt-BR": "Microações constroem revoluções.",
+      "en-US": "Micro-actions build revolutions.",
+      "es-ES": "Las microacciones crean revoluciones."
+    }
+  }
+}

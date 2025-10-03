@@ -1,0 +1,18 @@
+/* 1) Atenua o “vidro” do container sem afetar o conteúdo 3D do iframe */
+.arch-circle{
+  /* Bordas e fundo mais discretos */
+  border-color: rgba(255,255,255,.06) !important;
+  background: radial-gradient(60% 60% at 50% 50%, rgba(0,255,255,.04), rgba(255,255,255,0)) !important;
+  /* Sombra mais leve pra reduzir a presença visual da bola */
+  box-shadow: 0 8px 22px rgba(0,0,0,.28) !important;
+}
+
+/* 2) Se estiver usando “ripple” de áudio por cima, deixa ele mais sutil */
+#audioRipple{ opacity: .5 !important; }
+
+/* 3) Se o “fade” de troca de arquétipo estiver forte, mantenha ele transparente */
+#arch-fadeCover{ opacity: 0 !important; }
+
+/* 4) Menu e seletor com leve redução pra não “roubar” a cena da bola */
+.arch-switcher{ background: rgba(15,17,32,.62) !important; }
+.arch-menu button{ background: rgba(15,17,32,.62) !important; }
