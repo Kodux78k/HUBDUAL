@@ -1,16 +1,9 @@
 <!doctype html>
 <html lang="pt-BR" style="--arch-overlay: rgba(64, 158, 255, 0.22);"><head>
   <meta charset="utf-8">
-  <!-- Manifest PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0b0f14" />
-
-<!-- iOS Safe Area -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
   <title>HUB UNO — PROD (safe)</title>
-
+  <meta name="theme-color" content="#0b0f14">
   <style>
     :root {
       /* Paleta padrão (rosa/azul) */
@@ -1178,101 +1171,6 @@ body[data-theme="blue1"] #chatFeed .msg.ai { background: rgba(77, 148, 255, 0.14
 body[data-theme="blue1"] #chatFeed .msg.user { background: rgba(232,240,255,0.10); }
 
 </style>
-<link rel="stylesheet" href="blue-1.css">
-
-<style id="ui-polish">
-/* ==== Pretty slider (range) ==== */
-input[type="range"]{
-  -webkit-appearance:none; appearance:none;
-  width:100%; height:12px; border-radius:999px;
-  background: linear-gradient(90deg, var(--grad-a), var(--grad-b));
-  outline:none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), var(--shadow);
-}
-input[type="range"]::-webkit-slider-thumb{
-  -webkit-appearance:none; appearance:none;
-  width:22px; height:22px; border-radius:50%;
-  background:#0b0f14; border:2px solid rgba(255,255,255,.85);
-  box-shadow: 0 6px 18px rgba(0,0,0,.4);
-  cursor:pointer;
-}
-input[type="range"]::-moz-range-thumb{
-  width:22px; height:22px; border-radius:50%;
-  background:#0b0f14; border:2px solid rgba(255,255,255,.85);
-  box-shadow: 0 6px 18px rgba(0,0,0,.4);
-  cursor:pointer;
-}
-
-/* Toggle buttons (Overlay ON/OFF) */
-.btn.toggle{min-width:96px; font-weight:800}
-.btn.toggle.on{ background: var(--ok); color:#0b0f14; border-color: transparent; }
-.btn.toggle.off{ background: linear-gradient(180deg,#1a1e2e,#0e1220); border: var(--bd); }
-.btn.toggle.off:hover{ box-shadow: 0 10px 26px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.12) inset }
-
-/* File input pretty */
-#fileLocal{ position:absolute; left:-99999px; width:1px; height:1px; overflow:hidden; }
-label.btn-file{ display:inline-flex; align-items:center; gap:6px; cursor:pointer; }
-label.btn-file img{ filter: invert(1) brightness(1.2); }
-
-/* Wrap fixes */
-#logs{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;-webkit-hyphens:auto;hyphens:auto}
-.app-title{
-  font-weight:800;white-space:normal;display:-webkit-box;
-  -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
-  word-break:break-word;overflow-wrap:anywhere;
-}
-.app-card .mut{word-break:break-word;overflow-wrap:anywhere}
-.session .title{white-space:normal;word-break:break-word;overflow-wrap:anywhere}
-
-/* 3D circle fill & iframe hide */
-.arch-circle{position:relative}
-#three-canvas{position:absolute;inset:0}
-#three-canvas canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.arch-circle iframe{display:none !important}
-</style>
-
-<style>#arch-overlay-bg{position:absolute;inset:0;background:var(--arch-overlay);opacity:var(--arch-overlay-alpha,.08);pointer-events:none}</style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-<style id="ls-panel-css">
-/* === DualHub • Painel de LocalStorage (namespaced) === */
-#lsModal.ls-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1200;background:rgba(0,0,0,.55);backdrop-filter:blur(8px)}
-#lsModal.ls-modal.open{display:flex}
-#lsModal .ls-panel{width:min(1040px,95vw);max-height:86vh;overflow:auto;background:rgba(15,17,32,.92);border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 12px 34px rgba(0,0,0,.4);padding:14px;color:#f5f7ff;font:14px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
-#lsModal .ls-hdr{display:flex;gap:10px;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.12);padding-bottom:10px;margin-bottom:10px}
-#lsModal .ls-ttl{font-weight:900;letter-spacing:.06em}
-#lsModal .ls-actions{display:flex;gap:8px;flex-wrap:wrap}
-#lsModal button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;padding:8px 12px;border-radius:10px;cursor:pointer}
-#lsModal button:hover{background:rgba(255,255,255,.18)}
-#lsModal .meta{color:#cfd8dc;font-size:12px;margin:8px 0 10px}
-#lsModal .presets{border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:8px;background:rgba(255,255,255,.04);margin:10px 0}
-#lsModal .presets-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:8px}
-#lsModal .preset{border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.04);padding:10px;display:grid;gap:6px}
-#lsModal .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-#lsModal .val{font:12px/1.4 ui-monospace,monospace;background:#0b0f1a;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px;max-height:140px;overflow:auto;word-break:break-word}
-#lsModal .list{display:grid;gap:10px}
-#lsModal .item{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px;display:grid;gap:8px}
-#lsModal .item .head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-#lsModal .key{font-weight:800;max-width:56vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#lsModal .type{font-size:11px;color:#cfd8dc}
-#lsModal .switch{inline-size:46px;block-size:28px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.15);position:relative;cursor:pointer}
-#lsModal .switch::after{content:"";position:absolute;inset:4px auto 4px 4px;width:20px;border-radius:999px;background:#fff;transition:all .18s}
-#lsModal .switch.on{background:rgba(25,226,123,.28)}
-#lsModal .switch.on::after{left:22px}
-#lsModal .img-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
-#lsModal .img-card{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);border-radius:10px;padding:8px}
-#lsModal .img-card img{width:100%;height:auto;display:block;border-radius:8px}
-/* Carteira SK */
-#lsModal .sk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media (max-width:720px){#lsModal .sk-grid{grid-template-columns:1fr}#lsModal .key{max-width:46vw}}
-#lsModal .sk-item{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px;display:grid;gap:8px}
-#lsModal .sk-item .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-#lsModal .sk-item .name{font-weight:800}
-#lsModal .sk-item .key{font:12px/1.4 ui-monospace,monospace;opacity:.85;word-break:break-all}
-#lsModal .sk-item button{font-size:.75rem;padding:4px 8px;border-radius:8px}
-#lsModal .sk-item button:first-child{background:rgba(57,255,182,.18)}
-#lsModal .sk-item button:last-child{background:rgba(255,92,138,.18)}
-</style>
-
 </head>
 <body>
   <!-- Splash screen displayed on initial load -->
@@ -1317,9 +1215,7 @@ label.btn-file img{ filter: invert(1) brightness(1.2); }
 
   <!-- Container para fundo personalizado (imagem ou vídeo).  Será preenchido via JS quando o usuário escolher
        um tema customizado.  Fica no início do body para garantir que fique abaixo de todos os conteúdos -->
-  <div id="custom-bg" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;overflow:hidden;pointer-events:none">
-    <div id="arch-overlay-bg"></div>
-  </div>
+  <div id="custom-bg" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;overflow:hidden;pointer-events:none"></div>
 
   <!-- ===== Views ===== -->
   <main>
@@ -1354,12 +1250,11 @@ label.btn-file img{ filter: invert(1) brightness(1.2); }
               <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/chevron-right.svg" alt="Próximo" width="16" height="16" onerror="this.onerror=null;this.src='icons/chevron-right.svg'">
             <span class="ripple"></span></button>
           </div>
-          <div class="arch-circle" id="arch-circle">
-            <div id="three-canvas"></div>
+          <div class="arch-circle">
             <div id="arch-fadeCover"></div>
             <!-- Camada de ripple auditivo fica sobre o conteúdo do círculo -->
             <div id="audioRipple" class="audio-ripple"></div>
-            <iframe id="arch-frame" title="Archetype Core" sandbox="allow-scripts" referrerpolicy="no-referrer" src="./archetypes/atlas.html" src="archetypes/center.html?preset=blue1"></iframe>
+            <iframe id="arch-frame" title="Archetype Core" sandbox="allow-scripts" referrerpolicy="no-referrer" src="./archetypes/atlas.html"></iframe>
           </div>
           <!-- Mensagem de feedback aparece fora da bolinha, logo abaixo dela -->
           <div id="archMsg" class="arch-msg show" style="background: rgba(57, 255, 182, 0.75); color: rgb(11, 15, 20);">Bem-vindo de volta, KODUX. UNO está ao seu lado.</div>
@@ -1458,7 +1353,6 @@ label.btn-file img{ filter: invert(1) brightness(1.2); }
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
               <!-- Aceita arquivos .json além de HTML/TXT para permitir upload de catálogos personalizados -->
               <input id="fileLocal" type="file" accept=".html,.htm,.txt,.json" multiple="" class="input ring">
-<label for="fileLocal" class="btn btn-file fx-trans fx-press ring"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/file-arrow-up.svg" alt="Escolher" width="16" height="16" onerror="this.onerror=null;this.src='icons/file-upload.svg'">Selecionar arquivos<span class="ripple"></span></label>
               <button id="btnImport" class="btn fx-trans fx-press ring">
                 <img src="icons/plus-circle.svg" alt="Adicionar" width="16" height="16" onerror="this.onerror=null;this.src='icons/plus-circle.svg'" style="margin-right:4px">
                 Adicionar Locais<span class="ripple"></span>
@@ -4580,7 +4474,12 @@ window.addEventListener('load', () => {
 
 })(); // end ChatPlus
 </script>
-  <style>
+  <script src="dual_multiagent_v1.js"></script>
+  <script src="dual_multiagent_v12_locked.js"></script>
+  <script src="openrouter_hardlock_model_v1.js" defer=""></script>
+
+
+<style>
 /* --------------------------------------------
    KOBLLUX • Compact Mode — Mobile-first Vertical
    Colar após o CSS atual
@@ -4987,271 +4886,290 @@ main .row > * + * { margin-top: .5rem; }
 })();
 </script>
 
-<script src="dual_multiagent_v12_locked_fixed.js"></script>
-<script src="UNO_patch_arch3d_particles.js"></script>
-<script src="blue-1.js"></script>
 
-<script>
-(function(){
-  const selArch   = document.getElementById('arch-select');
-  const selPreset = document.getElementById('arch-preset');
-  const frame     = document.getElementById('arch-frame');
-  if (!selArch || !frame || !selPreset) return;
-  const LS = { get:(k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d }catch{ return d } },
-               set:(k,v)=>{ try{ localStorage.setItem(k, JSON.stringify(v)) }catch{} } };
-  // Load saved preset
-  const saved = (LS.get('uno:arch:preset')||'blue1').toLowerCase();
-  if (['blue1','strong','cinematic','off'].includes(saved)) selPreset.value = saved;
-  function apply(){
-    if (!selArch.value) return;
-    const url = new URL(selArch.value, location.href);
-    const preset = selPreset.value || 'blue1';
-    if (preset==='off') { url.searchParams.delete('preset'); } else { url.searchParams.set('preset', preset); }
-    frame.src = url.toString();
-    LS.set('uno:arch:preset', preset);
+  <link rel="stylesheet" href="uno_showcase_patch.css">
+  <script src="uno_showcase_patch.js" defer></script>
+
+<!-- ARTEASC • Efeito total (SVG + fade configurável) -->
+<style id="arteasc-style">
+  :root{
+    --asc-emoji-size: 36px;
+    --asc-fade-dur: 3s; /* ajuste aqui: 8s → 3s */
+    --asc-overlay: rgba(0,0,0,0); /* será atualizado por arquétipo se --arch-overlay não estiver definido */
   }
-  selPreset.addEventListener('change', apply);
-  selArch.addEventListener('change', apply);
-  // Initial apply if iframe empty
-  if (!frame.getAttribute('src')) apply();
-})();
-</script>
-<script type="module" src="UNO_patch_arch3d_bloom.js" defer></script>
- 
+  #asc-backdrop{
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    background: var(--arch-overlay, var(--asc-overlay, rgba(0,0,0,0)));
+    opacity:0;
+    transition: opacity var(--asc-fade-dur) var(--ease, cubic-bezier(.22,.61,.36,1));
+  }
+  #asc-emoji{
+    position:fixed; left:50%;
+    bottom:calc(var(--tabsH, 60px) + 18px + env(safe-area-inset-bottom, 0));
+    transform:translateX(-50%) scale(var(--pulse,1));
+    font-size:var(--asc-emoji-size);
+    filter:drop-shadow(0 6px 18px rgba(0,0,0,.35));
+    opacity:0;
+    transition:opacity .2s var(--ease, cubic-bezier(.22,.61,.36,1)), transform .08s var(--ease, cubic-bezier(.22,.61,.36,1));
+    z-index:1200;
+  }
+  #asc-emoji.show{ opacity:1; }
 
-<script type="module" src="UNO_patch_arch3d.js"defer></script>
+  /* Selo container (com SVG) */
+  #asc-selo{
+    position:fixed; top:12px; left:12px; z-index:1300;
+    width:56px; height:56px; display:grid; place-items:center; border-radius:50%;
+    pointer-events:none;
+    animation:asc-pop .5s var(--ease, cubic-bezier(.22,.61,.36,1));
+  }
+  @keyframes asc-pop{
+    0%{ transform:scale(.7) rotate(-8deg); opacity:0 }
+    60%{ transform:scale(1.08) rotate(2deg); opacity:1 }
+    100%{ transform:scale(1) rotate(0) }
+  }
+  /* Arch message tweaks (preserva UNO) */
+  #archMsg{ white-space: pre-line; letter-spacing:.04em; line-height:1.6; }
+</style>
 
-
-
- <script type="module" src="dual_multiagent_v12_locked_fixed.js"defer></script>
- 
-
- <script type="module" src="UNO_patch_arch3d_particles.js" defer></script>
-
- <script type="module" src="blue-1.js"defer></script>
-
-
- <script type="module" src="uno_audio_breath.js" defer></script>
-
-<script>
+<script id="arteasc-runtime">
 (function(){
-  const $ = (q,r=document)=>r.querySelector(q);
-  const LS = { get:(k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d }catch{ return d } },
-               set:(k,v)=>{ try{ localStorage.setItem(k, JSON.stringify(v)) }catch{} } };
-  function applyOverlayAlpha(val){ document.documentElement.style.setProperty('--arch-overlay-alpha', (Number(val)||0).toString()); }
-  document.addEventListener('DOMContentLoaded', ()=>{
-    const onBtn = $('#overlayAlphaOn'), offBtn = $('#overlayAlphaOff');
-    const range = $('#overlayAlphaRange'), label = $('#overlayAlphaVal');
-    const savedAlpha = LS.get('uno:overlay:alpha', 0.08);
-    const enabled = LS.get('uno:overlay:enabled', true);
-    if(range){ range.value = savedAlpha; if(label) label.textContent = Number(savedAlpha).toFixed(2); }
-    if(enabled){ applyOverlayAlpha(savedAlpha); onBtn && onBtn.classList.add('on'); } else { applyOverlayAlpha(0); onBtn && onBtn.classList.remove('on'); }
-    function setEnabled(flag){
-      LS.set('uno:overlay:enabled', !!flag);
-      if(flag){ const a = Number((range && range.value) || savedAlpha || 0.08); applyOverlayAlpha(a); onBtn && onBtn.classList.add('on'); }
-      else{ applyOverlayAlpha(0); onBtn && onBtn.classList.remove('on'); }
+  let FORCE_OVERLAY=false;
+  const OVERLAY_PALETTE = {
+    atlas: 'rgba(56,170,255,0.24)',
+    nova: 'rgba(255,90,255,0.20)',
+    vitalis: 'rgba(0,200,120,0.24)',
+    pulse: 'rgba(255,180,0,0.18)',
+    artemis: 'rgba(255,100,120,0.20)',
+    serena: 'rgba(0,180,255,0.22)',
+    kaos: 'rgba(255,220,40,0.18)',
+    genus: 'rgba(130,220,255,0.18)',
+    lumine: 'rgba(250,250,255,0.24)',
+    rhea: 'rgba(140,230,170,0.20)',
+    solus: 'rgba(130,100,255,0.20)',
+    aion: 'rgba(110,110,110,0.20)'
+  };
+  const ARCH_EMOJI = {
+    atlas:'🧭', nova:'✨', vitalis:'💪', pulse:'🎵', artemis:'🏹', serena:'🌊',
+    kaos:'⚡️', genus:'🧪', lumine:'🌟', rhea:'🌿', solus:'🔮', aion:'⏳'
+  };
+  const doc = document;
+  const ease = getComputedStyle(doc.documentElement)
+                .getPropertyValue('--ease') || 'cubic-bezier(.22,.61,.36,1)';
+
+  function ensureNodes(){
+    if(!doc.getElementById('asc-backdrop')){
+      const d = doc.createElement('div'); d.id = 'asc-backdrop';
+      doc.body.prepend(d);
     }
-    onBtn && onBtn.addEventListener('click', ()=> setEnabled(true));
-    offBtn && offBtn.addEventListener('click', ()=> setEnabled(false));
-    range && range.addEventListener('input', ()=>{
-      const v = Number(range.value || 0.08);
-      LS.set('uno:overlay:alpha', v);
-      if(label) label.textContent = v.toFixed(2);
-      if(LS.get('uno:overlay:enabled', true)) applyOverlayAlpha(v);
-    });
+    if(!doc.getElementById('asc-emoji')){
+      const e = doc.createElement('div'); e.id = 'asc-emoji'; e.textContent = '✨';
+      doc.body.appendChild(e);
+    }
+  }
+
+  function getActiveArch(){
+    const sel = doc.getElementById('arch-select');
+    if(!sel) return 'atlas';
+    const file = (sel.value || 'atlas.html');
+    return file.replace(/\.html$/i,'').toLowerCase();
+  }
+
+  function parseCssDurationMs(varName, fallbackMs){
+    const val = getComputedStyle(doc.documentElement).getPropertyValue(varName).trim();
+    if(!val) return fallbackMs;
+    if(val.endsWith('ms')) return parseFloat(val);
+    if(val.endsWith('s')) return Math.round(parseFloat(val)*1000);
+    const n = parseFloat(val);
+    return isFinite(n) ? n : fallbackMs;
+  }
+
+  function setAscOverlayByArch(){
+    const arch = getActiveArch();
+    const color = OVERLAY_PALETTE[arch] || 'rgba(57,255,182,0.18)';
+    doc.documentElement.style.setProperty('--asc-overlay', color);
+    if(FORCE_OVERLAY){ doc.documentElement.style.setProperty('--arch-overlay', color); }
+  }
+
+  function fadeBackdropOnce(){
+    const d = doc.getElementById('asc-backdrop'); if(!d) return;
+    const dur = parseCssDurationMs('--asc-fade-dur', 600);
+    d.style.opacity = '0.85';
+    setTimeout(()=>{ d.style.opacity = '0.18'; }, Math.max(120, Math.round(dur*0.45)));
+  }
+
+  function showSeloSVG(){
+    let s = doc.getElementById('asc-selo');
+    if(!s){
+      s = doc.createElement('div'); s.id='asc-selo'; s.setAttribute('aria-label','ArteASC Selo');
+      s.innerHTML = `
+      <svg width="56" height="56" viewBox="0 0 56 56" role="img" aria-hidden="true">
+        <defs>
+          <radialGradient id="g1" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+            <stop offset="45%" stop-color="#EFFFFA" stop-opacity="0.82"/>
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <circle cx="28" cy="28" r="26" fill="url(#g1)" filter="url(#glow)"/>
+        <g transform="translate(28 28)">
+          <circle r="13" fill="none" stroke="#39FFB6" stroke-width="1.8" stroke-opacity="0.8"/>
+          <text x="0" y="6" text-anchor="middle" font-size="12" font-weight="800" font-family="Inter, Montserrat, system-ui" fill="#0B0F14">ASC</text>
+        </g>
+      </svg>`;
+      doc.body.appendChild(s);
+    }else{
+      // replay animation
+      s.style.animation='none'; s.offsetHeight; s.style.animation='asc-pop .5s '+ease;
+    }
+    return s;
+  }
+
+  // ======= Selo de texto no #archMsg ======
+  function renderArteASCSeal(name) {
+    try {
+      const el = doc.getElementById('archMsg');
+      if (!el) return;
+      const pulso = name ? (name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()) : getActiveArch();
+      // módulo render (stub)
+      const txt = (window.ArteASC && typeof window.ArteASC.render === 'function')
+        ? window.ArteASC.render('seal_trinity_v2', { pulso })
+        : `⟐ Trinity v2\n⚡ Pulso: ${pulso}`;
+      el.innerText = txt;
+      el.style.background = 'rgba(0,255,255,0.12)';
+      el.style.color = 'var(--accent, #39FFB6)';
+      el.classList.add('show');
+      clearTimeout(el._tm);
+      el._tm = setTimeout(() => el.classList.remove('show'), 5000);
+    } catch (e) {
+      console.warn('ArteASC render fail', e);
+    }
+  }
+
+  function speakWithArchVoice(text){
+    try{
+      const arch = (getActiveArch() || 'atlas');
+      const key = arch.charAt(0).toUpperCase() + arch.slice(1);
+      const saved = (JSON.parse(localStorage.getItem('infodose:voices')||'{}') || {});
+      const prefer = saved[key] || localStorage.getItem('infodose:speechVoice') || '';
+      const voices = speechSynthesis.getVoices();
+      const pick = (() => {
+        if(prefer){ const v = voices.find(x => x.name === prefer); if(v) return v; }
+        const pt = voices.find(x => (x.lang||'').toLowerCase().startsWith('pt')); if(pt) return pt;
+        const en = voices.find(x => (x.lang||'').toLowerCase().startsWith('en')); if(en) return en;
+        return voices[0];
+      })();
+      const u = new SpeechSynthesisUtterance(text);
+      if(pick) u.voice = pick;
+      return u;
+    }catch(e){ return null; }
+  }
+
+  function pulseEmojiFromTTS(u){
+    const emoji = doc.getElementById('asc-emoji'); if(!emoji || !u) return;
+    u.onboundary = () => {
+      emoji.style.setProperty('--pulse','1.18');
+      setTimeout(()=>emoji.style.setProperty('--pulse','1'), 90);
+    };
+  }
+
+  function setEmojiForArch(){
+    const e = doc.getElementById('asc-emoji'); if(!e) return;
+    const arch = getActiveArch();
+    e.textContent = ARCH_EMOJI[arch] || '✨';
+    e.classList.add('show');
+  }
+
+  function normalize(s){
+    return (s||'').toString().normalize('NFD')
+      .replace(/\\p{Diacritic}/gu,'').toLowerCase()
+      .replace(/[^\\p{L}\\p{N}\\s]/gu,'').trim();
+  }
+  function matchesTrigger(s){
+    const n = normalize(s);
+    return n === 'arteasc com efeito total' || (n.includes('arteasc') && n.includes('efeito total'));
+  }
+  function matchesReset(s){
+    const n = normalize(s);
+    return n === 'resetar arteasc' || n === 'limpar arteasc' || n === 'limpar efeito';
+  }
+
+  function bindArchEvents(){
+    const sel = doc.getElementById('arch-select');
+    const prev = doc.getElementById('arch-prev');
+    const next = doc.getElementById('arch-next');
+    const doFade = () => { setAscOverlayByArch(); requestAnimationFrame(fadeBackdropOnce); renderArteASCSeal(getActiveArch()); showSeloSVG(); };
+    sel && sel.addEventListener('change', doFade);
+    prev && prev.addEventListener('click', doFade);
+    next && next.addEventListener('click', doFade);
+  }
+
+  function runFull(){
+    ensureNodes();
+    setAscOverlayByArch();
+    showSeloSVG();
+    setEmojiForArch();
+    fadeBackdropOnce();
+    try{
+      const u = speakWithArchVoice('Arte A S C pronto. Efeito total ativado.');
+      if(u){ pulseEmojiFromTTS(u); speechSynthesis.cancel(); speechSynthesis.speak(u); }
+    }catch(e){}
+    try{ (window.feedPush||console.log)('status','🎨 ArteASC — efeito total'); }catch{}
+  }
+  function reset(){
+    ['asc-selo','asc-emoji'].forEach(id=>{ const el = doc.getElementById(id); if(el) el.remove(); });
+    const d = doc.getElementById('asc-backdrop'); if(d) d.style.opacity = '0';
+  }
+
+  function wrapHandle(){
+    if(!window.handleUserMessage || window.handleUserMessage._ascWrapped) return;
+    const orig = window.handleUserMessage;
+    window.handleUserMessage = function(text, user, sk, model){
+      if(matchesReset(text)){ reset(); return; }
+      if(matchesTrigger(text)){ runFull(); return; }
+      return orig.apply(this, arguments);
+    };
+    window.handleUserMessage._ascWrapped = true;
+  }
+
+  function wrapSpeakArchetype(){
+    if(!window.speakArchetype || window.speakArchetype._ascWrapped) return;
+    const orig = window.speakArchetype;
+    window.speakArchetype = function(name){
+      const r = orig.apply(this, arguments);
+      try { renderArteASCSeal(name); } catch(e){}
+      try { setAscOverlayByArch(); } catch(e){}
+      try { showSeloSVG(); } catch(e){}
+      try { fadeBackdropOnce(); } catch(e){}
+      return r;
+    };
+    window.speakArchetype._ascWrapped = true;
+  }
+
+  // expose
+  window.ArteASC = Object.assign(window.ArteASC||{}, {
+    render: (n, v = {}) => ({
+      portal369: `╔═══🌌═══╗\\n ✪ (°ロ°)☝\\n 🧭 ${v.tri||''}`,
+      seal_trinity_v2: `⟐ Trinity v2\\n⚡ Pulso: ${v.pulso||''}`
+    }[n] || '[ArteASC]'),
+    runFull, reset,
+    setOverlayPaletteMode(mode){ FORCE_OVERLAY = (mode === 'override'); setAscOverlayByArch(); },
+    onMicLevel(level){
+      const e = document.getElementById('asc-emoji'); if(!e) return;
+      const s = (1 + Math.min(0.26, level*0.6)).toFixed(3);
+      e.style.setProperty('--pulse', s);
+    }
+  });
+
+  // boot
+  ensureNodes(); setAscOverlayByArch(); bindArchEvents(); wrapHandle(); wrapSpeakArchetype();
+  // hotkey
+  window.addEventListener('keydown', (e)=>{
+    if((e.ctrlKey||e.metaKey) && e.shiftKey && e.key.toLowerCase()==='a'){ e.preventDefault(); runFull(); }
   });
 })();
 </script>
-
-
-<!-- === DualHub • Painel LocalStorage === -->
-<div id="lsModal" class="ls-modal" aria-hidden="true">
-  <div class="ls-panel" id="lsPanel">
-    <div class="ls-hdr">
-      <div class="ls-ttl">LocalStorage • Presets, Chaves & Carteira SK</div>
-      <div class="ls-actions">
-        <button id="lsRescan">Re-scan</button>
-        <button id="lsExport">Exportar</button>
-        <label for="lsImportFile" style="display:inline-block"><button type="button">Importar</button></label>
-        <input id="lsImportFile" type="file" accept="application/json" hidden>
-        <button id="lsClearDisabled">Limpar desativados</button>
-        <button id="lsClose">Fechar</button>
-      </div>
-    </div>
-
-    <details class="presets" open>
-      <summary><strong>Presets (ON/OFF global)</strong></summary>
-      <div class="presets-grid" id="presetsGrid"></div>
-    </details>
-
-    <details class="presets" open>
-      <summary><strong>Carteira de Chaves OpenRouter</strong></summary>
-      <div class="grid" style="gap:8px">
-        <div class="row" style="border:0;padding:0;gap:8px">
-          <input id="skName" placeholder="Nome curto (ex.: Prod, Dev, Teste)" style="flex:1">
-          <input id="skValue" placeholder="sk-..." style="flex:2">
-          <button id="skAdd">Adicionar</button>
-        </div>
-        <div class="sk-grid" id="skGrid"></div>
-      </div>
-      <div class="meta">A chave <code>dual.keys.openrouter</code> recebe a chave marcada como <b>Ativa</b>. Desativar retira a chave ativa do uso (sem apagar a carteira).</div>
-    </details>
-
-    <div class="meta"><span id="lsCount">—</span> • <span id="lsSize">—</span></div>
-    <div class="list" id="lsList"></div>
-
-    <details class="presets" style="margin-top:10px" open>
-      <summary><strong>Pré-visualização de Imagens</strong></summary>
-      <div class="img-grid" id="imgGrid"></div>
-    </details>
-  </div>
-</div>
-
-
-<script id="ls-panel-js">
-(() => {
-  const $ = (s, r=document)=> r.querySelector(s);
-  const $$ = (s, r=document)=> Array.from(r.querySelectorAll(s));
-  const prettyBytes = (n)=>{ if(!Number.isFinite(n)||n<=0) return '0 B'; const u=['B','KB','MB','GB']; let i=0; while(n>=1024&&i<u.length-1){n/=1024;i++} return n.toFixed(2)+' '+u[i] };
-  const isJson = (v)=>{ try{ JSON.parse(v); return true; }catch{ return false; } };
-  const inferType = (v)=>{
-    if(v==null||v==='') return 'empty';
-    if(isJson(v)){const p=JSON.parse(v); if(Array.isArray(p)) return 'json[array]'; if(p&&typeof p==='object') return 'json[object]'; return 'json['+(typeof p)+']';}
-    if(/^data:image\//i.test(v)||/\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(v)) return 'image';
-    if(/^(true|false|1|0)$/i.test(v)) return 'boolean-like';
-    if(/^https?:\/\//i.test(v)) return 'url';
-    if(/^data:/i.test(v)) return 'data-url';
-    return 'string';
-  };
-
-  const DISABLED_KEY = 'infodose:presets.disabled';
-  const PRESETS = [
-    { key:'infodose:userName', label:'Usuário' },
-    { key:'infodose:assistantName', label:'Assistente' },
-    { key:'dual.keys.openrouter', label:'Chave OpenRouter (ativa)' },
-    { key:'dual.openrouter.model', label:'Modelo OpenRouter' },
-    { key:'uno:theme', label:'Tema' },
-    { key:'uno:bg', label:'Fundo Custom' },
-    { key:'infodose:cssCustom', label:'CSS Custom' },
-    { key:'infodose:voices', label:'Vozes Arquetípicas' }
-  ];
-
-  const disabledSet = ()=> { try{ return new Set(JSON.parse(localStorage.getItem(DISABLED_KEY)||'[]')); }catch{ return new Set(); } };
-  const saveDisabled = (set)=> localStorage.setItem(DISABLED_KEY, JSON.stringify(Array.from(set)));
-  const isEnabled = (k)=> !disabledSet().has(k);
-  const toggleDisabled = (k)=> { const s=disabledSet(); s.has(k)?s.delete(k):s.add(k); saveDisabled(s); renderAll(); window.dispatchEvent(new CustomEvent('ls:disabled-changed',{detail:{key:k,disabled:s.has(k)}})); };
-
-  // Carteira SK
-  const WALLET_KEY = 'dual.keys.wallet';
-  const getWallet = ()=>{ try{ return JSON.parse(localStorage.getItem(WALLET_KEY)||'[]'); }catch{return []} };
-  const setWallet = (arr)=> localStorage.setItem(WALLET_KEY, JSON.stringify(arr));
-  const addWalletItem = (name, key)=>{
-    const list=getWallet();
-    const genId = (crypto?.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2));
-    list.push({ id: genId, name, key, active:false });
-    setWallet(list); renderWallet();
-  };
-  const removeWalletItem = (id)=>{ const list=getWallet().filter(x=>x.id!==id); setWallet(list); ensureActiveConsistency(); renderWallet(); };
-  const activateWalletItem = (id)=>{
-    const list=getWallet().map(x=>({...x, active: x.id===id})); setWallet(list);
-    if(isEnabled('dual.keys.openrouter')){
-      const chosen=list.find(x=>x.active); localStorage.setItem('dual.keys.openrouter', chosen? chosen.key: '');
-    }
-    renderAll();
-  };
-  const ensureActiveConsistency = ()=>{ const list=getWallet(); const anyActive=list.some(x=>x.active); if(!anyActive){ localStorage.setItem('dual.keys.openrouter',''); } };
-  const renderWallet = ()=>{
-    const grid=$('#skGrid'); if(!grid) return; grid.innerHTML='';
-    const list=getWallet(); if(!list.length){ grid.innerHTML='<div class="meta">Nenhuma chave na carteira ainda.</div>'; return; }
-    list.forEach(item=>{
-      const div=document.createElement('div'); div.className='sk-item';
-      const top=document.createElement('div'); top.className='top';
-      const name=document.createElement('div'); name.className='name'; name.textContent=item.name+(item.active?' • ATIVA':'');
-      const act=document.createElement('div');
-      const bUse=document.createElement('button'); bUse.textContent=item.active?'Desativar':'Ativar';
-      bUse.onclick=()=>{ if(item.active){
-          const list2=getWallet().map(x=>({...x, active: x.id===item.id? false: x.active })); setWallet(list2); ensureActiveConsistency(); renderWallet(); renderAll();
-        } else { activateWalletItem(item.id); } };
-      const bDel=document.createElement('button'); bDel.textContent='Apagar'; bDel.onclick=()=>{ if(confirm('Apagar entrada da carteira?')) removeWalletItem(item.id) };
-      act.append(bUse,bDel); top.append(name,act);
-      const key=document.createElement('div'); key.className='key'; key.textContent=item.key;
-      div.append(top,key); grid.append(div);
-    });
-  };
-
-  // LS
-  const lsEntries = ()=>{ const out=[]; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); const v=localStorage.getItem(k)||''; out.push({key:k,val:v}); } return out.sort((a,b)=>a.key.localeCompare(b.key)); };
-  const lsSizeBytes = ()=>{ let sum=0; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); const v=localStorage.getItem(k)||''; sum += k.length + v.length; } return sum; };
-
-  const renderPresets = ()=>{
-    const grid=$('#presetsGrid'); if(!grid) return; grid.innerHTML='';
-    const dis=disabledSet();
-    PRESETS.forEach(p=>{
-      const val=localStorage.getItem(p.key); const on=!dis.has(p.key);
-      const wrap=document.createElement('div'); wrap.className='preset';
-      const head=document.createElement('div'); head.className='row';
-      const name=document.createElement('div'); name.innerHTML = `<strong>${p.label}</strong><div class="type">${p.key}</div>`;
-      const sw=document.createElement('div'); sw.className='switch'+(on?' on':''); sw.title=on?'Desativar (não apaga)':'Ativar'; sw.onclick=()=>toggleDisabled(p.key);
-      head.append(name,sw);
-      const meta=document.createElement('div'); meta.className='val';
-      meta.textContent = val ? (inferType(val).startsWith('json')? JSON.stringify(JSON.parse(val),null,2): val) : '—';
-      wrap.append(head,meta); grid.append(wrap);
-    });
-  };
-
-  const addImagePreview = (key,src)=>{ const g=$('#imgGrid'); if(!g) return; const card=document.createElement('div'); card.className='img-card'; const cap=document.createElement('div'); cap.className='meta'; cap.textContent=key; const im=new Image(); im.src=src; im.loading='lazy'; card.append(cap,im); g.append(card); };
-
-  const renderLS = ()=>{
-    const list=$('#lsList'); if(!list) return; list.innerHTML=''; const imgGrid=$('#imgGrid'); if(imgGrid) imgGrid.innerHTML='';
-    const entries=lsEntries(); const count=$('#lsCount'); if(count) count.textContent = entries.length+' chave(s)';
-    const size=$('#lsSize'); if(size) size.textContent = prettyBytes(lsSizeBytes());
-    const dis=disabledSet();
-    entries.forEach(({key,val})=>{
-      if(key===DISABLED_KEY) return;
-      const it=document.createElement('div'); it.className='item';
-      const head=document.createElement('div'); head.className='head';
-      const left=document.createElement('div');
-      left.innerHTML=`<div class="key">${key}${dis.has(key)?' <span class="type">(desativado)</span>':''}</div><div class="type">${inferType(val)} • ${prettyBytes((val||'').length)}</div>`;
-      const ctr=document.createElement('div'); ctr.style.display='flex'; ctr.style.gap='8px'; ctr.style.flexWrap='wrap';
-      const sw=document.createElement('div'); sw.className='switch'+(!dis.has(key)?' on':''); sw.title = (!dis.has(key)?'Desativar':'Ativar'); sw.onclick=()=>toggleDisabled(key);
-      const bEdit=document.createElement('button'); bEdit.textContent='Editar'; bEdit.onclick=()=>{ const next=prompt('Editar valor de
-'+key, val ?? ''); if(next==null) return; localStorage.setItem(key,String(next)); renderAll(); };
-      const bDel=document.createElement('button'); bDel.textContent='Apagar'; bDel.onclick=()=>{ if(confirm('Apagar '+key+'?')){ localStorage.removeItem(key); renderAll(); } };
-      if(inferType(val)==='image'){ const bImg=document.createElement('button'); bImg.textContent='Ver imagem'; bImg.onclick=()=>addImagePreview(key,val); ctr.append(bImg); }
-      ctr.append(sw,bEdit,bDel); head.append(left,ctr);
-      const v=document.createElement('div'); v.className='val'; v.textContent = inferType(val).startsWith('json')? JSON.stringify(JSON.parse(val),null,2): (val??'—');
-      it.append(head,v); list.append(it);
-    });
-  };
-
-  const exportLS = ()=>{ const dump={}; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k===DISABLED_KEY) continue; dump[k]=localStorage.getItem(k); } const blob=new Blob([JSON.stringify(dump,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='localstorage_export.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(url), 2000); };
-  const importLS = (file)=>{ const r=new FileReader(); r.onload=()=>{ try{ const data=JSON.parse(r.result||'{}'); Object.entries(data).forEach(([k,v])=>localStorage.setItem(k,String(v))); alert('Importado com sucesso.'); renderAll(); }catch(e){ alert('JSON inválido.'); } }; r.readAsText(file); };
-
-  const openLS = ()=>{ const m=$('#lsModal'); if(!m) return; m.classList.add('open'); m.setAttribute('aria-hidden','false'); renderAll(); renderWallet(); };
-  const closeLS = ()=>{ const m=$('#lsModal'); if(!m) return; m.classList.remove('open'); m.setAttribute('aria-hidden','true'); };
-
-  const renderAll = ()=>{ renderPresets(); renderLS(); };
-
-  // Wire up events when DOM is ready
-  const ready = () => {
-    const btn = document.getElementById('btnLS');
-    if(btn && !btn.dataset._lsbound){
-      btn.addEventListener('click', openLS);
-      btn.dataset._lsbound = '1';
-    }
-    const c = $('#lsClose'); if(c) c.onclick = closeLS;
-    const r = $('#lsRescan'); if(r) r.onclick = renderAll;
-    const e = $('#lsExport'); if(e) e.onclick = exportLS;
-    const imp = $('#lsImportFile'); if(imp) imp.addEventListener('change', ev=>{ const f=ev.target.files?.[0]; if(f) importLS(f); ev.target.value=''; });
-    const clr = $('#lsClearDisabled'); if(clr) clr.onclick = ()=>{ localStorage.setItem(DISABLED_KEY,'[]'); renderAll(); };
-    const modal = $('#lsModal'); if(modal) modal.addEventListener('click', (evt)=>{ if(evt.target===modal) closeLS(); });
-    const skAdd = $('#skAdd'); if(skAdd) skAdd.onclick = ()=>{ const name=$('#skName').value.trim(); const key=$('#skValue').value.trim(); if(!name||!key) return alert('Informe nome e chave.'); addWalletItem(name,key); $('#skName').value=''; $('#skValue').value=''; };
-  };
-  if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', ready); } else { ready(); }
-
-  // Expose a small API
-  window.DualLS = { open: openLS, close: closeLS, render: renderAll };
-})();
-</script>
-
 </body></html>
