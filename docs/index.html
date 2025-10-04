@@ -81,7 +81,7 @@
 /* Overlay de cor do arquétipo ativo.  Usa a variável --arch-overlay definida no
    :root e atualizada via script.  O overlay cobre toda a tela, tem pointer-events
    desativado e fica atrás dos demais elementos (z-index: 0). */
-body::after{content:'';position:fixed;inset:0;background:var(--arch-overlay);pointer-events:none;}
+body::after{content:'';position:fixed;inset:0;background:none !important;pointer-events:none;}
 
     /* ===== Micro-interações base ===== */
     .fx-trans { transition: transform .16s var(--ease), background .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease), color .25s var(--ease), opacity .25s var(--ease) }
@@ -413,7 +413,7 @@ body::after{content:'';position:fixed;inset:0;background:var(--arch-overlay);poi
        * de branco e mantemos a estética coesa durante as transições.
        */
       background: #0b0f14;
-     display: none !important; }
+    }
 
     /* ===== Splash overlay ===== */
     /* O elemento #appSplash cobre toda a tela enquanto o app carrega.
@@ -1179,7 +1179,100 @@ body[data-theme="blue1"] #chatFeed .msg.user { background: rgba(232,240,255,0.10
 
 </style>
 <link rel="stylesheet" href="blue-1.css">
+
+<style id="ui-polish">
+/* ==== Pretty slider (range) ==== */
+input[type="range"]{
+  -webkit-appearance:none; appearance:none;
+  width:100%; height:12px; border-radius:999px;
+  background: linear-gradient(90deg, var(--grad-a), var(--grad-b));
+  outline:none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), var(--shadow);
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none;
+  width:22px; height:22px; border-radius:50%;
+  background:#0b0f14; border:2px solid rgba(255,255,255,.85);
+  box-shadow: 0 6px 18px rgba(0,0,0,.4);
+  cursor:pointer;
+}
+input[type="range"]::-moz-range-thumb{
+  width:22px; height:22px; border-radius:50%;
+  background:#0b0f14; border:2px solid rgba(255,255,255,.85);
+  box-shadow: 0 6px 18px rgba(0,0,0,.4);
+  cursor:pointer;
+}
+
+/* Toggle buttons (Overlay ON/OFF) */
+.btn.toggle{min-width:96px; font-weight:800}
+.btn.toggle.on{ background: var(--ok); color:#0b0f14; border-color: transparent; }
+.btn.toggle.off{ background: linear-gradient(180deg,#1a1e2e,#0e1220); border: var(--bd); }
+.btn.toggle.off:hover{ box-shadow: 0 10px 26px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.12) inset }
+
+/* File input pretty */
+#fileLocal{ position:absolute; left:-99999px; width:1px; height:1px; overflow:hidden; }
+label.btn-file{ display:inline-flex; align-items:center; gap:6px; cursor:pointer; }
+label.btn-file img{ filter: invert(1) brightness(1.2); }
+
+/* Wrap fixes */
+#logs{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;-webkit-hyphens:auto;hyphens:auto}
+.app-title{
+  font-weight:800;white-space:normal;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  word-break:break-word;overflow-wrap:anywhere;
+}
+.app-card .mut{word-break:break-word;overflow-wrap:anywhere}
+.session .title{white-space:normal;word-break:break-word;overflow-wrap:anywhere}
+
+/* 3D circle fill & iframe hide */
+.arch-circle{position:relative}
+#three-canvas{position:absolute;inset:0}
+#three-canvas canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.arch-circle iframe{display:none !important}
+</style>
+
+<style>#arch-overlay-bg{position:absolute;inset:0;background:var(--arch-overlay);opacity:var(--arch-overlay-alpha,.08);pointer-events:none}</style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<style id="ls-panel-css">
+/* === DualHub • Painel de LocalStorage (namespaced) === */
+#lsModal.ls-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1200;background:rgba(0,0,0,.55);backdrop-filter:blur(8px)}
+#lsModal.ls-modal.open{display:flex}
+#lsModal .ls-panel{width:min(1040px,95vw);max-height:86vh;overflow:auto;background:rgba(15,17,32,.92);border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 12px 34px rgba(0,0,0,.4);padding:14px;color:#f5f7ff;font:14px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
+#lsModal .ls-hdr{display:flex;gap:10px;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.12);padding-bottom:10px;margin-bottom:10px}
+#lsModal .ls-ttl{font-weight:900;letter-spacing:.06em}
+#lsModal .ls-actions{display:flex;gap:8px;flex-wrap:wrap}
+#lsModal button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;padding:8px 12px;border-radius:10px;cursor:pointer}
+#lsModal button:hover{background:rgba(255,255,255,.18)}
+#lsModal .meta{color:#cfd8dc;font-size:12px;margin:8px 0 10px}
+#lsModal .presets{border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:8px;background:rgba(255,255,255,.04);margin:10px 0}
+#lsModal .presets-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:8px}
+#lsModal .preset{border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.04);padding:10px;display:grid;gap:6px}
+#lsModal .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#lsModal .val{font:12px/1.4 ui-monospace,monospace;background:#0b0f1a;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px;max-height:140px;overflow:auto;word-break:break-word}
+#lsModal .list{display:grid;gap:10px}
+#lsModal .item{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px;display:grid;gap:8px}
+#lsModal .item .head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#lsModal .key{font-weight:800;max-width:56vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#lsModal .type{font-size:11px;color:#cfd8dc}
+#lsModal .switch{inline-size:46px;block-size:28px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.15);position:relative;cursor:pointer}
+#lsModal .switch::after{content:"";position:absolute;inset:4px auto 4px 4px;width:20px;border-radius:999px;background:#fff;transition:all .18s}
+#lsModal .switch.on{background:rgba(25,226,123,.28)}
+#lsModal .switch.on::after{left:22px}
+#lsModal .img-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+#lsModal .img-card{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);border-radius:10px;padding:8px}
+#lsModal .img-card img{width:100%;height:auto;display:block;border-radius:8px}
+/* Carteira SK */
+#lsModal .sk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:720px){#lsModal .sk-grid{grid-template-columns:1fr}#lsModal .key{max-width:46vw}}
+#lsModal .sk-item{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px;display:grid;gap:8px}
+#lsModal .sk-item .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#lsModal .sk-item .name{font-weight:800}
+#lsModal .sk-item .key{font:12px/1.4 ui-monospace,monospace;opacity:.85;word-break:break-all}
+#lsModal .sk-item button{font-size:.75rem;padding:4px 8px;border-radius:8px}
+#lsModal .sk-item button:first-child{background:rgba(57,255,182,.18)}
+#lsModal .sk-item button:last-child{background:rgba(255,92,138,.18)}
+</style>
+
 </head>
 <body>
   <!-- Splash screen displayed on initial load -->
@@ -1224,7 +1317,9 @@ body[data-theme="blue1"] #chatFeed .msg.user { background: rgba(232,240,255,0.10
 
   <!-- Container para fundo personalizado (imagem ou vídeo).  Será preenchido via JS quando o usuário escolher
        um tema customizado.  Fica no início do body para garantir que fique abaixo de todos os conteúdos -->
-  <div id="custom-bg" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;overflow:hidden;pointer-events:none"></div>
+  <div id="custom-bg" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;overflow:hidden;pointer-events:none">
+    <div id="arch-overlay-bg"></div>
+  </div>
 
   <!-- ===== Views ===== -->
   <main>
@@ -1363,6 +1458,7 @@ body[data-theme="blue1"] #chatFeed .msg.user { background: rgba(232,240,255,0.10
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
               <!-- Aceita arquivos .json além de HTML/TXT para permitir upload de catálogos personalizados -->
               <input id="fileLocal" type="file" accept=".html,.htm,.txt,.json" multiple="" class="input ring">
+<label for="fileLocal" class="btn btn-file fx-trans fx-press ring"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/file-arrow-up.svg" alt="Escolher" width="16" height="16" onerror="this.onerror=null;this.src='icons/file-upload.svg'">Selecionar arquivos<span class="ripple"></span></label>
               <button id="btnImport" class="btn fx-trans fx-press ring">
                 <img src="icons/plus-circle.svg" alt="Adicionar" width="16" height="16" onerror="this.onerror=null;this.src='icons/plus-circle.svg'" style="margin-right:4px">
                 Adicionar Locais<span class="ripple"></span>
@@ -4936,121 +5032,226 @@ main .row > * + * { margin-top: .5rem; }
 
 
  <script type="module" src="uno_audio_breath.js" defer></script>
+
 <script>
-// === KOBLLUX 3D Archetypes — inline engine ===
 (function(){
   const $ = (q,r=document)=>r.querySelector(q);
-  const archSelect = $('#arch-select');
-  const archCircle = $('#arch-circle');
-  const threeCanvasContainer = $('#three-canvas');
-  if(!archSelect || !archCircle || !threeCanvasContainer || !window.THREE){ return; }
-
-  // Map 12 archetypes (baseName => config)
-  const ARQ = {
-    Atlas:{ color:0x00FF7F, geo:()=>new THREE.BoxGeometry(2,2,2), overlay:'rgba(64,158,255,0.22)', flow:{rotation:0.001, noise:0.05} },
-    Nova:{ color:0xFF4500, geo:()=>new THREE.TetrahedronGeometry(1.5), overlay:'rgba(255,82,177,0.22)', flow:{rotation:0.008, noise:0.2} },
-    Vitalis:{ color:0x48DAA8, geo:()=>new THREE.ConeGeometry(1.3,2.2,7), overlay:'rgba(87,207,112,0.22)', flow:{rotation:0.004, noise:0.12} },
-    Pulse:{ color:0x00BFFF, geo:()=>new THREE.TorusKnotGeometry(0.8,0.26,160,24), overlay:'rgba(0,191,255,0.22)', flow:{rotation:0.007, noise:0.18} },
-    Artemis:{ color:0xBA82DB, geo:()=>new THREE.OctahedronGeometry(1.5), overlay:'rgba(186,130,219,0.22)', flow:{rotation:0.005, noise:0.3} },
-    Serena:{ color:0x8CBEFF, geo:()=>new THREE.SphereGeometry(1.6, 24, 20), overlay:'rgba(140,190,255,0.22)', flow:{rotation:0.002, noise:0.05} },
-    Kaos:{ color:0xFF4D6D, geo:()=>new THREE.TetrahedronGeometry(1.5,1), overlay:'rgba(255,77,109,0.22)', flow:{rotation:0.012, noise:0.35} },
-    Genus:{ color:0x57CF70, geo:()=>new THREE.DodecahedronGeometry(1.5), overlay:'rgba(87,207,112,0.22)', flow:{rotation:0.003, noise:0.1} },
-    Lumine:{ color:0xFFD54F, geo:()=>new THREE.IcosahedronGeometry(1.5), overlay:'rgba(255,213,79,0.22)', flow:{rotation:0.003, noise:0.1} },
-    Rhea:{ color:0x00D1B2, geo:()=>new THREE.DodecahedronGeometry(1.5), overlay:'rgba(0,209,178,0.22)', flow:{rotation:0.002, noise:0.15} },
-    Solus:{ color:0x6495ED, geo:()=>new THREE.OctahedronGeometry(1.5,1), overlay:'rgba(100,149,237,0.22)', flow:{rotation:0.002, noise:0.1} },
-    Aion:{ color:0xFFD700, geo:()=>new THREE.IcosahedronGeometry(1.5,1), overlay:'rgba(255,159,67,0.22)', flow:{rotation:0.001, noise:0.05} }
-  };
-
-  function baseNameFromValue(val){
-    if(!val) return 'Atlas';
-    const base = String(val).replace(/\.html$/i,'').trim().toLowerCase();
-    return (base.charAt(0).toUpperCase()+base.slice(1));
-  }
-
-  // THREE setup
-  let scene, camera, renderer, crystal;
-  let isDragging=false, prev={x:0,y:0};
-  const sens=0.005, clock=new THREE.Clock();
-
-  function init(){
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(75, threeCanvasContainer.clientWidth/threeCanvasContainer.clientHeight, 0.1, 1000);
-    camera.position.z = 4;
-    renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
-    renderer.setSize(threeCanvasContainer.clientWidth, threeCanvasContainer.clientHeight);
-    renderer.setPixelRatio(window.devicePixelRatio||1);
-    threeCanvasContainer.innerHTML='';
-    threeCanvasContainer.appendChild(renderer.domElement);
-
-    scene.add(new THREE.AmbientLight(0xffffff,0.5));
-    const pl = new THREE.PointLight(0xffffff,1.6,100); pl.position.set(5,5,5); scene.add(pl);
-
-    updateCrystal();
-    animate();
-
-    archCircle.addEventListener('pointerdown', e=>{isDragging=true; prev.x=e.clientX; prev.y=e.clientY;});
-    archCircle.addEventListener('pointerleave', ()=>isDragging=false);
-    archCircle.addEventListener('pointerup', ()=>isDragging=false);
-    archCircle.addEventListener('pointermove', e=>{
-      if(!isDragging || !crystal) return;
-      const dx = e.clientX - prev.x, dy = e.clientY - prev.y;
-      crystal.rotation.y += dx*sens; crystal.rotation.x += dy*sens;
-      prev.x=e.clientX; prev.y=e.clientY;
+  const LS = { get:(k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d }catch{ return d } },
+               set:(k,v)=>{ try{ localStorage.setItem(k, JSON.stringify(v)) }catch{} } };
+  function applyOverlayAlpha(val){ document.documentElement.style.setProperty('--arch-overlay-alpha', (Number(val)||0).toString()); }
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const onBtn = $('#overlayAlphaOn'), offBtn = $('#overlayAlphaOff');
+    const range = $('#overlayAlphaRange'), label = $('#overlayAlphaVal');
+    const savedAlpha = LS.get('uno:overlay:alpha', 0.08);
+    const enabled = LS.get('uno:overlay:enabled', true);
+    if(range){ range.value = savedAlpha; if(label) label.textContent = Number(savedAlpha).toFixed(2); }
+    if(enabled){ applyOverlayAlpha(savedAlpha); onBtn && onBtn.classList.add('on'); } else { applyOverlayAlpha(0); onBtn && onBtn.classList.remove('on'); }
+    function setEnabled(flag){
+      LS.set('uno:overlay:enabled', !!flag);
+      if(flag){ const a = Number((range && range.value) || savedAlpha || 0.08); applyOverlayAlpha(a); onBtn && onBtn.classList.add('on'); }
+      else{ applyOverlayAlpha(0); onBtn && onBtn.classList.remove('on'); }
+    }
+    onBtn && onBtn.addEventListener('click', ()=> setEnabled(true));
+    offBtn && offBtn.addEventListener('click', ()=> setEnabled(false));
+    range && range.addEventListener('input', ()=>{
+      const v = Number(range.value || 0.08);
+      LS.set('uno:overlay:alpha', v);
+      if(label) label.textContent = v.toFixed(2);
+      if(LS.get('uno:overlay:enabled', true)) applyOverlayAlpha(v);
     });
-    window.addEventListener('resize', onResize);
-  }
-
-  function onResize(){
-    if(!renderer) return;
-    const w = threeCanvasContainer.clientWidth, h = threeCanvasContainer.clientHeight;
-    camera.aspect = w/h; camera.updateProjectionMatrix();
-    renderer.setSize(w,h);
-  }
-
-  function applyOverlayFor(name){
-    const key = name in ARQ ? name : 'Atlas';
-    const col = ARQ[key].overlay;
-    document.documentElement.style.setProperty('--arch-overlay', col);
-    // if there's applyArchOverlay override in page, let it compute too
-    if(typeof window.applyArchOverlay === 'function'){
-      try { window.applyArchOverlay(name.toLowerCase()); } catch(e){}
-    }
-  }
-
-  function updateCrystal(){
-    const name = baseNameFromValue(archSelect.value);
-    const cfg = ARQ[name] || ARQ['Atlas'];
-    if(crystal) scene.remove(crystal);
-    const geo = cfg.geo();
-    const mat = new THREE.MeshStandardMaterial({ color: cfg.color, metalness:0.7, roughness:0.3, transparent:true, opacity:0.85 });
-    const mesh = new THREE.Mesh(geo, mat);
-    const edges = new THREE.EdgesGeometry(geo);
-    const wire = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color:0xffffff, opacity:0.4, transparent:true }));
-    crystal = new THREE.Group(); crystal.add(mesh); crystal.add(wire); scene.add(crystal);
-    applyOverlayFor(name);
-  }
-
-  function animate(){
-    requestAnimationFrame(animate);
-    if(crystal){
-      const name = baseNameFromValue(archSelect.value);
-      const flow = (ARQ[name]||ARQ['Atlas']).flow;
-      const t = clock.getElapsedTime();
-      crystal.rotation.x += flow.rotation + Math.sin(t*0.5)*flow.noise*0.01;
-      crystal.rotation.y += flow.rotation + Math.cos(t*0.3)*flow.noise*0.01;
-    }
-    renderer.render(scene,camera);
-  }
-
-  archSelect.addEventListener('change', updateCrystal);
-  // Hook prev/next buttons if present
-  const btnPrev = document.getElementById('arch-prev');
-  const btnNext = document.getElementById('arch-next');
-  if(btnPrev) btnPrev.addEventListener('click', ()=>setTimeout(updateCrystal, 10));
-  if(btnNext) btnNext.addEventListener('click', ()=>setTimeout(updateCrystal, 10));
-
-  // Start after DOM ready
-  init();
+  });
 })();
 </script>
+
+
+<!-- === DualHub • Painel LocalStorage === -->
+<div id="lsModal" class="ls-modal" aria-hidden="true">
+  <div class="ls-panel" id="lsPanel">
+    <div class="ls-hdr">
+      <div class="ls-ttl">LocalStorage • Presets, Chaves & Carteira SK</div>
+      <div class="ls-actions">
+        <button id="lsRescan">Re-scan</button>
+        <button id="lsExport">Exportar</button>
+        <label for="lsImportFile" style="display:inline-block"><button type="button">Importar</button></label>
+        <input id="lsImportFile" type="file" accept="application/json" hidden>
+        <button id="lsClearDisabled">Limpar desativados</button>
+        <button id="lsClose">Fechar</button>
+      </div>
+    </div>
+
+    <details class="presets" open>
+      <summary><strong>Presets (ON/OFF global)</strong></summary>
+      <div class="presets-grid" id="presetsGrid"></div>
+    </details>
+
+    <details class="presets" open>
+      <summary><strong>Carteira de Chaves OpenRouter</strong></summary>
+      <div class="grid" style="gap:8px">
+        <div class="row" style="border:0;padding:0;gap:8px">
+          <input id="skName" placeholder="Nome curto (ex.: Prod, Dev, Teste)" style="flex:1">
+          <input id="skValue" placeholder="sk-..." style="flex:2">
+          <button id="skAdd">Adicionar</button>
+        </div>
+        <div class="sk-grid" id="skGrid"></div>
+      </div>
+      <div class="meta">A chave <code>dual.keys.openrouter</code> recebe a chave marcada como <b>Ativa</b>. Desativar retira a chave ativa do uso (sem apagar a carteira).</div>
+    </details>
+
+    <div class="meta"><span id="lsCount">—</span> • <span id="lsSize">—</span></div>
+    <div class="list" id="lsList"></div>
+
+    <details class="presets" style="margin-top:10px" open>
+      <summary><strong>Pré-visualização de Imagens</strong></summary>
+      <div class="img-grid" id="imgGrid"></div>
+    </details>
+  </div>
+</div>
+
+
+<script id="ls-panel-js">
+(() => {
+  const $ = (s, r=document)=> r.querySelector(s);
+  const $$ = (s, r=document)=> Array.from(r.querySelectorAll(s));
+  const prettyBytes = (n)=>{ if(!Number.isFinite(n)||n<=0) return '0 B'; const u=['B','KB','MB','GB']; let i=0; while(n>=1024&&i<u.length-1){n/=1024;i++} return n.toFixed(2)+' '+u[i] };
+  const isJson = (v)=>{ try{ JSON.parse(v); return true; }catch{ return false; } };
+  const inferType = (v)=>{
+    if(v==null||v==='') return 'empty';
+    if(isJson(v)){const p=JSON.parse(v); if(Array.isArray(p)) return 'json[array]'; if(p&&typeof p==='object') return 'json[object]'; return 'json['+(typeof p)+']';}
+    if(/^data:image\//i.test(v)||/\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(v)) return 'image';
+    if(/^(true|false|1|0)$/i.test(v)) return 'boolean-like';
+    if(/^https?:\/\//i.test(v)) return 'url';
+    if(/^data:/i.test(v)) return 'data-url';
+    return 'string';
+  };
+
+  const DISABLED_KEY = 'infodose:presets.disabled';
+  const PRESETS = [
+    { key:'infodose:userName', label:'Usuário' },
+    { key:'infodose:assistantName', label:'Assistente' },
+    { key:'dual.keys.openrouter', label:'Chave OpenRouter (ativa)' },
+    { key:'dual.openrouter.model', label:'Modelo OpenRouter' },
+    { key:'uno:theme', label:'Tema' },
+    { key:'uno:bg', label:'Fundo Custom' },
+    { key:'infodose:cssCustom', label:'CSS Custom' },
+    { key:'infodose:voices', label:'Vozes Arquetípicas' }
+  ];
+
+  const disabledSet = ()=> { try{ return new Set(JSON.parse(localStorage.getItem(DISABLED_KEY)||'[]')); }catch{ return new Set(); } };
+  const saveDisabled = (set)=> localStorage.setItem(DISABLED_KEY, JSON.stringify(Array.from(set)));
+  const isEnabled = (k)=> !disabledSet().has(k);
+  const toggleDisabled = (k)=> { const s=disabledSet(); s.has(k)?s.delete(k):s.add(k); saveDisabled(s); renderAll(); window.dispatchEvent(new CustomEvent('ls:disabled-changed',{detail:{key:k,disabled:s.has(k)}})); };
+
+  // Carteira SK
+  const WALLET_KEY = 'dual.keys.wallet';
+  const getWallet = ()=>{ try{ return JSON.parse(localStorage.getItem(WALLET_KEY)||'[]'); }catch{return []} };
+  const setWallet = (arr)=> localStorage.setItem(WALLET_KEY, JSON.stringify(arr));
+  const addWalletItem = (name, key)=>{
+    const list=getWallet();
+    const genId = (crypto?.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2));
+    list.push({ id: genId, name, key, active:false });
+    setWallet(list); renderWallet();
+  };
+  const removeWalletItem = (id)=>{ const list=getWallet().filter(x=>x.id!==id); setWallet(list); ensureActiveConsistency(); renderWallet(); };
+  const activateWalletItem = (id)=>{
+    const list=getWallet().map(x=>({...x, active: x.id===id})); setWallet(list);
+    if(isEnabled('dual.keys.openrouter')){
+      const chosen=list.find(x=>x.active); localStorage.setItem('dual.keys.openrouter', chosen? chosen.key: '');
+    }
+    renderAll();
+  };
+  const ensureActiveConsistency = ()=>{ const list=getWallet(); const anyActive=list.some(x=>x.active); if(!anyActive){ localStorage.setItem('dual.keys.openrouter',''); } };
+  const renderWallet = ()=>{
+    const grid=$('#skGrid'); if(!grid) return; grid.innerHTML='';
+    const list=getWallet(); if(!list.length){ grid.innerHTML='<div class="meta">Nenhuma chave na carteira ainda.</div>'; return; }
+    list.forEach(item=>{
+      const div=document.createElement('div'); div.className='sk-item';
+      const top=document.createElement('div'); top.className='top';
+      const name=document.createElement('div'); name.className='name'; name.textContent=item.name+(item.active?' • ATIVA':'');
+      const act=document.createElement('div');
+      const bUse=document.createElement('button'); bUse.textContent=item.active?'Desativar':'Ativar';
+      bUse.onclick=()=>{ if(item.active){
+          const list2=getWallet().map(x=>({...x, active: x.id===item.id? false: x.active })); setWallet(list2); ensureActiveConsistency(); renderWallet(); renderAll();
+        } else { activateWalletItem(item.id); } };
+      const bDel=document.createElement('button'); bDel.textContent='Apagar'; bDel.onclick=()=>{ if(confirm('Apagar entrada da carteira?')) removeWalletItem(item.id) };
+      act.append(bUse,bDel); top.append(name,act);
+      const key=document.createElement('div'); key.className='key'; key.textContent=item.key;
+      div.append(top,key); grid.append(div);
+    });
+  };
+
+  // LS
+  const lsEntries = ()=>{ const out=[]; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); const v=localStorage.getItem(k)||''; out.push({key:k,val:v}); } return out.sort((a,b)=>a.key.localeCompare(b.key)); };
+  const lsSizeBytes = ()=>{ let sum=0; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); const v=localStorage.getItem(k)||''; sum += k.length + v.length; } return sum; };
+
+  const renderPresets = ()=>{
+    const grid=$('#presetsGrid'); if(!grid) return; grid.innerHTML='';
+    const dis=disabledSet();
+    PRESETS.forEach(p=>{
+      const val=localStorage.getItem(p.key); const on=!dis.has(p.key);
+      const wrap=document.createElement('div'); wrap.className='preset';
+      const head=document.createElement('div'); head.className='row';
+      const name=document.createElement('div'); name.innerHTML = `<strong>${p.label}</strong><div class="type">${p.key}</div>`;
+      const sw=document.createElement('div'); sw.className='switch'+(on?' on':''); sw.title=on?'Desativar (não apaga)':'Ativar'; sw.onclick=()=>toggleDisabled(p.key);
+      head.append(name,sw);
+      const meta=document.createElement('div'); meta.className='val';
+      meta.textContent = val ? (inferType(val).startsWith('json')? JSON.stringify(JSON.parse(val),null,2): val) : '—';
+      wrap.append(head,meta); grid.append(wrap);
+    });
+  };
+
+  const addImagePreview = (key,src)=>{ const g=$('#imgGrid'); if(!g) return; const card=document.createElement('div'); card.className='img-card'; const cap=document.createElement('div'); cap.className='meta'; cap.textContent=key; const im=new Image(); im.src=src; im.loading='lazy'; card.append(cap,im); g.append(card); };
+
+  const renderLS = ()=>{
+    const list=$('#lsList'); if(!list) return; list.innerHTML=''; const imgGrid=$('#imgGrid'); if(imgGrid) imgGrid.innerHTML='';
+    const entries=lsEntries(); const count=$('#lsCount'); if(count) count.textContent = entries.length+' chave(s)';
+    const size=$('#lsSize'); if(size) size.textContent = prettyBytes(lsSizeBytes());
+    const dis=disabledSet();
+    entries.forEach(({key,val})=>{
+      if(key===DISABLED_KEY) return;
+      const it=document.createElement('div'); it.className='item';
+      const head=document.createElement('div'); head.className='head';
+      const left=document.createElement('div');
+      left.innerHTML=`<div class="key">${key}${dis.has(key)?' <span class="type">(desativado)</span>':''}</div><div class="type">${inferType(val)} • ${prettyBytes((val||'').length)}</div>`;
+      const ctr=document.createElement('div'); ctr.style.display='flex'; ctr.style.gap='8px'; ctr.style.flexWrap='wrap';
+      const sw=document.createElement('div'); sw.className='switch'+(!dis.has(key)?' on':''); sw.title = (!dis.has(key)?'Desativar':'Ativar'); sw.onclick=()=>toggleDisabled(key);
+      const bEdit=document.createElement('button'); bEdit.textContent='Editar'; bEdit.onclick=()=>{ const next=prompt('Editar valor de
+'+key, val ?? ''); if(next==null) return; localStorage.setItem(key,String(next)); renderAll(); };
+      const bDel=document.createElement('button'); bDel.textContent='Apagar'; bDel.onclick=()=>{ if(confirm('Apagar '+key+'?')){ localStorage.removeItem(key); renderAll(); } };
+      if(inferType(val)==='image'){ const bImg=document.createElement('button'); bImg.textContent='Ver imagem'; bImg.onclick=()=>addImagePreview(key,val); ctr.append(bImg); }
+      ctr.append(sw,bEdit,bDel); head.append(left,ctr);
+      const v=document.createElement('div'); v.className='val'; v.textContent = inferType(val).startsWith('json')? JSON.stringify(JSON.parse(val),null,2): (val??'—');
+      it.append(head,v); list.append(it);
+    });
+  };
+
+  const exportLS = ()=>{ const dump={}; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k===DISABLED_KEY) continue; dump[k]=localStorage.getItem(k); } const blob=new Blob([JSON.stringify(dump,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='localstorage_export.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(url), 2000); };
+  const importLS = (file)=>{ const r=new FileReader(); r.onload=()=>{ try{ const data=JSON.parse(r.result||'{}'); Object.entries(data).forEach(([k,v])=>localStorage.setItem(k,String(v))); alert('Importado com sucesso.'); renderAll(); }catch(e){ alert('JSON inválido.'); } }; r.readAsText(file); };
+
+  const openLS = ()=>{ const m=$('#lsModal'); if(!m) return; m.classList.add('open'); m.setAttribute('aria-hidden','false'); renderAll(); renderWallet(); };
+  const closeLS = ()=>{ const m=$('#lsModal'); if(!m) return; m.classList.remove('open'); m.setAttribute('aria-hidden','true'); };
+
+  const renderAll = ()=>{ renderPresets(); renderLS(); };
+
+  // Wire up events when DOM is ready
+  const ready = () => {
+    const btn = document.getElementById('btnLS');
+    if(btn && !btn.dataset._lsbound){
+      btn.addEventListener('click', openLS);
+      btn.dataset._lsbound = '1';
+    }
+    const c = $('#lsClose'); if(c) c.onclick = closeLS;
+    const r = $('#lsRescan'); if(r) r.onclick = renderAll;
+    const e = $('#lsExport'); if(e) e.onclick = exportLS;
+    const imp = $('#lsImportFile'); if(imp) imp.addEventListener('change', ev=>{ const f=ev.target.files?.[0]; if(f) importLS(f); ev.target.value=''; });
+    const clr = $('#lsClearDisabled'); if(clr) clr.onclick = ()=>{ localStorage.setItem(DISABLED_KEY,'[]'); renderAll(); };
+    const modal = $('#lsModal'); if(modal) modal.addEventListener('click', (evt)=>{ if(evt.target===modal) closeLS(); });
+    const skAdd = $('#skAdd'); if(skAdd) skAdd.onclick = ()=>{ const name=$('#skName').value.trim(); const key=$('#skValue').value.trim(); if(!name||!key) return alert('Informe nome e chave.'); addWalletItem(name,key); $('#skName').value=''; $('#skValue').value=''; };
+  };
+  if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', ready); } else { ready(); }
+
+  // Expose a small API
+  window.DualLS = { open: openLS, close: closeLS, render: renderAll };
+})();
+</script>
+
 </body></html>
