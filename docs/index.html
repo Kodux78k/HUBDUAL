@@ -5018,4 +5018,213 @@ if ('serviceWorker' in navigator) {
   addEventListener('load', ()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 }
 </script>
+
+<!-- ======= DualHub Uplift v13: Built-in Apps + Better Open Behavior ======= -->
+<script>
+(function(){
+  if (window.__DUALHUB_UPLIFT_V13__) return; window.__DUALHUB_UPLIFT_V13__ = true;
+
+  // --- 1) Built-in micro‑apps (Notes + Checklist + Timer), used when url === "about:blank" ---
+  function builtinAppHTML(key, title){
+    const safeKey = String(key || 'app').replace(/[^a-z0-9_-]/ig,'');
+    const t = String(title || key || 'App');
+    return `<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>${t}</title>
+<style>
+  :root {
+    --bg:#0b0f14; --card:#131a24; --mut:#b7c1cc; --line:rgba(255,255,255,.08);
+    --fg:#e9eef5; --ok:#39FFB6; --warn:#FFC857; --err:#FF5C8A;
+    --r:12px; --r2:18px; --shadow:0 10px 30px rgba(0,0,0,.45);
+  }
+  body { margin:0; background:radial-gradient(1200px 800px at 50% 110%, rgba(0,197,229,.14) 0%, var(--bg) 56%);
+         color:var(--fg); font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif; }
+  header { position:sticky; top:0; background:rgba(19,26,36,.72); backdrop-filter:blur(10px);
+           display:flex; align-items:center; justify-content:space-between; gap:12px;
+           padding:12px 14px; border-bottom:1px solid var(--line); z-index:10 }
+  .title { display:flex; gap:10px; align-items:center; font-weight:800; letter-spacing:.02em }
+  .badge { font-size:11px; color:#0b0f14; background:linear-gradient(90deg,#ff52e5,#00c5e5);
+           padding:2px 8px; border-radius:999px; font-weight:700 }
+  .wrap { padding:14px; display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)) }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:var(--r2); box-shadow:var(--shadow); padding:14px }
+  .card h3 { margin:0 0 10px; font-size:13px; font-weight:800; color:var(--mut); letter-spacing:.06em; text-transform:uppercase }
+  textarea, input[type="text"] { width:100%; background:#0e1420; color:var(--fg); border:1px solid var(--line);
+           border-radius:var(--r); padding:10px; resize:vertical; outline:none }
+  .btn { background:#1b2432; color:var(--fg); border:1px solid var(--line); border-radius:var(--r); padding:9px 12px; cursor:pointer }
+  .btn:hover { background:#222c3b }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap }
+  .mut { color:var(--mut); font-size:12px }
+  .todo { display:flex; align-items:center; gap:10px; padding:8px 6px; border-bottom:1px dashed var(--line) }
+  .todo input { width:18px; height:18px }
+  .timer { font-variant-numeric:tabular-nums; font-size:32px; font-weight:800; text-align:center; margin:6px 0 12px }
+</style>
+</head>
+<body>
+  <header>
+    <div class="title"><span class="badge">${safeKey}</span> ${t}</div>
+    <div class="row">
+      <button class="btn" id="export">Exportar</button>
+      <span class="mut" id="saved">—</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h3>Notas Rápidas</h3>
+      <textarea id="notes" rows="8" placeholder="Escreva livremente..."></textarea>
+      <div class="mut" id="count"></div>
+    </section>
+
+    <section class="card">
+      <h3>Checklist</h3>
+      <div class="row">
+        <input id="newTask" type="text" placeholder="Adicionar item e Enter">
+        <button class="btn" id="add">Adicionar</button>
+      </div>
+      <div id="list"></div>
+    </section>
+
+    <section class="card">
+      <h3>Timer</h3>
+      <div class="timer" id="clock">25:00</div>
+      <div class="row">
+        <button class="btn" data-t="25">Foco 25</button>
+        <button class="btn" data-t="5">Pausa 5</button>
+        <button class="btn" data-t="15">Pausa 15</button>
+        <button class="btn" id="start">Iniciar</button>
+        <button class="btn" id="stop">Parar</button>
+      </div>
+    </section>
+  </main>
+
+<script>
+(function(){
+  const KEY = 'builtin:${safeKey}';
+  const S = JSON.parse(localStorage.getItem(KEY) || '{}');
+  const $ = (q,r=document)=>r.querySelector(q);
+  const $$ = (q,r=document)=>Array.from(r.querySelectorAll(q));
+  const saved = $('#saved');
+
+  // Notes
+  const notes = $('#notes');
+  notes.value = S.notes || '';
+  const updCount = ()=>{ $('#count').textContent = notes.value.length + ' chars'; };
+  notes.addEventListener('input', ()=>{ S.notes = notes.value; persist(); updCount(); });
+  updCount();
+
+  // Checklist
+  const list = $('#list');
+  function renderTodos(){
+    list.innerHTML = '';
+    (S.todos || []).forEach((t,i)=>{
+      const row = document.createElement('div'); row.className='todo';
+      row.innerHTML = '<input type="checkbox"><div contenteditable="true" style="flex:1"></div><button class="btn">X</button>';
+      const [cb,txt,del] = row.children;
+      cb.checked = !!t.done; txt.textContent = t.text || '';
+      cb.onchange = ()=>{ t.done = cb.checked; persist(); };
+      txt.oninput  = ()=>{ t.text = txt.textContent; persist(); };
+      del.onclick  = ()=>{ (S.todos||[]).splice(i,1); persist(); renderTodos(); };
+      list.appendChild(row);
+    });
+  }
+  S.todos = Array.isArray(S.todos) ? S.todos : [];
+  renderTodos();
+  $('#add').onclick = ()=>{
+    const v = ($('#newTask').value || '').trim(); if(!v) return;
+    S.todos.push({text:v, done:false}); $('#newTask').value = ''; persist(); renderTodos();
+  };
+  $('#newTask').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); $('#add').click(); }});
+
+  // Timer
+  let secs = 25*60, id = null;
+  function fmt(n){ n = Math.max(0,n)|0; const m = String(Math.floor(n/60)).padStart(2,'0'); const s = String(n%60).padStart(2,'0'); return m+':'+s; }
+  function tick(){ secs--; if(secs<=0){ clearInterval(id); id=null; } $('#clock').textContent = fmt(secs); }
+  function set(t){ secs = t*60; $('#clock').textContent = fmt(secs); }
+  $$('.card [data-t]').forEach(b=> b.onclick = ()=> set(parseInt(b.dataset.t,10)||25));
+  $('#start').onclick = ()=>{ if(id) return; id = setInterval(tick,1000); };
+  $('#stop').onclick  = ()=>{ clearInterval(id); id=null; };
+
+  // Persist
+  function persist(){
+    localStorage.setItem(KEY, JSON.stringify(S));
+    const ts = new Date().toLocaleString('pt-BR');
+    saved.textContent = 'salvo ' + ts;
+  }
+  $('#export').onclick = ()=>{
+    const blob = new Blob([JSON.stringify(S,null,2)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = safeKey + '_dados.json'; a.click();
+  };
+  // first save stamp
+  persist();
+})();
+</script>
+</body></html>`;
+  }
+
+  // Helper: local "locals()" mirror used in the legacy code to include user-saved local apps
+  function userLocals(){
+    try {
+      const arr = JSON.parse(localStorage.getItem('infodose:locals:v1') || '[]') || [];
+      return arr.map(l => ({ key: 'local:' + l.id, title: l.name || l.id, url: 'local:' + l.id, icon: 'local', tags: ['local'] }));
+    } catch(e){ return []; }
+  }
+
+  // --- 2) Override openApp to inject a blob URL for built-ins when URL is blank/placeholder ---
+  const __originalOpenApp = window.openApp;
+  window.openApp = function(app){
+    try {
+      const a = app ? Object.assign({}, app) : { key:'app', title:'App', url:'about:blank' };
+      const isPlaceholder = !a.url || a.url === 'about:blank' || /^\s*$/.test(String(a.url));
+      const isLocalScheme  = String(a.url || '').startsWith('local:');
+      if (isLocalScheme) {
+        // keep legacy behavior (local:ID resolved elsewhere)
+        return __originalOpenApp(a);
+      }
+      if (isPlaceholder) {
+        const html = builtinAppHTML(a.key || 'app', a.title || a.key || 'App');
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        a.url = URL.createObjectURL(blob);
+      }
+      return __originalOpenApp(a);
+    } catch(e) {
+      try { return __originalOpenApp(app); } catch(_){ console.error('openApp override falhou:', e); }
+    }
+  };
+
+  // --- 3) Make the whole app card clickable (except on favorite star or buttons) ---
+  function installCardClick(){
+    const wrap = document.getElementById('appsWrap');
+    if (!wrap || wrap.__clickInstalled) return;
+    wrap.__clickInstalled = true;
+    wrap.addEventListener('click', function(ev){
+      const card = ev.target.closest('.app-card'); if (!card) return;
+      if (ev.target.closest('.fav-btn') || ev.target.closest('button')) return;
+      // find the app by matching the full title stored as the tooltip on .app-title
+      const titleEl = card.querySelector('.app-title');
+      const fullTitle = (titleEl && (titleEl.getAttribute('title') || titleEl.textContent)) || '';
+      // try RAW.apps first, then user locals
+      const lib = (window.RAW && Array.isArray(window.RAW.apps) ? window.RAW.apps : []).concat(userLocals());
+      const a = lib.find(x => String(x.title||'') === String(fullTitle||''));
+      if (a) window.openApp(a);
+    }, true);
+  }
+
+  // --- 4) Re-render apps so the new open handler is bound on the "Abrir" button ---
+  function refresh(){
+    try { installCardClick(); } catch(e){}
+    try { window.renderApps && window.renderApps(); } catch(e){}
+    try { installCardClick(); } catch(e){}
+  }
+
+  // Run after the page finishes attaching original handlers
+  if (document.readyState !== 'loading') setTimeout(refresh, 120);
+  else document.addEventListener('DOMContentLoaded', function(){ setTimeout(refresh, 120); });
+})();
+</script>
+<!-- ======= /DualHub Uplift v13 ======= -->
+
 </body></html>
