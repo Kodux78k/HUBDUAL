@@ -1062,7 +1062,48 @@ textarea {
 #btnKOBLLUX { 
   bottom: calc(1rem + env(safe-area-inset-bottom));
 }
+/* Orb container já existe no teu index/orb; só adicionamos o slot */
+.orb-wrap { position: relative; }
+.orb-wrap canvas,
+.orb-wrap .orb-glow,
+.orb-wrap .ring { position: absolute; inset: 0; }
 
+/* NOVO: o “berço” do iframe dentro do orbe */
+.orb-slot{
+  position:absolute;
+  /* recuo leve pra caber dentro da borda luminosa */
+  inset: 8%;
+  border-radius: 50%;
+  overflow: hidden;
+  /* máscara redundante p/ navegadores sem border-radius clipping perfeito */
+  -webkit-clip-path: circle(50% at 50% 50%);
+          clip-path: circle(50% at 50% 50%);
+  /* mistura com o shader do orbe para parecer embutido */
+  mix-blend-mode: screen;
+  opacity: .92;
+  filter: saturate(1.06) contrast(1.04);
+  will-change: transform, opacity, filter;
+  z-index: 3; /* entre o núcleo e as partículas */
+}
+
+.orb-slot iframe{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  border:0; background:#0b0f14; /* evita flash branco */
+  /* leve suavização pra parecer “líquido” */
+  transform: translateZ(0);
+}
+
+/* Dá um “tint” com a cor do arquétipo ativo sem perder legibilidade */
+.orb-slot::after{
+  content:"";
+  position:absolute; inset:0;
+  background: var(--arch-overlay, transparent);
+  pointer-events:none;
+  mix-blend-mode: overlay; /* interage com o conteúdo do iframe */
+  opacity:.35;
+  transition: opacity .25s ease;
+}
 /* Navegações/chips SOMENTE na header: scroll horizontal, sem wrap */
 .header .row {
   display: block !important;
@@ -1385,6 +1426,19 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
           </div>
           <div class="arch-circle">
             <div id="arch-fadeCover"></div>
+            <!-- NOVO: slot circular que “carrega” o arquétipo por dentro do orbe -->
+    <div class="orb-slot">
+      <iframe id="arch-frame" title="Archetype Core"
+              sandbox="allow-scripts"
+              referrerpolicy="no-referrer"
+              src="./archetypes/atlas.html"></iframe>
+    </div>
+
+    <canvas id="particles"></canvas>
+    <div class="ring"></div>
+  </div>
+
+ 
             <!-- Camada de ripple auditivo fica sobre o conteúdo do círculo -->
             <div id="audioRipple" class="audio-ripple"></div>
             <!-- ORB Nebula (WebGL + Partículas) — integrado no HUB -->
