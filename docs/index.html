@@ -913,6 +913,65 @@ body::after{content:'';position:fixed;inset:0;background:none !important;pointer
     body.session-full .tabs-wrap,
     body.session-full .fab { display: none !important; }
 
+
+
+/* === ORB + Particles (escopado dentro do círculo de arquétipos) === */
+.arch-circle .orb-wrap{
+  pointer-events:auto;
+  position:absolute;
+  inset: 6%;
+  width: 88%;
+  height: 88%;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  filter: drop-shadow(0 24px 48px rgba(0,0,0,.45));
+  z-index: 5; /* acima do iframe, abaixo de overlays de UI */
+}
+.arch-circle canvas#orb, .arch-circle canvas#particles{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  display:block;
+  pointer-events:none; /* não bloquear cliques do hub */
+}
+.arch-circle .orb-glow{
+  position:absolute;
+  inset:-8%;
+  border-radius:50%;
+  pointer-events:none;
+  background:radial-gradient(60% 60% at 50% 50%, rgba(122,60,255,.18), rgba(0,229,255,.14) 45%, rgba(0,0,0,0) 70%);
+  filter:blur(16px);
+  opacity:.92;
+  transition:opacity .6s ease, transform .6s ease;
+}
+.arch-circle .orb-wrap.activated .orb-glow{ transform:scale(1.05); }
+.arch-circle .ring{
+  position:absolute;
+  inset:-8%;
+  border-radius:50%;
+  pointer-events:none;
+  background: radial-gradient(80% 80% at 50% 50%, rgba(255,255,255,.10), rgba(255,255,255,0) 42%);
+}
+.arch-circle .call{
+  position:absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(234,242,255,.78);
+  font-size: 11px;
+  letter-spacing: .3px;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: .85;
+  text-shadow: 0 1px 0 rgba(0,0,0,.5);
+}
+@media (min-width:768px){
+  .arch-circle .call{ font-size:12px; }
+}
 </style>
 <style id="blue1Theme">
 /* === Blue‑1 Theme (UI) === */
@@ -1328,6 +1387,15 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
             <div id="arch-fadeCover"></div>
             <!-- Camada de ripple auditivo fica sobre o conteúdo do círculo -->
             <div id="audioRipple" class="audio-ripple"></div>
+            <!-- ORB Nebula (WebGL + Partículas) — integrado no HUB -->
+            <div class="orb-wrap" id="orbWrap" aria-label="Orbe Nebula">
+              <canvas id="orb"></canvas>
+              <div class="orb-glow" id="orbGlow"></div>
+              <canvas id="particles"></canvas>
+              <div class="ring"></div>
+              <div class="call" id="orbCall">Toque para pulsar · Nebula</div>
+            </div>
+
             <iframe id="arch-frame" title="Archetype Core" sandbox="allow-scripts" referrerpolicy="no-referrer" src="./archetypes/atlas.html"></iframe>
           </div>
           <!-- Mensagem de feedback aparece fora da bolinha, logo abaixo dela -->
@@ -5019,70 +5087,97 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<!-- SAFE ResizeObserver helper & auto-apply for canvas elements -->
 <script>
+/* ==========================================================================
+   ORB WebGL (shader nebula) + Partículas 2D — escopo HUB
+   ========================================================================== */
 (function(){
-  if(window.__createSafeResizeObserverInstalled) return;
-  window.__createSafeResizeObserverInstalled = true;
-  function createSafeResizeObserver(target, onRectChange, opts={}) {
-    if (!target) return { disconnect(){}, observe(){} };
-    if (!target.__roSafe) target.__roSafe = {};
-    const state = target.__roSafe;
-    if (state.observer) {
-      return { observe(){}, disconnect(){ state.observer.disconnect(); state.observer=null; } };
-    }
-    const DPR = Math.min(2, (window.devicePixelRatio || 1));
-    let rafId = null;
-    let diagCount = 0, diagTimer = null;
-    const applyRect = (rect) => { try { onRectChange(rect, DPR); } catch(e){ console.warn('safeRO callback error', e); } };
-    const ro = new ResizeObserver((entries) => {
-      diagCount++;
-      if (!diagTimer) {
-        diagTimer = setTimeout(() => {
-          if (opts.logHealth) console.log('[RO-Health]', diagCount <= 10 ? 'ok' : 'many', diagCount, target);
-          diagCount = 0; diagTimer = null;
-        }, 250);
-      }
-      if (!entries || !entries.length) return;
-      const rect = entries[0].contentRect;
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(()=> applyRect(rect));
-    });
-    ro.observe(target);
-    state.observer = ro;
-    requestAnimationFrame(() => {
-      try {
-        const rect = target.getBoundingClientRect();
-        applyRect(rect);
-      } catch(e){}
-    });
-    return {
-      observe(){ ro.observe(target); },
-      disconnect(){ try{ ro.disconnect(); }catch(e){} state.observer=null; }
-    };
-  }
-  window.createSafeResizeObserver = createSafeResizeObserver;
+  const canvas = document.getElementById('orb');
+  if(!canvas) return;
+  const gl = canvas.getContext('webgl', { antialias:true, alpha:true });
+  if(!gl) return;
 
-  // Auto-apply to canvas elements to ensure safe sizing
-  document.addEventListener('DOMContentLoaded', function(){
-    try {
-      const canvases = Array.from(document.querySelectorAll('canvas'));
-      canvases.forEach(c => {
-        if (c.dataset.__roAutoApplied) return;
-        c.dataset.__roAutoApplied = '1';
-        createSafeResizeObserver(c, (rect, DPR) => {
-          const cssW = (rect && rect.width) ? rect.width : (c.clientWidth || 1);
-          const cssH = (rect && rect.height) ? rect.height : (c.clientHeight || 1);
-          const w = Math.max(1, Math.floor(cssW * DPR));
-          const h = Math.max(1, Math.floor(cssH * DPR));
-          if (c.width !== w || c.height !== h) {
-            c.width = w;
-            c.height = h;
-          }
-        }, { logHealth:false });
-      });
-    } catch(e){}
-  });
+  const dpr = Math.min(2, window.devicePixelRatio||1);
+  function resize(){
+    const r = canvas.getBoundingClientRect();
+    canvas.width = Math.floor(r.width*dpr);
+    canvas.height = Math.floor(r.height*dpr);
+    gl.viewport(0,0,canvas.width,canvas.height);
+  }
+  new ResizeObserver(resize).observe(canvas); resize();
+
+  const vs = 'attribute vec2 aPos; varying vec2 vUv; void main(){ vUv=aPos*0.5+0.5; gl_Position=vec4(aPos,0.,1.);}';
+  const fs = `precision highp float; varying vec2 vUv; uniform vec2 u_res; uniform float u_time; uniform float u_active;
+  float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453123); }
+  float noise(vec2 p){ vec2 i=floor(p); vec2 f=fract(p); float a=hash(i);
+    float b=hash(i+vec2(1.,0.)); float c=hash(i+vec2(0.,1.)); float d=hash(i+vec2(1.,1.));
+    vec2 u=f*f*(3.-2.*f); return mix(a,b,u.x)+(c-a)*u.y*(1.-u.x)+(d-b)*u.x*u.y; }
+  vec3 cam(){ return vec3(0.,0.,3.); }
+  vec3 getRay(vec2 uv){ uv=(uv*2.-1.); uv.x*=u_res.x/u_res.y; return normalize(vec3(uv,-1.8)); }
+  bool isph(vec3 ro, vec3 rd, float r, out float t){
+    float b=dot(ro,rd); float c=dot(ro,ro)-r*r; float h=b*b-c; if(h<0.){t=-1.;return false;}
+    h=sqrt(h); t=-b-h; if(t<0.) t=-b+h; if(t<0.) return false; return true; }
+  void main(){
+    vec2 uv=vUv; vec3 ro=cam(); vec3 rd=getRay(uv);
+    float t; vec3 col=vec3(0.02,0.03,0.07); vec3 fogCol=vec3(0.07,0.09,0.16);
+    float g=noise(uv*6.+u_time*0.05)*0.25; col+=vec3(0.25,0.08,0.55)*g*0.6+vec3(0.0,0.35,0.55)*g*0.4;
+    if(isph(ro,rd,1.,t)){
+      vec3 p=ro+rd*t; vec3 n=normalize(p);
+      float bands=0.5+0.5*sin(6.*p.x+5.*p.y+u_time*0.6);
+      float swirl=noise(p.xy*4.+u_time*0.2);
+      vec3 A=vec3(0.52,0.24,1.00), B=vec3(0.00,0.90,1.00);
+      vec3 base=mix(A,B, clamp(bands*0.6+swirl*0.4,0.,1.));
+      vec3 L=normalize(vec3(0.6,0.7,0.5));
+      float diff=max(dot(n,L),0.); float rim=pow(1.-max(dot(n,-rd),0.), 2.);
+      float pulse=0.5+0.5*sin(u_time*1.5); float act=mix(0.6,1.0,u_active);
+      vec3 c=base*(0.35+0.75*diff*act)+(B*0.6+A*0.4)*rim*(0.6+0.4*pulse);
+      float fogAmt=1.0-exp(-t*0.35); col=mix(c,fogCol,fogAmt*0.25);
+    }else{
+      vec2 centered=uv-0.5; centered.x*=u_res.x/u_res.y;
+      float d=length(centered); float outer=smoothstep(0.58,0.12,d);
+      vec3 halo=vec3(0.25,0.12,0.55)*outer*0.35+vec3(0.00,0.55,0.95)*outer*0.25;
+      col+=halo;
+    }
+    float vign=smoothstep(1.2,0.55, length((uv-0.5)*vec2(u_res.x/u_res.y,1.)));
+    col*=vign; gl_FragColor=vec4(col,0.98);
+  }`;
+  function sh(type,src){ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s); return s; }
+  const pr=gl.createProgram(); gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs)); gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs)); gl.linkProgram(pr); gl.useProgram(pr);
+  const buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1, 1,-1,1,1,-1,1]),gl.STATIC_DRAW);
+  const loc=gl.getAttribLocation(pr,'aPos'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  const uRes=gl.getUniformLocation(pr,'u_res'); const uTime=gl.getUniformLocation(pr,'u_time'); const uActive=gl.getUniformLocation(pr,'u_active');
+  let start=performance.now(), active=0.0;
+  function draw(){ const t=(performance.now()-start)*0.001; gl.uniform2f(uRes,canvas.width,canvas.height); gl.uniform1f(uTime,t); gl.uniform1f(uActive,active); gl.drawArrays(gl.TRIANGLES,0,6); requestAnimationFrame(draw) }
+  draw();
+  window.__orbGL__ = {
+    setActive:(v)=>{ active=v?1.0:0.0; },
+    pulse:()=>{ let k=0,steps=24; const id=setInterval(()=>{ active=Math.min(1,active+0.06); if(++k>=steps) clearInterval(id);},16);
+                setTimeout(()=>{ let j=0; const id2=setInterval(()=>{ active=Math.max(0,active-0.06); if(++j>=steps) clearInterval(id2);},16);},380); }
+  };
 })();
+
+(function particles2D(){
+  const c=document.getElementById('particles'); if(!c) return;
+  const ctx=c.getContext('2d'); const dpr=Math.min(2,window.devicePixelRatio||1);
+  function rs(){ const r=c.getBoundingClientRect(); c.width=Math.floor(r.width*dpr); c.height=Math.floor(r.height*dpr); }
+  new ResizeObserver(rs).observe(c); rs();
+  const N=90, nodes=Array.from({length:N},()=>({a:Math.random()*6.283, r:0.42+Math.random()*0.48, s:(0.2+Math.random()*0.7)*(Math.random()<0.5?-1:1), z:0.5+Math.random()*0.5, hue:200+Math.random()*160}));
+  function draw(t){ ctx.clearRect(0,0,c.width,c.height); ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.translate(c.width/2,c.height/2); const scale=Math.min(c.width,c.height)/2;
+    for(const n of nodes){
+      const a=n.a + t*0.00025*n.s, r=n.r + 0.03*Math.sin(t*0.0005+n.a);
+      const x=Math.cos(a)*r*scale, y=Math.sin(a)*r*scale;
+      const g=ctx.createRadialGradient(x,y,0, x,y, 6 + n.z*8);
+      g.addColorStop(0, `hsla(${n.hue}, 85%, 65%, ${0.38*n.z})`);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y, 2.5 + n.z*3.0, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore(); requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+
+// Pulsar no clique direto no wrap
+document.getElementById('orbWrap')?.addEventListener('click', function(){ try{ window.__orbGL__ && window.__orbGL__.pulse(); }catch(_){ } });
 </script>
+
 </body></html>
