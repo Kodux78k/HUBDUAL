@@ -913,6 +913,65 @@ body::after{content:'';position:fixed;inset:0;background:none !important;pointer
     body.session-full .tabs-wrap,
     body.session-full .fab { display: none !important; }
 
+
+
+/* === ORB + Particles (escopado dentro do círculo de arquétipos) === */
+.arch-circle .orb-wrap{
+  pointer-events:auto;
+  position:absolute;
+  inset: 6%;
+  width: 88%;
+  height: 88%;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  filter: drop-shadow(0 24px 48px rgba(0,0,0,.45));
+  z-index: 5; /* acima do iframe, abaixo de overlays de UI */
+}
+.arch-circle canvas#orb, .arch-circle canvas#particles{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  display:block;
+  pointer-events:none; /* não bloquear cliques do hub */
+}
+.arch-circle .orb-glow{
+  position:absolute;
+  inset:-8%;
+  border-radius:50%;
+  pointer-events:none;
+  background:radial-gradient(60% 60% at 50% 50%, rgba(122,60,255,.18), rgba(0,229,255,.14) 45%, rgba(0,0,0,0) 70%);
+  filter:blur(16px);
+  opacity:.92;
+  transition:opacity .6s ease, transform .6s ease;
+}
+.arch-circle .orb-wrap.activated .orb-glow{ transform:scale(1.05); }
+.arch-circle .ring{
+  position:absolute;
+  inset:-8%;
+  border-radius:50%;
+  pointer-events:none;
+  background: radial-gradient(80% 80% at 50% 50%, rgba(255,255,255,.10), rgba(255,255,255,0) 42%);
+}
+.arch-circle .call{
+  position:absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(234,242,255,.78);
+  font-size: 11px;
+  letter-spacing: .3px;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: .85;
+  text-shadow: 0 1px 0 rgba(0,0,0,.5);
+}
+@media (min-width:768px){
+  .arch-circle .call{ font-size:12px; }
+}
 </style>
 <style id="blue1Theme">
 /* === Blue‑1 Theme (UI) === */
@@ -1245,6 +1304,57 @@ body::after{
 html[data-overlay="off"] body::after{ background: transparent !important; }
 html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
 </style>
+
+<style id="orb-slot-css">
+/* === ORB Slot (iframe "dentro" do orbe) === */
+.arch-circle { position: relative; }
+#orbWrap { position: relative; }
+#orbWrap canvas#orb,
+#orbWrap .orb-glow,
+#orbWrap .ring,
+#orbWrap canvas#particles { position: absolute; inset: 0; }
+
+/* Z-order for sandwiching */
+#orbWrap canvas#orb { z-index: 1; }
+#orbWrap .orb-glow { z-index: 2; }
+#orbWrap .orb-slot   { z-index: 3; } /* iframe masked */
+#orbWrap canvas#particles { z-index: 4; }
+#orbWrap .ring { z-index: 5; }
+/* HUB overlays keep above */
+#arch-fadeCover, #audioRipple { z-index: 6; }
+
+/* Masked slot inside the orb */
+.orb-slot{
+  position:absolute;
+  inset: 8%;              /* adjust 6–10% to taste */
+  border-radius: 50%;
+  overflow: hidden;
+  -webkit-clip-path: circle(50% at 50% 50%);
+          clip-path: circle(50% at 50% 50%);
+  mix-blend-mode: screen;
+  opacity: .92;
+  filter: saturate(1.06) contrast(1.04);
+  will-change: transform, opacity, filter;
+  pointer-events: auto;   /* allow interaction inside the archetype app */
+}
+.orb-slot iframe#arch-frame{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  border:0; background:#0b0f14; /* avoid white flash */
+  transform: translateZ(0);
+}
+/* Tint with archetype overlay color */
+.orb-slot::after{
+  content:"";
+  position:absolute; inset:0;
+  background: var(--arch-overlay, transparent);
+  pointer-events:none;
+  mix-blend-mode: overlay;
+  opacity:.35;
+  transition: opacity .25s ease;
+}
+</style>
+
 </head>
 <body>
   <!-- Splash screen displayed on initial load -->
@@ -1319,7 +1429,7 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
             <button class="btn fx-trans fx-press ring" id="arch-prev" title="Anterior">
               <img src="icons/chevron-left.svg" alt="Anterior" width="16" height="16" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/chevron-left.svg'">
             <span class="ripple"></span></button>
-            <select id="arch-select" title="Escolher arquétipo"><option value="atlas.html">atlas.html</option><option value="nova.html">nova.html</option><option value="vitalis.html">vitalis.html</option><option value="pulse.html">pulse.html</option><option value="artemis.html">artemis.html</option><option value="serena.html">serena.html</option><option value="kaos.html">kaos.html</option><option value="genus.html">genus.html</option><option value="lumine.html">lumine.html</option><option value="rhea.html">rhea.html</option><option value="solus.html">solus.html</option><option value="aion.html">aion.html</option></select>
+            <select id="arch-select" title="Escolher arquétipo"><option value="./archetypes3d/value="./archetypes3d/atlas.html">atlas.html</option><option value="./archetypes3d/value="./archetypes3d/nova.html">nova.html</option><option value="./archetypes3d/value="./archetypes3d/vitalis.html">vitalis.html</option><option value="./archetypes3d/value="./archetypes3d/pulse.html">pulse.html</option><option value="./archetypes3d/value="./archetypes3d/artemis.html">artemis.html</option><option value="./archetypes3d/value="./archetypes3d/serena.html">serena.html</option><option value="./archetypes3d/value="./archetypes3d/kaos.html">kaos.html</option><option value="./archetypes3d/value="./archetypes3d/genus.html">genus.html</option><option value="./archetypes3d/value="./archetypes3d/lumine.html">lumine.html</option><option value="./archetypes3d/value="./archetypes3d/rhea.html">rhea.html</option><option value="./archetypes3d/value="./archetypes3d/solus.html">solus.html</option><option value="./archetypes3d/value="./archetypes3d/aion.html">aion.html</option></select>
             <button class="btn fx-trans fx-press ring" id="arch-next" title="Próximo">
               <img src="icons/chevron-right.svg" alt="Próximo" width="16" height="16" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/chevron-right.svg'">
             <span class="ripple"></span></button>
@@ -1328,6 +1438,15 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
             <div id="arch-fadeCover"></div>
             <!-- Camada de ripple auditivo fica sobre o conteúdo do círculo -->
             <div id="audioRipple" class="audio-ripple"></div>
+            <!-- ORB Nebula (WebGL + Partículas) — integrado no HUB -->
+            <div class="orb-wrap" id="orbWrap" aria-label="Orbe Nebula">
+              <canvas id="orb"></canvas>
+              <div class="orb-glow" id="orbGlow"></div>
+              <canvas id="particles"></canvas>
+              <div class="ring"></div>
+              <div class="call" id="orbCall">Toque para pulsar · Nebula</div>
+            </div>
+
             <iframe id="arch-frame" title="Archetype Core" sandbox="allow-scripts" referrerpolicy="no-referrer" src="./archetypes/atlas.html"></iframe>
           </div>
           <!-- Mensagem de feedback aparece fora da bolinha, logo abaixo dela -->
@@ -5019,89 +5138,479 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<!-- DUALHUB-WALLET-PATCH START -->
 <script>
+/* ==========================================================================
+   ORB WebGL (shader nebula) + Partículas 2D — escopo HUB
+   ========================================================================== */
 (function(){
-  if(window.__dualhub_wallet_patch_applied) return;
-  window.__dualhub_wallet_patch_applied = true;
-  const LS = {
-    get(k){ try{ return (localStorage.getItem(k)||'').trim(); }catch(e){ return ''; } },
-    set(k,v){ try{ localStorage.setItem(k,(v||'').toString().trim()); }catch(e){} }
-  };
-  const K = {
-    ACTIVE: 'dual.wallet.active',
-    OR_KEY: 'wallet.openrouter.key',
-    OR_MODEL: 'wallet.openrouter.model',
-    BRIDGE_KEY: 'dual.keys.openrouter',
-    BRIDGE_MODEL: 'dual.openrouter.model'
-  };
-  // migrate from legacy keys if empty
-  (function migrate(){
-    try{
-      if(!LS.get(K.OR_KEY)){
-        const legacy = LS.get('dual.keys.openrouter') || LS.get('openrouter.key') || LS.get('wallet.openrouter.1') || LS.get('wallet.openrouter.2');
-        if(legacy) LS.set(K.OR_KEY, legacy);
-      }
-      if(!LS.get(K.OR_MODEL)){
-        const legacyM = LS.get('dual.openrouter.model') || LS.get('openrouter.model') || 'openrouter/auto';
-        LS.set(K.OR_MODEL, legacyM);
-      }
-      if(!LS.get(K.ACTIVE)) LS.set(K.ACTIVE,'openrouter');
-    }catch(e){}
-  })();
-  function applyBridgeFromWallet(){
-    const active = LS.get(K.ACTIVE);
-    if(active === 'openrouter'){
-      const key = LS.get(K.OR_KEY);
-      const mdl = LS.get(K.OR_MODEL) || 'openrouter/auto';
-      if(key) LS.set(K.BRIDGE_KEY, key);
-      LS.set(K.BRIDGE_MODEL, mdl);
-      appendLog('Bridge aplicada: ' + (key? 'chave presente' : 'sem chave') + ' • modelo=' + mdl);
-    }
+  const canvas = document.getElementById('orb');
+  if(!canvas) return;
+  const gl = canvas.getContext('webgl', { antialias:true, alpha:true });
+  if(!gl) return;
+
+  const dpr = Math.min(2, window.devicePixelRatio||1);
+  function resize(){
+    const r = canvas.getBoundingClientRect();
+    canvas.width = Math.floor(r.width*dpr);
+    canvas.height = Math.floor(r.height*dpr);
+    gl.viewport(0,0,canvas.width,canvas.height);
   }
-  // quick logger UI
-  function appendLog(s){
-    try{
-      let L = document.getElementById('dualhub_patch_log');
-      if(!L){
-        L = document.createElement('div');
-        L.id = 'dualhub_patch_log';
-        L.style.cssText = 'position:fixed;left:12px;bottom:12px;right:12px;z-index:999999;pointer-events:none;font:12px/1.2 system-ui;color:#cfe8ff';
-        document.body.appendChild(L);
-      }
-      const d = document.createElement('div');
-      d.style.cssText = 'background:rgba(3,6,12,0.6);border:1px solid rgba(255,255,255,0.03);padding:6px;border-radius:8px;margin-top:6px;pointer-events:auto';
-      d.textContent = (new Date()).toLocaleTimeString() + ' — ' + s;
-      L.appendChild(d);
-      // keep last 6
-      while(L.children.length>6) L.removeChild(L.firstChild);
-    }catch(e){}
+  new ResizeObserver(resize).observe(canvas); resize();
+
+  const vs = 'attribute vec2 aPos; varying vec2 vUv; void main(){ vUv=aPos*0.5+0.5; gl_Position=vec4(aPos,0.,1.);}';
+  const fs = `precision highp float; varying vec2 vUv; uniform vec2 u_res; uniform float u_time; uniform float u_active;
+  float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453123); }
+  float noise(vec2 p){ vec2 i=floor(p); vec2 f=fract(p); float a=hash(i);
+    float b=hash(i+vec2(1.,0.)); float c=hash(i+vec2(0.,1.)); float d=hash(i+vec2(1.,1.));
+    vec2 u=f*f*(3.-2.*f); return mix(a,b,u.x)+(c-a)*u.y*(1.-u.x)+(d-b)*u.x*u.y; }
+  vec3 cam(){ return vec3(0.,0.,3.); }
+  vec3 getRay(vec2 uv){ uv=(uv*2.-1.); uv.x*=u_res.x/u_res.y; return normalize(vec3(uv,-1.8)); }
+  bool isph(vec3 ro, vec3 rd, float r, out float t){
+    float b=dot(ro,rd); float c=dot(ro,ro)-r*r; float h=b*b-c; if(h<0.){t=-1.;return false;}
+    h=sqrt(h); t=-b-h; if(t<0.) t=-b+h; if(t<0.) return false; return true; }
+  void main(){
+    vec2 uv=vUv; vec3 ro=cam(); vec3 rd=getRay(uv);
+    float t; vec3 col=vec3(0.02,0.03,0.07); vec3 fogCol=vec3(0.07,0.09,0.16);
+    float g=noise(uv*6.+u_time*0.05)*0.25; col+=vec3(0.25,0.08,0.55)*g*0.6+vec3(0.0,0.35,0.55)*g*0.4;
+    if(isph(ro,rd,1.,t)){
+      vec3 p=ro+rd*t; vec3 n=normalize(p);
+      float bands=0.5+0.5*sin(6.*p.x+5.*p.y+u_time*0.6);
+      float swirl=noise(p.xy*4.+u_time*0.2);
+      vec3 A=vec3(0.52,0.24,1.00), B=vec3(0.00,0.90,1.00);
+      vec3 base=mix(A,B, clamp(bands*0.6+swirl*0.4,0.,1.));
+      vec3 L=normalize(vec3(0.6,0.7,0.5));
+      float diff=max(dot(n,L),0.); float rim=pow(1.-max(dot(n,-rd),0.), 2.);
+      float pulse=0.5+0.5*sin(u_time*1.5); float act=mix(0.6,1.0,u_active);
+      vec3 c=base*(0.35+0.75*diff*act)+(B*0.6+A*0.4)*rim*(0.6+0.4*pulse);
+      float fogAmt=1.0-exp(-t*0.35); col=mix(c,fogCol,fogAmt*0.25);
+    }else{
+      vec2 centered=uv-0.5; centered.x*=u_res.x/u_res.y;
+      float d=length(centered); float outer=smoothstep(0.58,0.12,d);
+      vec3 halo=vec3(0.25,0.12,0.55)*outer*0.35+vec3(0.00,0.55,0.95)*outer*0.25;
+      col+=halo;
+    }
+    float vign=smoothstep(1.2,0.55, length((uv-0.5)*vec2(u_res.x/u_res.y,1.)));
+    col*=vign; gl_FragColor=vec4(col,0.98);
+  }`;
+  function sh(type,src){ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s); return s; }
+  const pr=gl.createProgram(); gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs)); gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs)); gl.linkProgram(pr); gl.useProgram(pr);
+  const buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1, 1,-1,1,1,-1,1]),gl.STATIC_DRAW);
+  const loc=gl.getAttribLocation(pr,'aPos'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  const uRes=gl.getUniformLocation(pr,'u_res'); const uTime=gl.getUniformLocation(pr,'u_time'); const uActive=gl.getUniformLocation(pr,'u_active');
+  let start=performance.now(), active=0.0;
+  function draw(){ const t=(performance.now()-start)*0.001; gl.uniform2f(uRes,canvas.width,canvas.height); gl.uniform1f(uTime,t); gl.uniform1f(uActive,active); gl.drawArrays(gl.TRIANGLES,0,6); requestAnimationFrame(draw) }
+  draw();
+  window.__orbGL__ = {
+    setActive:(v)=>{ active=v?1.0:0.0; },
+    pulse:()=>{ let k=0,steps=24; const id=setInterval(()=>{ active=Math.min(1,active+0.06); if(++k>=steps) clearInterval(id);},16);
+                setTimeout(()=>{ let j=0; const id2=setInterval(()=>{ active=Math.max(0,active-0.06); if(++j>=steps) clearInterval(id2);},16);},380); }
+  };
+})();
+
+(function particles2D(){
+  const c=document.getElementById('particles'); if(!c) return;
+  const ctx=c.getContext('2d'); const dpr=Math.min(2,window.devicePixelRatio||1);
+  function rs(){ const r=c.getBoundingClientRect(); c.width=Math.floor(r.width*dpr); c.height=Math.floor(r.height*dpr); }
+  new ResizeObserver(rs).observe(c); rs();
+  const N=90, nodes=Array.from({length:N},()=>({a:Math.random()*6.283, r:0.42+Math.random()*0.48, s:(0.2+Math.random()*0.7)*(Math.random()<0.5?-1:1), z:0.5+Math.random()*0.5, hue:200+Math.random()*160}));
+  function draw(t){ ctx.clearRect(0,0,c.width,c.height); ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.translate(c.width/2,c.height/2); const scale=Math.min(c.width,c.height)/2;
+    for(const n of nodes){
+      const a=n.a + t*0.00025*n.s, r=n.r + 0.03*Math.sin(t*0.0005+n.a);
+      const x=Math.cos(a)*r*scale, y=Math.sin(a)*r*scale;
+      const g=ctx.createRadialGradient(x,y,0, x,y, 6 + n.z*8);
+      g.addColorStop(0, `hsla(${n.hue}, 85%, 65%, ${0.38*n.z})`);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y, 2.5 + n.z*3.0, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore(); requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+
+// Pulsar no clique direto no wrap
+document.getElementById('orbWrap')?.addEventListener('click', function(){ try{ window.__orbGL__ && window.__orbGL__.pulse(); }catch(_){ } });
+</script>
+
+
+<script id="orb-slot-and-archpersist-patch">
+(function(){
+  // ---- Helpers ----
+  function $(q, r=document){ return r.querySelector(q); }
+  function baseName(file){ return String(file||'').replace(/\.html$/i,'').toLowerCase(); }
+
+  // ---- Create orb-slot and move the iframe inside the orb ----
+  function fuseIframeIntoOrb(){
+    var wrap = $('#orbWrap');
+    var frame = $('#arch-frame');
+    if(!wrap || !frame) return;
+    // If already fused, skip
+    if (frame.parentElement && frame.parentElement.classList && frame.parentElement.classList.contains('orb-slot')) return;
+    var slot = document.createElement('div');
+    slot.className = 'orb-slot';
+    // Insert slot above particles but below ring (order controlled by CSS z-index)
+    wrap.appendChild(slot);
+    // Move iframe inside slot
+    slot.appendChild(frame);
   }
 
-  // Test function (GET /models)
-  const OR_API = "https://openrouter.ai/api/v1";
-  function validKey(sk){ return /^sk-or-v1-[A-Za-z0-9_-]{12,}$/.test(sk); }
-  async function testKey(){
-    const sk = LS.get(K.OR_KEY);
-    if(!sk){ appendLog('Sem chave wallet.openrouter.key'); alert('Sem chave na carteira. Cole e Salve.'); return; }
-    if(!validKey(sk)) appendLog('Formato de chave suspeito');
-    try{
-      appendLog('Testando chave /models...');
-      const r = await fetch(OR_API + '/models', { method:'GET', headers:{ 'Authorization':'Bearer '+sk, 'X-Title':'DualHub-Local' }});
-      const txt = await r.text();
-      if(!r.ok){ appendLog('API erro ' + r.status + ' — ' + txt.slice(0,160)); alert('Erro API: '+r.status); return; }
-      appendLog('Chave OK — modelos listados');
-      alert('Chave OK — modelos listados');
-    }catch(e){
-      appendLog('Falha rede/CORS: ' + (e.message||e));
-      alert('Falha rede/CORS: ' + (e.message||e));
+  // ---- Archetype persistence (uno:arch) + overlay/apply + Firestore sync ----
+  function currentSelectBase(){
+    var sel = $('#arch-select'); if(!sel) return '';
+    var opt = sel.options[sel.selectedIndex];
+    return baseName(opt && opt.value);
+  }
+  function applyArch(base){
+    var sel = $('#arch-select'), frame = $('#arch-frame'), fade = $('#arch-fadeCover');
+    if(!sel || !frame) return;
+    var idx = -1;
+    for (var i=0;i<sel.options.length;i++){
+      if (baseName(sel.options[i].value) === base){ idx = i; break; }
+    }
+    if (idx >= 0){
+      sel.selectedIndex = idx;
+      if (fade) fade.classList.add('show');
+      var file = sel.options[idx].value;
+      frame.src = './archetypes/' + file;
+      try { if (typeof window.applyArchOverlay === 'function') window.applyArchOverlay(base); } catch(_){}
+      try { if (typeof window.speakArchetype === 'function') window.speakArchetype(base); } catch(_){}
+      try { if (typeof window.updateHomeStatus === 'function') window.updateHomeStatus(); } catch(_){}
+      setTimeout(function(){ if (fade) fade.classList.remove('show'); }, 240);
     }
   }
-  // Expose minimal helpers
-  window.__dualhub_wallet = { applyBridgeFromWallet, testKey };
-  // Auto-apply bridge on load
-  try{ applyBridgeFromWallet(); appendLog('Bridge inicial aplicada'); }catch(e){}
+  function saveArch(base){
+    if(!base) return;
+    try { localStorage.setItem('uno:arch', base); } catch(_){}
+    // If a shared app state exists, mirror and save remotely
+    try {
+      if (window.S && S.state){
+        S.state.archetype = base;
+        if (typeof window.saveState === 'function') saveState(S.state);
+      }
+    } catch(_){}
+  }
+  function bindArchPersistence(){
+    var sel = $('#arch-select'), prev = $('#arch-prev'), next = $('#arch-next');
+    function persist(){ var b=currentSelectBase(); if(b){ saveArch(b);} }
+    if (sel) sel.addEventListener('change', persist, {passive:true});
+    if (prev) prev.addEventListener('click', function(){ setTimeout(persist, 0); }, {passive:true});
+    if (next) next.addEventListener('click', function(){ setTimeout(persist, 0); }, {passive:true});
+    // Accept remote notifications
+    window.addEventListener('message', function(ev){
+      var d = ev && ev.data || {};
+      if (d && d.type==='archReady' && d.name){
+        var b = baseName(d.name);
+        saveArch(b);
+      }
+    });
+  }
+  function bootWithSavedArch(){
+    var saved = (localStorage.getItem('uno:arch') || localStorage.getItem('infodose:arch') || '').replace(/\.html$/i,'');
+    saved = baseName(saved);
+    if(saved){
+      var cur = currentSelectBase();
+      if (cur !== saved) applyArch(saved);
+    } else {
+      // Initialize with current
+      saveArch(currentSelectBase());
+    }
+  }
+
+  function start(){
+    fuseIframeIntoOrb();
+    bindArchPersistence();
+    bootWithSavedArch();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
 })();
 </script>
-<!-- DUALHUB-WALLET-PATCH END -->
+
+
+<script id="arch-chips-3d-layers">
+// BLOOM TOGGLE: persist in localStorage('dual.ui.bloom'), add button above chips
+(function(){ 
+  const _bState = (localStorage.getItem('dual.ui.bloom') === '1');
+  function sendBloom(enabled){
+    try{
+      const fr = document.getElementById('arch-frame');
+      if(fr && fr.contentWindow) fr.contentWindow.postMessage({ type:'bloomToggle', enabled: !!enabled }, '*');
+      // Adjust overlay intensity when bloom enabled
+      document.documentElement.style.setProperty('--arch-overlay-intensity', enabled? '0.45' : '0.35');
+    }catch(e){}
+  }
+  // ensure we send initial state on boot after DOM ready
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', ()=> sendBloom(_bState) );
+  } else sendBloom(_bState);
+  // expose helper for the chip script to create the button
+  window._dual_bloom_state = _bState;
+  window._dual_bloom_send = sendBloom;
+})();
+(function(){
+  // Minimal palettes (sync with your overlay colors)
+  const COLORS = {
+    atlas:'#409EFF', nova:'#FF52B1', vitalis:'#34D399', pulse:'#00BFFF',
+    artemis:'#FFC300', serena:'#B684FF', kaos:'#FF4D6D', genus:'#22C55E',
+    lumine:'#FFD54F', rhea:'#00D1B2', solus:'#6495ED', aion:'#8B5CF6'
+  };
+  const PRESET = name => ({
+    name,
+    color: COLORS[name] || '#88a',
+    count: (name==='nova'||name==='pulse'||name==='lumine') ? 340 : 260,
+    orbitRadius: (name==='nova'||name==='serena'||name==='lumine') ? 0.76 : 0.68,
+    spin: (name==='nova'||name==='pulse') ? 0.7 : 0.56,
+    size: 0.010, // sphere size
+    glow: 0.42
+  });
+
+  const ACTIVE = new Set();
+  function sendLayers(){
+    const fr = document.getElementById('arch-frame');
+    if (!fr || !fr.contentWindow) return;
+    const arr = Array.from(ACTIVE).map(n => PRESET(n));
+    fr.contentWindow.postMessage({ type:'atomConfigLayers', layers: arr }, '*');
+  }
+
+  function chipEl(name){
+    const b = document.createElement('button');
+    b.className = 'arch-chip';
+    b.textContent = name[0].toUpperCase()+name.slice(1);
+    b.style.borderColor = 'rgba(255,255,255,.18)';
+    b.style.background = 'rgba(255,255,255,.06)';
+    b.onclick = ()=>{
+      if (ACTIVE.has(name)) ACTIVE.delete(name); else ACTIVE.add(name);
+      b.classList.toggle('on', ACTIVE.has(name));
+      sendLayers();
+    };
+    return b;
+  }
+
+  function ensureStyles(){
+    if (document.getElementById('archChip3DStyles')) return;
+    const st = document.createElement('style'); st.id='archChip3DStyles';
+    st.textContent = `
+      .arch-chip-wrap{ display:grid; grid-template-columns: repeat(auto-fill,minmax(92px,1fr)); gap:8px; }
+      .arch-chip{ appearance:none; border:1px solid var(--ring, rgba(255,255,255,.18)); background: var(--glass, rgba(255,255,255,.06)); color: var(--txt, #eaf2ff);
+        padding:8px 10px; border-radius:999px; font-size:12px; letter-spacing:.2px; cursor:pointer; }
+      .arch-chip.on{ background: rgba(57,255,182,.18); border-color: rgba(57,255,182,.45); }
+      .arch-chip-title{ font-size:12px; color: var(--muted,#a6b0c0); margin: 6px 0 6px; font-weight:800; }
+    `;
+    document.head.appendChild(st);
+  }
+
+  function injectInLSPanel(){
+    ensureStyles();
+    const panel = document.getElementById('lsPanel') || document.querySelector('#lsModal .ls-panel');
+    if (!panel || document.getElementById('archChip3DSection')) return;
+    const sec = document.createElement('div');
+    sec.id = 'archChip3DSection';
+    sec.className = 'preset';
+    sec.style.marginTop = '10px';
+    sec.innerHTML = `<div class="arch-chip-title">Arquétipos (camadas no ORB · 3D)</div>`;
+    const wrap = document.createElement('div'); wrap.className = 'arch-chip-wrap';
+    ['atlas','nova','vitalis','pulse','artemis','serena','kaos','genus','lumine','rhea','solus','aion'].forEach(n=> wrap.appendChild(chipEl(n)));
+    sec.appendChild(wrap);
+    // === Bloom toggle (insert above chips) ===
+    const bloomWrap = document.createElement('div');
+    bloomWrap.style.display = 'flex'; bloomWrap.style.alignItems = 'center'; bloomWrap.style.justifyContent = 'space-between';
+    bloomWrap.style.marginBottom = '8px';
+    const lbl = document.createElement('div'); lbl.textContent = 'Bloom Nébula'; lbl.className='arch-chip-title'; lbl.style.margin='0'; lbl.style.fontSize='12px';
+    const toggle = document.createElement('button'); toggle.id='toggleBloomBtn'; toggle.className='arch-chip'; toggle.style.minWidth='92px';
+    const state = (localStorage.getItem('dual.ui.bloom') === '1') || !!window._dual_bloom_state;
+    if(state) toggle.classList.add('on');
+    toggle.textContent = state ? 'Bloom: ON' : 'Bloom: OFF';
+    toggle.onclick = function(){
+      const now = !toggle.classList.contains('on');
+      toggle.classList.toggle('on', now);
+      toggle.textContent = now ? 'Bloom: ON' : 'Bloom: OFF';
+      try{ localStorage.setItem('dual.ui.bloom', now? '1':'0'); }catch(_){}
+      if (window._dual_bloom_send) window._dual_bloom_send(now);
+      // send message to iframe as well for immediate toggle
+      try{ const f = document.getElementById('arch-frame'); if(f && f.contentWindow) f.contentWindow.postMessage({ type: 'bloomToggle', enabled: !!now }, '*'); }catch(_){}
+    };
+    sec.insertBefore(bloomWrap, sec.firstChild);
+    bloomWrap.appendChild(lbl);
+    bloomWrap.appendChild(toggle);
+    
+    // Coloca no topo do LS Panel
+    const hdr = panel.querySelector('.ls-hdr');
+    if (hdr && hdr.parentNode) hdr.parentNode.insertBefore(sec, hdr.nextSibling);
+    // Ativa por padrão a camada do arquétipo atual
+    try{
+      const sel = document.getElementById('arch-select');
+      const cur = (sel && sel.value || 'atlas.html').replace(/.*\//,'').replace(/\.html$/i,'');
+      const btn = wrap.querySelector('button.arch-chip:nth-child(' + (['atlas','nova','vitalis','pulse','artemis','serena','kaos','genus','lumine','rhea','solus','aion'].indexOf(cur)+1) + ')');
+      if (cur && btn){ ACTIVE.add(cur); btn.classList.add('on'); sendLayers(); }
+    }catch(_){}
+  }
+
+  function bindLSButton(){
+    const btn = document.getElementById('btnLS');
+    if (btn && !btn.dataset._chipsHook){
+      btn.dataset._chipsHook = '1';
+      btn.addEventListener('click', ()=> setTimeout(injectInLSPanel, 80), {passive:true});
+    } else {
+      // if already open
+      setTimeout(injectInLSPanel, 120);
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindLSButton);
+  else bindLSButton();
+
+  // Also re-inject if LS modal gets rebuilt
+  document.addEventListener('ls:disabled-changed', ()=> setTimeout(injectInLSPanel, 60));
+})();
+</script>
+
+
+<!-- LSPANEL MASTER FIX v3.7.1 — CSS -->
+<style id="lspanel-masterfix-css">
+:root{ --ls-fg:#eaf2ff; --ls-surface:rgba(15,17,32,.9); --ls-line:rgba(255,255,255,.14); --ls-gap:10px; --ls-h:40px; --ls-r:12px; }
+#lsModal .ls-panel{background:var(--ls-surface)!important;border:1px solid var(--ls-line)!important;border-radius:16px!important;padding:12px!important}
+#lsModal .ls-panel .section-title{font-weight:900;font-size:12px;color:var(--ls-fg);opacity:.95;margin:8px 0 6px}
+#lsModal .ls-panel .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--ls-gap)}
+#lsModal .ls-panel .line{display:grid;grid-template-columns:1fr 1fr;gap:var(--ls-gap);align-items:center}
+#lsModal .ls-panel label{font-size:12px;opacity:.85}
+#lsModal .ls-panel .pill-btn, #lsModal .ls-panel button, #lsModal .ls-panel .arch-chip, #lsModal .ls-panel .btn{
+  min-height:var(--ls-h);border-radius:var(--ls-r);padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);color:var(--ls-fg);font-size:12px;letter-spacing:.2px
+}
+#lsModal .ls-panel .pill-btn.on, #lsModal .ls-panel .arch-chip.on{background:rgba(57,255,182,.18);border-color:rgba(57,255,182,.45)}
+#lsModal .ls-panel input[type="range"], #lsModal .ls-panel select{
+  min-height:var(--ls-h);border-radius:var(--ls-r);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);color:var(--ls-fg);padding:10px
+}
+#lsModal .ls-panel output{font-size:12px;opacity:.9}
+#perfHud{display:flex;gap:8px;align-items:center;justify-content:space-between;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:8px 10px;margin:8px 0}
+#perfHud .stats{display:flex;gap:10px;align-items:center}
+#perfHud .badge{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 8px;background:rgba(255,255,255,.08);font-weight:800}
+</style>
+
+
+<!-- LSPANEL MASTER FIX v3.7.1 — robust injector -->
+<script id="lspanel-masterfix-js">
+(function(){
+  // helpers
+  const $ = (q,r=document)=>r.querySelector(q);
+  const $$ = (q,r=document)=>Array.from(r.querySelectorAll(q));
+  function setLS(k,v){ try{ localStorage.setItem(k,String(v)); }catch(_){ } }
+  function getNum(k,d){ try{ const v=localStorage.getItem(k); return v==null? d : parseFloat(v); }catch(_){ return d; } }
+  function getFlag(k,d){ try{ const v=localStorage.getItem(k); return v==null? d : v==='1'; }catch(_){ return d; } }
+
+  // defaults (perf + atom)
+  const DEF = { target:50, minS:96, minR:80, cap:360, dn:0.85, up:1.06 };
+  const KP  = {
+    en:'dual.perf.enable', tgt:'dual.perf.target', s:'dual.perf.minSingle', r:'dual.perf.minRing', cap:'dual.perf.maxCap', dn:'dual.perf.stepDown', up:'dual.perf.stepUp'
+  };
+  if(localStorage.getItem(KP.en)==null) setLS(KP.en,'1');
+  if(localStorage.getItem(KP.tgt)==null) setLS(KP.tgt, DEF.target);
+  if(localStorage.getItem(KP.s)==null)   setLS(KP.s,   DEF.minS);
+  if(localStorage.getItem(KP.r)==null)   setLS(KP.r,   DEF.minR);
+  if(localStorage.getItem(KP.cap)==null) setLS(KP.cap, DEF.cap);
+  if(localStorage.getItem(KP.dn)==null)  setLS(KP.dn,  DEF.dn);
+  if(localStorage.getItem(KP.up)==null)  setLS(KP.up,  DEF.up);
+  if(localStorage.getItem('dual.atom.count')==null) setLS('dual.atom.count', 160);
+  if(localStorage.getItem('dual.atom.orbit')==null) setLS('dual.atom.orbit', 0.74);
+  if(localStorage.getItem('dual.atom.glow')==null)  setLS('dual.atom.glow',  0.38);
+  if(localStorage.getItem('dual.ui.bloom')==null)   setLS('dual.ui.bloom',   0);
+  document.body.setAttribute('data-orb-solid','off');
+
+  function panel(){
+    return $('#lsPanel') || $('#lsModal .ls-panel') || $('.ls-panel') || $('.panel-ls') || $('.settings-panel');
+  }
+
+  function ensureSection(){
+    const p = panel();
+    if(!p || $('#perfControlsV371')) return;
+    const tgt=getNum(KP.tgt,DEF.target), ms=getNum(KP.s,DEF.minS), mr=getNum(KP.r,DEF.minR), cap=getNum(KP.cap,DEF.cap), dn=getNum(KP.dn,DEF.dn), up=getNum(KP.up,DEF.up), en=getFlag(KP.en,true);
+    const sec = document.createElement('section'); sec.id='perfControlsV371';
+    sec.innerHTML = `
+      <div class="section-title">Desempenho (FPS Target)</div>
+      <div id="perfHud">
+        <div class="stats">
+          <span class="badge">FPS: <strong id="hudFps">—</strong></span>
+          <span class="badge">Meta: <strong id="hudTarget">${tgt}</strong></span>
+        </div>
+        <button id="perfEnable" class="pill-btn ${en?'on':''}">${en?'Auto':'Manual'}</button>
+      </div>
+      <div class="line">
+        <label>Meta de FPS</label>
+        <div><input id="fpsTarget" type="range" min="30" max="60" step="1" value="${tgt}" /><output id="fpsTargetOut">${tgt}</output></div>
+      </div>
+      <div class="line">
+        <label>Min (single)</label>
+        <div><input id="minSingle" type="range" min="48" max="160" step="2" value="${ms}" /><output id="minSingleOut">${ms}</output></div>
+      </div>
+      <div class="line">
+        <label>Min por anel</label>
+        <div><input id="minRing" type="range" min="48" max="160" step="2" value="${mr}" /><output id="minRingOut">${mr}</output></div>
+      </div>
+      <div class="line">
+        <label>Máximo</label>
+        <div><input id="maxCap" type="range" min="160" max="680" step="10" value="${cap}" /><output id="maxCapOut">${cap}</output></div>
+      </div>
+      <div class="line">
+        <label>Passo Reduzir</label>
+        <div><input id="stepDn" type="range" min="0.70" max="0.95" step="0.01" value="${dn}" /><output id="stepDnOut">${dn.toFixed(2)}</output></div>
+      </div>
+      <div class="line">
+        <label>Passo Aumentar</label>
+        <div><input id="stepUp" type="range" min="1.01" max="1.15" step="0.01" value="${up}" /><output id="stepUpOut">${up.toFixed(2)}</output></div>
+      </div>
+      <div class="section-title">Partículas do Átomo — SAFE</div>
+      <div class="line">
+        <label>Quantidade</label>
+        <div><input id="safe-count" type="range" min="48" max="220" step="4" value="${getNum('dual.atom.count',160)}" /><output id="safe-count-out">${getNum('dual.atom.count',160)}</output></div>
+      </div>
+      <div class="line">
+        <label>Órbita</label>
+        <div><input id="safe-orbit" type="range" min="0.60" max="0.86" step="0.01" value="${getNum('dual.atom.orbit',0.74)}" /><output id="safe-orbit-out">${getNum('dual.atom.orbit',0.74).toFixed(2)}</output></div>
+      </div>
+      <div class="line">
+        <label>Glow</label>
+        <div><input id="safe-glow" type="range" min="0.00" max="1.00" step="0.01" value="${getNum('dual.atom.glow',0.38)}" /><output id="safe-glow-out">${getNum('dual.atom.glow',0.38).toFixed(2)}</output></div>
+      </div>
+    `;
+    p.prepend(sec);
+
+    // binds
+    function bindR(id, k, fmt=(v)=>v){
+      const el = $('#'+id), out=$('#'+id+'Out'); if(!el) return;
+      el.addEventListener('input', ()=>{ const val=parseFloat(el.value); out && (out.textContent=fmt(val)); setLS(k, val); $('#hudTarget') && (id==='fpsTarget') && ($('#hudTarget').textContent=String(val)); });
+    }
+    bindR('fpsTarget', KP.tgt);
+    bindR('minSingle', KP.s);
+    bindR('minRing',   KP.r);
+    bindR('maxCap',    KP.cap);
+    bindR('stepDn',    KP.dn, (v)=>v.toFixed(2));
+    bindR('stepUp',    KP.up, (v)=>v.toFixed(2));
+
+    ['safe-count','safe-orbit','safe-glow'].forEach(id=>{
+      const el=$('#'+id), out=$('#'+id+'-out'); el && el.addEventListener('input', ()=>{ out && (out.textContent = id==='safe-count'? el.value : parseFloat(el.value).toFixed(2)); setLS(el.id==='safe-count'?'dual.atom.count': el.id==='safe-orbit'?'dual.atom.orbit':'dual.atom.glow', el.value); });
+    });
+
+    const enBtn = $('#perfEnable'); enBtn && enBtn.addEventListener('click', ()=>{
+      const now=!enBtn.classList.contains('on'); enBtn.classList.toggle('on',now); enBtn.textContent = now? 'Auto':'Manual'; setLS(KP.en, now?'1':'0');
+    });
+
+    // Live HUD FPS
+    let L=performance.now(), F=0;
+    function hudTick(t){ F++; if(t-L>=1000){ const fps=F; F=0; L=t; $('#hudFps') && ($('#hudFps').textContent=fps); } requestAnimationFrame(hudTick); }
+    requestAnimationFrame(hudTick);
+  }
+
+  // robust triggers
+  function bind(){
+    // when LS opens
+    const btn = document.getElementById('btnLS') || [...document.querySelectorAll('button,[role="button"]')].find(b=>/ls|painel|config|settings/i.test((b.textContent||'')+(b.id||'')+(b.className||'')));
+    if(btn && !btn.dataset._masterfix){ btn.dataset._masterfix='1'; btn.addEventListener('click', ()=> setTimeout(ensureSection, 120), {passive:true}); }
+    // also try on boot and on modal toggle
+    setTimeout(ensureSection, 300);
+    document.addEventListener('ls:disabled-changed', ()=> setTimeout(ensureSection, 120));
+    document.getElementById('arch-frame')?.addEventListener('load', ()=> setTimeout(ensureSection, 200));
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bind); else bind();
+})();
+</script>
+
 </body></html>
