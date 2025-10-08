@@ -1305,54 +1305,49 @@ html[data-overlay="off"] body::after{ background: transparent !important; }
 html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
 </style>
 
-<style id="orb-slot-css">
-/* === ORB Slot (iframe "dentro" do orbe) === */
-.arch-circle { position: relative; }
-#orbWrap { position: relative; }
-#orbWrap canvas#orb,
-#orbWrap .orb-glow,
-#orbWrap .ring,
-#orbWrap canvas#particles { position: absolute; inset: 0; }
+<style>
+/* --- Edge Toggles (botões fantasmas na borda) --- */
+.edge-toggle {
+  position: fixed;
+  left: max(6px, env(safe-area-inset-left));
+  width: 14px; height: 56px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04);
+  box-shadow: 0 6px 24px rgba(0,0,0,.35), inset 0 0 20px rgba(255,255,255,.05);
+  opacity: .18; transition: opacity .2s ease, transform .12s ease;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  z-index: 120; /* acima do orb e do panel */
+  display: grid; place-items: center;
+  -webkit-tap-highlight-color: rgba(255,255,255,.1);
+}
+.edge-toggle:active { transform: scale(.98); }
+.edge-toggle:hover { opacity: .35; }
 
-/* Z-order for sandwiching */
-#orbWrap canvas#orb { z-index: 1; }
-#orbWrap .orb-glow { z-index: 2; }
-#orbWrap .orb-slot   { z-index: 3; } /* iframe masked */
-#orbWrap canvas#particles { z-index: 4; }
-#orbWrap .ring { z-index: 5; }
-/* HUB overlays keep above */
-#arch-fadeCover, #audioRipple { z-index: 6; }
+/* posições verticais */
+#etNav   { top: 55vh; transform: translateY(-50%); }
+#etHead  { top: 78vh; transform: translateY(-50%); }
 
-/* Masked slot inside the orb */
-.orb-slot{
-  position:absolute;
-  inset: 8%;              /* adjust 6–10% to taste */
-  border-radius: 50%;
-  overflow: hidden;
-  -webkit-clip-path: circle(50% at 50% 50%);
-          clip-path: circle(50% at 50% 50%);
-  mix-blend-mode: screen;
-  opacity: .92;
-  filter: saturate(1.06) contrast(1.04);
-  will-change: transform, opacity, filter;
-  pointer-events: auto;   /* allow interaction inside the archetype app */
+/* ícone minimal (barra dupla / barra única) */
+.edge-toggle i {
+  display:block; width: 2px; height: 32px; position:relative;
+  background: linear-gradient(180deg, rgba(255,255,255,.25), rgba(255,255,255,.08));
+  border-radius: 2px;
 }
-.orb-slot iframe#arch-frame{
-  position:absolute; inset:0;
-  width:100%; height:100%;
-  border:0; background:#0b0f14; /* avoid white flash */
-  transform: translateZ(0);
+.edge-toggle i::after{
+  content:""; position:absolute; left:6px; top:0; width:2px; height:32px;
+  background: linear-gradient(180deg, rgba(255,255,255,.25), rgba(255,255,255,.08));
+  border-radius:2px;
 }
-/* Tint with archetype overlay color */
-.orb-slot::after{
-  content:"";
-  position:absolute; inset:0;
-  background: var(--arch-overlay, transparent);
-  pointer-events:none;
-  mix-blend-mode: overlay;
-  opacity:.35;
-  transition: opacity .25s ease;
-}
+
+/* estados “escondidos” aplicados no BODY */
+body.hide-nav .options,
+body.hide-nav .btn-ctrl { display: none !important; }
+
+body.hide-header .hud-bar { display: none !important; }
+
+/* quando header some, compensa o topo no container principal */
+body.hide-header .container { padding-top: max(8px, env(safe-area-inset-top)); }
 </style>
 
 </head>
@@ -1429,7 +1424,7 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
             <button class="btn fx-trans fx-press ring" id="arch-prev" title="Anterior">
               <img src="icons/chevron-left.svg" alt="Anterior" width="16" height="16" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/chevron-left.svg'">
             <span class="ripple"></span></button>
-            <select id="arch-select" title="Escolher arquétipo"><option value="./archetypes3d/value="./archetypes3d/atlas.html">atlas.html</option><option value="./archetypes3d/value="./archetypes3d/nova.html">nova.html</option><option value="./archetypes3d/value="./archetypes3d/vitalis.html">vitalis.html</option><option value="./archetypes3d/value="./archetypes3d/pulse.html">pulse.html</option><option value="./archetypes3d/value="./archetypes3d/artemis.html">artemis.html</option><option value="./archetypes3d/value="./archetypes3d/serena.html">serena.html</option><option value="./archetypes3d/value="./archetypes3d/kaos.html">kaos.html</option><option value="./archetypes3d/value="./archetypes3d/genus.html">genus.html</option><option value="./archetypes3d/value="./archetypes3d/lumine.html">lumine.html</option><option value="./archetypes3d/value="./archetypes3d/rhea.html">rhea.html</option><option value="./archetypes3d/value="./archetypes3d/solus.html">solus.html</option><option value="./archetypes3d/value="./archetypes3d/aion.html">aion.html</option></select>
+            <select id="arch-select" title="Escolher arquétipo"><option value="atlas.html">atlas.html</option><option value="nova.html">nova.html</option><option value="vitalis.html">vitalis.html</option><option value="pulse.html">pulse.html</option><option value="artemis.html">artemis.html</option><option value="serena.html">serena.html</option><option value="kaos.html">kaos.html</option><option value="genus.html">genus.html</option><option value="lumine.html">lumine.html</option><option value="rhea.html">rhea.html</option><option value="solus.html">solus.html</option><option value="aion.html">aion.html</option></select>
             <button class="btn fx-trans fx-press ring" id="arch-next" title="Próximo">
               <img src="icons/chevron-right.svg" alt="Próximo" width="16" height="16" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/chevron-right.svg'">
             <span class="ripple"></span></button>
@@ -5232,561 +5227,1069 @@ document.getElementById('orbWrap')?.addEventListener('click', function(){ try{ w
 </script>
 
 
-<script id="orb-slot-and-archpersist-patch">
+<script>
+/* ================================================================
+   Dual · Particles "Cell" Renderer with Archetype Colors (Blue-1 safe)
+   - Replaces the existing #particles canvas with a new instance.
+   - Colors follow the current archetype (persisted in localStorage).
+   - Public API: window.setArchetype(name)
+   ================================================================ */
 (function(){
-  // ---- Helpers ----
-  function $(q, r=document){ return r.querySelector(q); }
-  function baseName(file){ return String(file||'').replace(/\.html$/i,'').toLowerCase(); }
+  const ARCH_KEY = 'dual.archetype';           // localStorage key
+  const DEFAULT_ARCH = 'Nova';                 // default if none stored
+  // Hue palettes (center hue and spread) — tweak to your taste
+  const ARCH_PALETTES = {
+    'Nova':   { hue: 200, spread: 24 }, // ciano celeste
+    'Elysha': { hue: 280, spread: 26 }, // violeta-nebula
+    'Kaion':  { hue: 160, spread: 20 }, // verde-tec
+    'Atlas':  { hue: 30,  spread: 16 }, // âmbar/solar
+    'Serena': { hue: 320, spread: 22 }, // magenta quente
+    'Artemis':{ hue: 210, spread: 18 }, // azul profundo
+    'Pulse':  { hue: 195, spread: 30 }, // aqua vivo
+    'Rhea':   { hue: 45,  spread: 18 }, // ouro suave
+    'Solus':  { hue: 12,  spread: 18 }, // coral
+    'Aion':   { hue: 260, spread: 20 }, // roxo frio
+    'Genus':  { hue: 140, spread: 18 }, // verde bio
+    'Lumine': { hue: 220, spread: 20 }  // azul-luz
+  };
 
-  // ---- Create orb-slot and move the iframe inside the orb ----
-  function fuseIframeIntoOrb(){
-    var wrap = $('#orbWrap');
-    var frame = $('#arch-frame');
-    if(!wrap || !frame) return;
-    // If already fused, skip
-    if (frame.parentElement && frame.parentElement.classList && frame.parentElement.classList.contains('orb-slot')) return;
-    var slot = document.createElement('div');
-    slot.className = 'orb-slot';
-    // Insert slot above particles but below ring (order controlled by CSS z-index)
-    wrap.appendChild(slot);
-    // Move iframe inside slot
-    slot.appendChild(frame);
+  // Read current archetype from localStorage
+  function getArch(){
+    try { return localStorage.getItem(ARCH_KEY) || DEFAULT_ARCH; }
+    catch(_) { return DEFAULT_ARCH; }
   }
+  function setArch(name){
+    const key = (name||'').trim();
+    if (!ARCH_PALETTES[key]) return;
+    try { localStorage.setItem(ARCH_KEY, key); } catch(_){}
+    // recolor immediately
+    CURRENT.arch = key;
+    recolor();
+  }
+  window.setArchetype = setArch;
+  window.getArchetype = getArch;
 
-  // ---- Archetype persistence (uno:arch) + overlay/apply + Firestore sync ----
-  function currentSelectBase(){
-    var sel = $('#arch-select'); if(!sel) return '';
-    var opt = sel.options[sel.selectedIndex];
-    return baseName(opt && opt.value);
+  // Obtain / replace particles canvas safely
+  const oldCanvas = document.getElementById('particles');
+  if (!oldCanvas) return;
+  const parent = oldCanvas.parentNode;
+  const clone = oldCanvas.cloneNode(true);
+  oldCanvas.replaceWith(clone);
+
+  const c = clone;
+  const ctx = c.getContext('2d', { alpha:true });
+  const dpr = Math.min(2, (window.devicePixelRatio||1));
+  let RAF = 0;
+
+  function resize(){
+    const r = c.getBoundingClientRect();
+    c.width  = Math.floor(r.width * dpr);
+    c.height = Math.floor(r.height * dpr);
   }
-  function applyArch(base){
-    var sel = $('#arch-select'), frame = $('#arch-frame'), fade = $('#arch-fadeCover');
-    if(!sel || !frame) return;
-    var idx = -1;
-    for (var i=0;i<sel.options.length;i++){
-      if (baseName(sel.options[i].value) === base){ idx = i; break; }
-    }
-    if (idx >= 0){
-      sel.selectedIndex = idx;
-      if (fade) fade.classList.add('show');
-      var file = sel.options[idx].value;
-      frame.src = './archetypes/' + file;
-      try { if (typeof window.applyArchOverlay === 'function') window.applyArchOverlay(base); } catch(_){}
-      try { if (typeof window.speakArchetype === 'function') window.speakArchetype(base); } catch(_){}
-      try { if (typeof window.updateHomeStatus === 'function') window.updateHomeStatus(); } catch(_){}
-      setTimeout(function(){ if (fade) fade.classList.remove('show'); }, 240);
-    }
+  new ResizeObserver(()=>{ resize(); }).observe(c); resize();
+
+  // "Cell": concentric membrane, cytoplasm glow, drifting organelles
+  const CURRENT = {
+    arch: getArch(),
+    t0: performance.now(),
+    nodes: [],
+    nucleus: { wobbleA: Math.random()*6.28, wobbleB: Math.random()*6.28 }
+  };
+
+  const N = 96; // particles (organelles)
+  function palette(){
+    const p = ARCH_PALETTES[CURRENT.arch] || ARCH_PALETTES[DEFAULT_ARCH];
+    return p;
   }
-  function saveArch(base){
-    if(!base) return;
-    try { localStorage.setItem('uno:arch', base); } catch(_){}
-    // If a shared app state exists, mirror and save remotely
-    try {
-      if (window.S && S.state){
-        S.state.archetype = base;
-        if (typeof window.saveState === 'function') saveState(S.state);
-      }
-    } catch(_){}
-  }
-  function bindArchPersistence(){
-    var sel = $('#arch-select'), prev = $('#arch-prev'), next = $('#arch-next');
-    function persist(){ var b=currentSelectBase(); if(b){ saveArch(b);} }
-    if (sel) sel.addEventListener('change', persist, {passive:true});
-    if (prev) prev.addEventListener('click', function(){ setTimeout(persist, 0); }, {passive:true});
-    if (next) next.addEventListener('click', function(){ setTimeout(persist, 0); }, {passive:true});
-    // Accept remote notifications
-    window.addEventListener('message', function(ev){
-      var d = ev && ev.data || {};
-      if (d && d.type==='archReady' && d.name){
-        var b = baseName(d.name);
-        saveArch(b);
-      }
+  function rand(min, max){ return min + Math.random()*(max-min); }
+
+  function seed(){
+    CURRENT.nodes = Array.from({length:N}, ()=>{
+      const a  = Math.random()*Math.PI*2;
+      const rr = 0.30 + Math.random()*0.58; // keep inner space for nucleus
+      const s  = (0.15 + Math.random()*0.65) * (Math.random()<0.5?-1:1);
+      const z  = 0.45 + Math.random()*0.55;
+      return { a, r: rr, s, z, hueOffset: rand(-1,1), drift: rand(0.8,1.6) };
     });
   }
-  function bootWithSavedArch(){
-    var saved = (localStorage.getItem('uno:arch') || localStorage.getItem('infodose:arch') || '').replace(/\.html$/i,'');
-    saved = baseName(saved);
-    if(saved){
-      var cur = currentSelectBase();
-      if (cur !== saved) applyArch(saved);
-    } else {
-      // Initialize with current
-      saveArch(currentSelectBase());
-    }
+  seed();
+
+  function recolor(){
+    // noop: colors are computed per-frame from CURRENT.arch
   }
 
-  function start(){
-    fuseIframeIntoOrb();
-    bindArchPersistence();
-    bootWithSavedArch();
-  }
+  function draw(now){
+    const t = now || performance.now();
+    const dt = t - CURRENT.t0;
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
-  else start();
-})();
-</script>
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.save();
+    ctx.translate(c.width/2, c.height/2);
+    ctx.globalCompositeOperation = 'lighter';
 
+    const scl = Math.min(c.width, c.height)/2;
 
-<script id="arch-chips-3d-layers">
-(function(){
-  // Minimal palettes (sync with your overlay colors)
-  const COLORS = {
-    atlas:'#409EFF', nova:'#FF52B1', vitalis:'#34D399', pulse:'#00BFFF',
-    artemis:'#FFC300', serena:'#B684FF', kaos:'#FF4D6D', genus:'#22C55E',
-    lumine:'#FFD54F', rhea:'#00D1B2', solus:'#6495ED', aion:'#8B5CF6'
-  };
-  const PRESET = name => ({
-    name,
-    color: COLORS[name] || '#88a',
-    count: (name==='nova'||name==='pulse'||name==='lumine') ? 340 : 260,
-    orbitRadius: (name==='nova'||name==='serena'||name==='lumine') ? 0.76 : 0.68,
-    spin: (name==='nova'||name==='pulse') ? 0.7 : 0.56,
-    size: 0.010, // sphere size
-    glow: 0.42
-  });
+    // Cell membrane (rim)
+    (()=>{
+      const grd = ctx.createRadialGradient(0,0, scl*0.15, 0,0, scl*0.98);
+      const P = palette();
+      const h = P.hue;
+      grd.addColorStop(0.00, `hsla(${h}, 90%, 65%, .06)`);
+      grd.addColorStop(0.55, `hsla(${h}, 90%, 55%, .10)`);
+      grd.addColorStop(0.87, `hsla(${h}, 90%, 60%, .16)`);
+      grd.addColorStop(1.00, `hsla(${h}, 90%, 65%, 0)`);
+      ctx.fillStyle = grd;
+      ctx.beginPath(); ctx.arc(0,0, scl*0.98, 0, Math.PI*2); ctx.fill();
+    })();
 
-  const ACTIVE = new Set();
-  function sendLayers(){
-    const fr = document.getElementById('arch-frame');
-    if (!fr || !fr.contentWindow) return;
-    const arr = Array.from(ACTIVE).map(n => PRESET(n));
-    fr.contentWindow.postMessage({ type:'atomConfigLayers', layers: arr }, '*');
-  }
-
-  function chipEl(name){
-    const b = document.createElement('button');
-    b.className = 'arch-chip';
-    b.textContent = name[0].toUpperCase()+name.slice(1);
-    b.style.borderColor = 'rgba(255,255,255,.18)';
-    b.style.background = 'rgba(255,255,255,.06)';
-    b.onclick = ()=>{
-      if (ACTIVE.has(name)) ACTIVE.delete(name); else ACTIVE.add(name);
-      b.classList.toggle('on', ACTIVE.has(name));
-      sendLayers();
-    };
-    return b;
-  }
-
-  function ensureStyles(){
-    if (document.getElementById('archChip3DStyles')) return;
-    const st = document.createElement('style'); st.id='archChip3DStyles';
-    st.textContent = `
-      .arch-chip-wrap{ display:grid; grid-template-columns: repeat(auto-fill,minmax(92px,1fr)); gap:8px; }
-      .arch-chip{ appearance:none; border:1px solid var(--ring, rgba(255,255,255,.18)); background: var(--glass, rgba(255,255,255,.06)); color: var(--txt, #eaf2ff);
-        padding:8px 10px; border-radius:999px; font-size:12px; letter-spacing:.2px; cursor:pointer; }
-      .arch-chip.on{ background: rgba(57,255,182,.18); border-color: rgba(57,255,182,.45); }
-      .arch-chip-title{ font-size:12px; color: var(--muted,#a6b0c0); margin: 6px 0 6px; font-weight:800; }
-    `;
-    document.head.appendChild(st);
-  }
-
-  function injectInLSPanel(){
-    ensureStyles();
-    const panel = document.getElementById('lsPanel') || document.querySelector('#lsModal .ls-panel');
-    if (!panel || document.getElementById('archChip3DSection')) return;
-    const sec = document.createElement('div');
-    sec.id = 'archChip3DSection';
-    sec.className = 'preset';
-    sec.style.marginTop = '10px';
-    sec.innerHTML = `<div class="arch-chip-title">Arquétipos (camadas no ORB · 3D)</div>`;
-    const wrap = document.createElement('div'); wrap.className = 'arch-chip-wrap';
-    ['atlas','nova','vitalis','pulse','artemis','serena','kaos','genus','lumine','rhea','solus','aion'].forEach(n=> wrap.appendChild(chipEl(n)));
-    sec.appendChild(wrap);
-    // Coloca no topo do LS Panel
-    const hdr = panel.querySelector('.ls-hdr');
-    if (hdr && hdr.parentNode) hdr.parentNode.insertBefore(sec, hdr.nextSibling);
-    // Ativa por padrão a camada do arquétipo atual
-    try{
-      const sel = document.getElementById('arch-select');
-      const cur = (sel && sel.value || 'atlas.html').replace(/.*\//,'').replace(/\.html$/i,'');
-      const btn = wrap.querySelector('button.arch-chip:nth-child(' + (['atlas','nova','vitalis','pulse','artemis','serena','kaos','genus','lumine','rhea','solus','aion'].indexOf(cur)+1) + ')');
-      if (cur && btn){ ACTIVE.add(cur); btn.classList.add('on'); sendLayers(); }
-    }catch(_){}
-  }
-
-  function bindLSButton(){
-    const btn = document.getElementById('btnLS');
-    if (btn && !btn.dataset._chipsHook){
-      btn.dataset._chipsHook = '1';
-      btn.addEventListener('click', ()=> setTimeout(injectInLSPanel, 80), {passive:true});
-    } else {
-      // if already open
-      setTimeout(injectInLSPanel, 120);
-    }
-  }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindLSButton);
-  else bindLSButton();
-
-  // Also re-inject if LS modal gets rebuilt
-  document.addEventListener('ls:disabled-changed', ()=> setTimeout(injectInLSPanel, 60));
-})();
-</script>
-
-
-<!-- PATCH v3.5 — Presets por arquétipo + Salvar como padrão (inline) -->
-<script id="lspanel-atom-presets-v35">
-(function(){
-  const ARCH_KEYS = ['atlas','nova','vitalis','pulse','artemis','serena','kaos','genus','lumine','rhea','solus','aion'];
-  const K = (arch)=> ({
-    count: `dual.atom.${arch}.count`,
-    orbit: `dual.atom.${arch}.orbit`,
-    glow:  `dual.atom.${arch}.glow`
-  });
-  const GLOBAL = { bloom:'dual.ui.bloom', solid:'dual.ui.orbSolid' };
-
-  const PRESETS = {
-    leve:   { count: 96,  orbitRadius: .72, glow: .30 },
-    medio:  { count: 180, orbitRadius: .75, glow: .42 },
-    cinema: { count: 320, orbitRadius: .78, glow: .56 }
-  };
-
-  function getArch(){
-    const sel = document.getElementById('arch-select');
-    if(!sel) return 'atlas';
-    const v = sel.value || 'atlas';
-    return v.replace(/\.html$/i,'').toLowerCase();
-  }
-  function getLS(key, def){
-    try{
-      const v = localStorage.getItem(key);
-      if (v === null || v === undefined) return def;
-      // try parse float/int
-      if (/count$/.test(key)) return parseInt(v, 10);
-      return parseFloat(v);
-    }catch(_){ return def; }
-  }
-  function setLS(key, val){ try{ localStorage.setItem(key, String(val)); }catch(_){ } }
-
-  function pushToFrame(data){
-    try{
-      const fr = document.getElementById('arch-frame');
-      fr && fr.contentWindow && fr.contentWindow.postMessage({ type:'atomConfig', data }, '*');
-    }catch(_){}
-  }
-
-  function currentFromLS(arch){
-    const keys = K(arch);
-    const out = {};
-    const c = getLS(keys.count, NaN);
-    const o = getLS(keys.orbit, NaN);
-    const g = getLS(keys.glow , NaN);
-    if(!isNaN(c)) out.count = clamp(c, 8, 720);
-    if(!isNaN(o)) out.orbitRadius = clamp(o, .40, .90);
-    if(!isNaN(g)) out.glow = clamp(g, 0, 1);
-    return out;
-  }
-
-  function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
-
-  // Inject UI into existing v3.4.2 section, augmenting with preset buttons and "Salvar"
-  function injectPresetUI(){
-    const panel = document.getElementById('lsPanel') || document.querySelector('#lsModal .ls-panel');
-    if(!panel) return;
-    // base controls section (from v3.4.2) or create if missing
-    let sec = document.getElementById('atomControlsV342');
-    if(!sec){
-      sec = document.createElement('section'); sec.id='atomControlsV342';
-      const title = document.createElement('div'); title.className='section-title'; title.textContent='Partículas do Átomo';
-      sec.appendChild(title);
-      panel.prepend(sec);
-    }
-    if (document.getElementById('atomPresetBar')) return;
-    const bar = document.createElement('div'); bar.id='atomPresetBar';
-    bar.style.display='grid'; bar.style.gridTemplateColumns='repeat(auto-fill,minmax(120px,1fr))';
-    bar.style.gap='8px'; bar.style.margin='8px 0';
-    function pill(txt, cb){
-      const b=document.createElement('button'); b.className='pill-btn'; b.textContent=txt; b.onclick=cb; return b;
-    }
-    const btnLeve   = pill('Leve',   ()=> applyPreset('leve'));
-    const btnMedio  = pill('Médio',  ()=> applyPreset('medio'));
-    const btnCinema = pill('Cinema', ()=> applyPreset('cinema'));
-    const btnSalvar = pill('Salvar padrão do arquétipo', saveAsDefault);
-    bar.appendChild(btnLeve); bar.appendChild(btnMedio); bar.appendChild(btnCinema); bar.appendChild(btnSalvar);
-    // insert above sliders (first line in sec)
-    const first = sec.firstElementChild && sec.firstElementChild.classList.contains('section-title') ? sec.firstElementChild.nextSibling : sec.firstChild;
-    sec.insertBefore(bar, first);
-
-    // small hint showing current arch target
-    const hint = document.createElement('div'); hint.className='mut'; hint.style.fontSize='11px'; hint.style.opacity='.8';
-    hint.style.marginTop='-2px'; hint.id='atomPresetHint';
-    sec.insertBefore(hint, bar.nextSibling);
-    updateHint();
-
-    function updateHint(){
-      const arch = getArch();
-      hint.textContent = 'Arquétipo alvo: ' + arch;
-    }
-    const sel = document.getElementById('arch-select'); if (sel && !sel.dataset._v35Bind){ sel.dataset._v35Bind='1'; sel.addEventListener('change', ()=>{ setTimeout(updateHint, 20); loadDefaultsForArch(); }, {passive:true}); }
-  }
-
-  function applyPreset(name){
-    const arch = getArch();
-    const keys = K(arch);
-    const p = PRESETS[name]; if(!p) return;
-    setLS(keys.count, p.count);
-    setLS(keys.orbit, p.orbitRadius);
-    setLS(keys.glow , p.glow);
-    // reflect on sliders if they exist (v3.4.2)
-    const c=document.getElementById('atom-count'), o=document.getElementById('atom-orbit'), g=document.getElementById('atom-glow');
-    const co=document.getElementById('atom-count-out'), oo=document.getElementById('atom-orbit-out'), go=document.getElementById('atom-glow-out');
-    if(c){ c.value=p.count; co && (co.textContent=String(p.count)); }
-    if(o){ o.value=p.orbitRadius; oo && (oo.textContent=p.orbitRadius.toFixed(2)); }
-    if(g){ g.value=p.glow; go && (go.textContent=p.glow.toFixed(2)); }
-    pushToFrame({ count:p.count, orbitRadius:p.orbitRadius, glow:p.glow });
-  }
-
-  function saveAsDefault(){
-    const arch = getArch();
-    const keys = K(arch);
-    // read current sliders or LS
-    const c=document.getElementById('atom-count'), o=document.getElementById('atom-orbit'), g=document.getElementById('atom-glow');
-    const count = c? parseInt(c.value,10) : getLS(keys.count, 64);
-    const orbit = o? parseFloat(o.value)   : getLS(keys.orbit, .74);
-    const glow  = g? parseFloat(g.value)   : getLS(keys.glow , .40);
-    setLS(keys.count, clamp(count, 8, 720));
-    setLS(keys.orbit, clamp(orbit, .40, .90));
-    setLS(keys.glow , clamp(glow , 0, 1));
-    // soft notify
-    try{
-      const sec = document.getElementById('atomControlsV342');
-      if(sec){
-        let ok = sec.querySelector('#atomSavedOK'); if(!ok){ ok = document.createElement('div'); ok.id='atomSavedOK'; ok.className='mut'; ok.style.fontSize='11px'; ok.style.marginTop='4px'; sec.appendChild(ok); }
-        ok.textContent = 'Padrão salvo para "'+arch+'".';
-        setTimeout(()=>{ ok.textContent=''; }, 1600);
+    // Cytoplasm faint noise swirl
+    (()=>{
+      const swirl = Math.sin(t*0.0013)*0.04;
+      ctx.rotate(swirl);
+      ctx.globalAlpha = 0.08;
+      const P = palette();
+      const h = P.hue + 12;
+      for (let i=0;i<6;i++){
+        const r = scl*(0.25 + i*0.12);
+        ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2);
+        ctx.strokeStyle = `hsla(${h},70%,60%,${0.08 - i*0.01})`;
+        ctx.lineWidth = 2 * (c.width/800);
+        ctx.stroke();
       }
+      ctx.globalAlpha = 1;
+      ctx.rotate(-swirl);
+    })();
+
+    // Nucleus (soft pulsing)
+    (()=>{
+      const P = palette();
+      const h = P.hue - 10;
+      const wob = Math.sin(t*0.0016 + CURRENT.nucleus.wobbleA)*0.02 + Math.sin(t*0.0011 + CURRENT.nucleus.wobbleB)*0.015;
+      const r  = scl*(0.18 + wob);
+      const g  = ctx.createRadialGradient(0,0, 0, 0,0, r*1.55);
+      g.addColorStop(0.00, `hsla(${h}, 95%, 75%, .55)`);
+      g.addColorStop(0.45, `hsla(${h}, 90%, 60%, .18)`);
+      g.addColorStop(1.00, `hsla(${h}, 85%, 55%, 0)`);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill();
+    })();
+
+    // Organelles (drifting particles)
+    const P = palette();
+    for(const n of CURRENT.nodes){
+      const ang = n.a + t*0.00025*n.s;
+      const rr  = n.r * (0.72 + 0.12*Math.sin(t*0.001 + n.a));
+      const x = Math.cos(ang)*rr*scl;
+      const y = Math.sin(ang)*rr*scl*0.98;
+      const rad = (1.0 + n.z*1.6) * (c.width/900);
+      const hue = P.hue + n.hueOffset * P.spread;
+
+      const g = ctx.createRadialGradient(x,y,0,x,y,rad*4.2);
+      g.addColorStop(0, `hsla(${hue}, 90%, 70%, .88)`);
+      g.addColorStop(1, `hsla(${hue}, 85%, 50%, 0)`);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(x,y,rad,0,Math.PI*2); ctx.fill();
+    }
+
+    ctx.restore();
+    RAF = requestAnimationFrame(draw);
+  }
+
+  function boot(){
+    cancelAnimationFrame(RAF);
+    RAF = requestAnimationFrame(draw);
+  }
+
+  // If a global archetype selector exists elsewhere, hook it:
+  document.addEventListener('archetype:change', (ev)=>{
+    const name = ev && ev.detail && ev.detail.name;
+    if (name && ARCH_PALETTES[name]) setArch(name);
+  });
+
+  // expose lightweight API
+  window.DUAL_ARCH = {
+    set: setArch,
+    get: getArch,
+    palettes: ARCH_PALETTES
+  };
+
+  // Start with last used or default
+  recolor();
+  boot();
+})();
+</script>
+
+
+<!-- Edge toggles: navegação (nave) e header -->
+<button id="etNav"  class="edge-toggle" aria-label="Alternar navegação" title="Mostrar/ocultar navegação">
+  <i></i>
+</button>
+<button id="etHead" class="edge-toggle" aria-label="Alternar header" title="Mostrar/ocultar header">
+  <i></i>
+</button>
+
+
+<script>
+(function(){
+  const KEY_NAV  = 'dual.ui.hideNav';
+  const KEY_HEAD = 'dual.ui.hideHeader';
+
+  const $ = (s)=> document.querySelector(s);
+  let etNav, etHead;
+
+  function vibrate(ms=12){ try{ navigator.vibrate && navigator.vibrate(ms); }catch(_){} }
+
+  function applyPersisted(){
+    try{
+      const hideNav  = localStorage.getItem(KEY_NAV)  === '1';
+      const hideHead = localStorage.getItem(KEY_HEAD) === '1';
+      document.body.classList.toggle('hide-nav', hideNav);
+      document.body.classList.toggle('hide-header', hideHead);
     }catch(_){}
   }
 
-  function loadDefaultsForArch(){
-    const arch = getArch();
-    const cfg = currentFromLS(arch);
-    if(Object.keys(cfg).length){
-      // reflect on sliders:
-      const c=document.getElementById('atom-count'), o=document.getElementById('atom-orbit'), g=document.getElementById('atom-glow');
-      const co=document.getElementById('atom-count-out'), oo=document.getElementById('atom-orbit-out'), go=document.getElementById('atom-glow-out');
-      if(cfg.count && c){ c.value=cfg.count; co && (co.textContent=String(cfg.count)); }
-      if(cfg.orbitRadius && o){ o.value=cfg.orbitRadius; oo && (oo.textContent=cfg.orbitRadius.toFixed(2)); }
-      if(cfg.glow!==undefined && g){ g.value=cfg.glow; go && (go.textContent=cfg.glow.toFixed(2)); }
-      pushToFrame(cfg);
-    }
+  function toggleNav(){
+    document.body.classList.toggle('hide-nav');
+    const on = document.body.classList.contains('hide-nav');
+    try{ localStorage.setItem(KEY_NAV, on?'1':'0'); }catch(_){}
+    vibrate(8);
   }
 
-  // On first load, apply saved defaults for the current arch
-  function firstBoot(){
-    injectPresetUI();
-    loadDefaultsForArch();
+  function toggleHeader(){
+    document.body.classList.toggle('hide-header');
+    const on = document.body.classList.contains('hide-header');
+    try{ localStorage.setItem(KEY_HEAD, on?'1':'0'); }catch(_){}
+    vibrate(8);
   }
 
-  // bind on LSPanel open or early boot
-  function bind(){
-    const btnLS = document.getElementById('btnLS');
-    if(btnLS && !btnLS.dataset._v35){
-      btnLS.dataset._v35='1';
-      btnLS.addEventListener('click', ()=> setTimeout(firstBoot, 120), {passive:true});
-    } else {
-      setTimeout(firstBoot, 200);
-    }
+  function boot(){
+    etNav  = $('#etNav');
+    etHead = $('#etHead');
+    if (etNav)  etNav.addEventListener('click', toggleNav,  {passive:true});
+    if (etHead) etHead.addEventListener('click', toggleHeader, {passive:true});
+    applyPersisted();
+    // atalhos desktop
+    document.addEventListener('keydown', (e)=>{
+      if (e.key === 'n' || e.key === 'N') toggleNav();
+      if (e.key === 'h' || e.key === 'H') toggleHeader();
+    });
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bind); else bind();
-  document.addEventListener('ls:disabled-changed', ()=> setTimeout(firstBoot, 100));
-  // also re-apply after iframe loads
-  (function(){
-    const fr = document.getElementById('arch-frame'); if(!fr) return;
-    fr.addEventListener('load', ()=> setTimeout(loadDefaultsForArch, 60));
-  })();
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();
 </script>
 
 
 <script>
-/* === Voice Patch (PT‑BR first, per‑archetype; consistent keys) === */
+/* =====================================================
+   Nexus Bind: UI flags ↔ S.state ↔ Firestore (persist)
+   - Adds S.state.ui.{hideNav, hideHeader}
+   - Mirrors to body classes
+   - Persists via saveState() when available
+   - Extends renderState + Manifesto
+   ===================================================== */
 (function(){
-  const LS = {
-    get: (k, d) => { try { const v = localStorage.getItem(k); return v? JSON.parse(v): d } catch(e){ return d } },
-    set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch(e){} }
-  };
-  const ARCHES = ["Atlas","Nova","Vitalis","Pulse","Artemis","Serena","Kaos","Genus","Lumine","Rhea","Solus","Aion"];
+  const KEY_NAV  = 'dual.ui.hideNav';
+  const KEY_HEAD = 'dual.ui.hideHeader';
 
-  function pickPtVoice(voices, wantFemale){
-    // Prefer pt-BR, then pt-PT. Try to guess gender by common names if available.
-    const byLang = (v) => (v.lang||"").toLowerCase().startsWith("pt");
-    const pt = voices.filter(byLang);
-    const namesFemale = /luciana|fem|bia|vitoria|camila|maria|helena|ana|joana|paula|catarina/i;
-    const namesMale = /felipe|ricardo|antonio|joao|pt\-br\-male|miguel|davi|bruno|pedro/i;
-    const isFemale = (v) => namesFemale.test(v.name||"");
-    const isMale   = (v) => namesMale.test(v.name||"");
+  // 1) Ensure S and ui bucket
+  window.S = window.S || { state:{}, config:{} };
+  const st = (S.state = S.state || {});
+  st.ui = st.ui || { hideNav:false, hideHeader:false };
 
-    if (pt.length){
-      if (wantFemale){
-        let f = pt.find(isFemale); if (f) return f;
-      } else {
-        let m = pt.find(isMale); if (m) return m;
-      }
-      return pt[0];
+  // 2) Bootstrap from localStorage if not set
+  try {
+    if (localStorage.getItem(KEY_NAV)  !== null) st.ui.hideNav    = localStorage.getItem(KEY_NAV)  === '1';
+    if (localStorage.getItem(KEY_HEAD) !== null) st.ui.hideHeader = localStorage.getItem(KEY_HEAD) === '1';
+  } catch(_){}
+
+  // 3) Helpers
+  function applyBody(){
+    document.body.classList.toggle('hide-nav', !!S.state.ui.hideNav);
+    document.body.classList.toggle('hide-header', !!S.state.ui.hideHeader);
+  }
+  function persist(){
+    try {
+      localStorage.setItem(KEY_NAV,  S.state.ui.hideNav ? '1':'0');
+      localStorage.setItem(KEY_HEAD, S.state.ui.hideHeader ? '1':'0');
+    } catch(_){}
+    if (typeof window.saveState === 'function'){
+      try { saveState(S.state); } catch(_){}
     }
-    // fallback en if no PT
-    const en = voices.filter(v => (v.lang||"").toLowerCase().startsWith("en"));
-    if (en.length){
-      if (wantFemale){
-        const f = en.find(v => /(female|samantha|karen|joanna|aria|olivia|amy|emma)/i.test(v.name||""));
-        if (f) return f;
-      } else {
-        const m = en.find(v => /(male|daniel|matthew|brian|joey|michael|alex)/i.test(v.name||""));
-        if (m) return m;
-      }
-      return en[0];
-    }
-    return voices[0] || null;
   }
 
-  // Default archetype → gender (heuristic)
-  const ARCH_GENDER = {
-    Atlas: "m", Nova: "f", Vitalis: "m", Pulse: "m",
-    Artemis: "f", Serena: "f", Kaos: "m", Genus: "m",
-    Lumine: "f", Rhea: "f", Solus: "m", Aion: "m"
-  };
-
-  function getVoices(){ try { return window.speechSynthesis.getVoices() || [] } catch(e){ return [] } }
-
-  // Normalize saved map to consistent keys (Atlas, Nova, ...)
-  function normalizeMap(map){
-    const out = {};
-    Object.keys(map||{}).forEach(k => {
-      const base = String(k).replace(/\.html$/i,'').toLowerCase();
-      const proper = base.charAt(0).toUpperCase() + base.slice(1);
-      out[proper] = map[k];
-    });
-    return out;
-  }
-
-  function ensureDefaults(){
-    const voices = getVoices();
-    let map = normalizeMap(LS.get('uno:archVoiceMap', {}));
-    // If empty, seed defaults
-    if (!Object.keys(map).length){
-      ARCHES.forEach(a => {
-        const wantFemale = ARCH_GENDER[a] === 'f';
-        const v = pickPtVoice(voices, wantFemale);
-        if (v) map[a] = v.name;
-      });
-      LS.set('uno:archVoiceMap', map);
-    } else {
-      // make sure all archetypes exist
-      ARCHES.forEach(a => { if (!map[a]) {
-        const wantFemale = ARCH_GENDER[a] === 'f';
-        const v = pickPtVoice(voices, wantFemale);
-        if (v) map[a] = v.name;
-      }});
-      LS.set('uno:archVoiceMap', map);
-    }
-    return map;
-  }
-
-  // Rebuild UI in #voicesWrap (if exists) using consistent keys
-  function rebuildUI(){
-    const wrap = document.getElementById('voicesWrap');
-    if (!wrap) return;
-    wrap.innerHTML = '';
-    const all = getVoices();
-    const map = ensureDefaults();
-    ARCHES.forEach(a => {
-      const row = document.createElement('div');
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.gap = '8px';
-      row.style.flexWrap = 'wrap';
-
-      const label = document.createElement('span');
-      label.textContent = a;
-      label.style.minWidth = '70px';
-      label.style.fontWeight = '700';
-
-      const sel = document.createElement('select');
-      sel.className = 'input ring';
-      sel.style.maxWidth = '240px';
-      (all||[]).forEach(v => {
-        const opt = document.createElement('option');
-        opt.value = v.name;
-        opt.textContent = v.name + (v.lang? (' ('+v.lang+')') : '');
-        sel.appendChild(opt);
-      });
-      if (map[a]) sel.value = map[a];
-
-      sel.onchange = () => {
-        const cur = normalizeMap(LS.get('uno:archVoiceMap', {}));
-        cur[a] = sel.value;
-        LS.set('uno:archVoiceMap', cur);
+  // 4) Wire edge toggle buttons to S.state (overwrite handlers if exist)
+  function wireEdge(){
+    const etNav  = document.getElementById('etNav');
+    const etHead = document.getElementById('etHead');
+    if (etNav){
+      etNav.onclick = function(){
+        S.state.ui.hideNav = !S.state.ui.hideNav;
+        applyBody(); persist();
+        try{ navigator.vibrate && navigator.vibrate(8);}catch(_){}
       };
-
-      const btn = document.createElement('button');
-      btn.className = 'btn fx-trans fx-press ring';
-      btn.textContent = 'Teste';
-      btn.addEventListener('click', () => {
-        try {
-          const utter = new SpeechSynthesisUtterance('Olá, eu sou ' + a);
-          const voiceName = (normalizeMap(LS.get('uno:archVoiceMap', {}))[a] || sel.value);
-          const v = (all||[]).find(x => x.name === voiceName) || pickPtVoice(all, ARCH_GENDER[a]==='f');
-          if (v) utter.voice = v;
-          window.speechSynthesis.cancel();
-          window.speechSynthesis.speak(utter);
-        } catch(e){}
-      });
-
-      row.appendChild(label);
-      row.appendChild(sel);
-      row.appendChild(btn);
-      wrap.appendChild(row);
-    });
+    }
+    if (etHead){
+      etHead.onclick = function(){
+        S.state.ui.hideHeader = !S.state.ui.hideHeader;
+        applyBody(); persist();
+        try{ navigator.vibrate && navigator.vibrate(8);}catch(_){}
+      };
+    }
   }
 
-  // Override global speak helpers
-  window.speakWithActiveArch = function(text){
-    try {
-      const select = document.getElementById('arch-select');
-      let archFile = select ? (select.value||'') : '';
-      let base = archFile.replace(/\.html$/i, '');
-      const key = base.charAt(0).toUpperCase() + base.slice(1);
-      const map = normalizeMap(LS.get('uno:archVoiceMap', {}));
-      const voices = getVoices();
-      let voice = (voices||[]).find(v => v.name === map[key]);
-      if (!voice){
-        const wantFemale = ARCH_GENDER[key] === 'f';
-        voice = pickPtVoice(voices, wantFemale);
-      }
-      if (!voice) return;
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.voice = voice;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utter);
-    } catch(e){}
+  // 5) Patch renderState to always apply UI flags
+  const prevRender = window.renderState;
+  window.renderState = function patchedRenderState(){
+    if (typeof prevRender === 'function') prevRender.apply(this, arguments);
+    // ensure UI classes
+    applyBody();
+    // also keep Manifesto fresh if open
+    if (S.state.manifestoOpen && typeof window.renderManifestoContent === 'function'){
+      try{ renderManifestoContent(); }catch(_){}
+    }
   };
-  window.speakArchetype = function(name){
-    try {
-      const key = String(name||'').charAt(0).toUpperCase() + String(name||'').slice(1).toLowerCase();
-      const map = normalizeMap(LS.get('uno:archVoiceMap', {}));
-      const voices = getVoices();
-      let voice = (voices||[]).find(v => v.name === map[key]);
-      if (!voice){
-        const wantFemale = ARCH_GENDER[key] === 'f';
-        voice = pickPtVoice(voices, wantFemale);
-      }
-      if (!voice) return;
-      const utter = new SpeechSynthesisUtterance('Olá, eu sou ' + key);
-      utter.voice = voice;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utter);
-    } catch(e){}
+  window.renderState.__uiBound = true;
+
+  // 6) Extend Manifesto content to show flags (wrap original)
+  const prevManifesto = window.renderManifestoContent;
+  window.renderManifestoContent = function patchedManifesto(){
+    if (typeof prevManifesto === 'function') prevManifesto.apply(this, arguments);
+    try{
+      const el = document.getElementById('manifestoStatus');
+      if (!el) return;
+      const uiInfo = document.createElement('div');
+      uiInfo.style.marginTop = '10px';
+      uiInfo.innerHTML = `
+        <h3 class="text-nebula-m" style="margin:.75rem 0 .35rem;font-weight:800">UI Flags</h3>
+        <ul class="text-sm" style="display:grid;gap:8px;list-style:none;padding:0;margin:0">
+          <li style="display:flex;justify-content:space-between;align-items:center;background:var(--glass);padding:10px;border:1px solid var(--ring);border-radius:12px">
+            <span>Ocultar Navegação</span><span style="color:${S.state.ui.hideNav?'var(--ok)':'var(--muted)'}">${S.state.ui.hideNav?'ATIVO':'INATIVO'}</span></li>
+          <li style="display:flex;justify-content:space-between;align-items:center;background:var(--glass);padding:10px;border:1px solid var(--ring);border-radius:12px">
+            <span>Ocultar Header</span><span style="color:${S.state.ui.hideHeader?'var(--ok)':'var(--muted)'}">${S.state.ui.hideHeader?'ATIVO':'INATIVO'}</span></li>
+        </ul>`;
+      el.appendChild(uiInfo);
+    }catch(_){}
   };
 
-  function bootstrap(){
-    ensureDefaults();
-    rebuildUI();
-  }
-
-  // Try immediate; also on voiceschanged
-  try { bootstrap(); } catch(e){}
-  try { window.speechSynthesis.onvoiceschanged = () => bootstrap(); } catch(e){}
+  // 7) Initial apply
+  applyBody();
+  // Try wire after DOM ready
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireEdge);
+  else wireEdge();
 })();
 </script>
+
+
+<script>
+/* =====================================================
+   Archetype Sync ↔ S.state ↔ localStorage ↔ Firestore
+   - Ensures S.state.archetype exists
+   - Wraps DUAL_ARCH.set to persist + saveState()
+   - Reconciles on boot and when remote state changes
+   - Shows in Manifesto
+   ===================================================== */
+(function(){
+  const ARCH_KEY = 'dual.archetype';
+  const DEFAULT  = 'Nova';
+
+  // 1) Ensure S and archetype field
+  window.S = window.S || { state:{}, config:{} };
+  const st = (S.state = S.state || {});
+  if (typeof st.archetype === 'undefined'){
+    // bootstrap from localStorage or renderer (DUAL_ARCH) or default
+    let bootArch = DEFAULT;
+    try{
+      const ls = localStorage.getItem(ARCH_KEY);
+      if (ls) bootArch = ls;
+    }catch(_){}
+    if (window.DUAL_ARCH && typeof DUAL_ARCH.get === 'function'){
+      try { bootArch = DUAL_ARCH.get() || bootArch; } catch(_){}
+    }
+    st.archetype = bootArch;
+  }
+
+  // 2) Helper: persist to LS + Firestore
+  function persistArch(name){
+    // localStorage
+    try{ localStorage.setItem(ARCH_KEY, name); }catch(_){}
+    // Firestore (if available)
+    if (typeof window.saveState === 'function'){
+      try{ saveState(S.state); }catch(_){}
+    }
+  }
+
+  // 3) Wrap DUAL_ARCH.set to also update S.state
+  if (window.DUAL_ARCH && typeof DUAL_ARCH.set === 'function'){
+    const prevSet = DUAL_ARCH.set;
+    DUAL_ARCH.set = function(name){
+      const res = prevSet.apply(this, arguments);
+      if (name && typeof name === 'string'){
+        S.state.archetype = name;
+        persistArch(name);
+        // If you want Manifesto to refresh live:
+        if (S.state.manifestoOpen && typeof window.renderManifestoContent === 'function'){
+          try{ renderManifestoContent(); }catch(_){}
+        }
+      }
+      return res;
+    };
+  }
+
+  // 4) Also wrap window.setArchetype if present
+  if (typeof window.setArchetype === 'function'){
+    const prev = window.setArchetype;
+    window.setArchetype = function(name){
+      const res = prev.apply(this, arguments);
+      if (name && typeof name === 'string'){
+        S.state.archetype = name;
+        persistArch(name);
+        if (S.state.manifestoOpen && typeof window.renderManifestoContent === 'function'){
+          try{ renderManifestoContent(); }catch(_){}
+        }
+      }
+      return res;
+    };
+  }
+
+  // 5) Reconcile particles renderer with S.state on boot
+  function reconcile(){
+    const target = S.state.archetype || DEFAULT;
+    if (window.DUAL_ARCH && typeof DUAL_ARCH.get === 'function' && typeof DUAL_ARCH.set === 'function'){
+      try{
+        if (DUAL_ARCH.get() !== target){
+          DUAL_ARCH.set(target);
+        }
+      }catch(_){}
+    }
+  }
+
+  // 6) Patch renderState so archetype is always consistent after any remote merge
+  const prevRender = window.renderState;
+  window.renderState = function patchedRenderState(){
+    if (typeof prevRender === 'function') prevRender.apply(this, arguments);
+    reconcile();
+  };
+
+  // 7) Extend Manifesto output with Archetype line
+  const prevManifesto = window.renderManifestoContent;
+  window.renderManifestoContent = function patchedManifesto(){
+    if (typeof prevManifesto === 'function') prevManifesto.apply(this, arguments);
+    const el = document.getElementById('manifestoStatus');
+    if (!el) return;
+    const info = document.createElement('div');
+    info.style.marginTop = '10px';
+    info.innerHTML = `
+      <h3 class="text-nebula-m" style="margin:.75rem 0 .35rem;font-weight:800">Arquetipo Atual</h3>
+      <div class="text-sm" style="display:flex;justify-content:space-between;align-items:center;background:var(--glass);padding:10px;border:1px solid var(--ring);border-radius:12px">
+        <span>Nome</span><span style="color:var(--ok)">${(S.state.archetype||'Nova')}</span>
+      </div>`;
+    el.appendChild(info);
+  };
+
+  // 8) Initial reconcile
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', reconcile);
+  else reconcile();
+})();
+</script>
+
+
+<!-- PATCH v3.5.3 — ARK3D • 3D Chips ORB (WebGL, fallback Canvas) -->
+<script id="ark3d-chips-orb">
+(function(){
+  const MOUNT_DELAY = 80;
+  function mount(){
+    const circle = document.querySelector('.arch-circle');
+    if(!circle) return;
+    let wrap = circle.querySelector('.orb-wrap');
+    if(!wrap){
+      wrap = document.createElement('div');
+      wrap.className='orb-wrap';
+      wrap.style.cssText='position:absolute;inset:6%;border-radius:50%;overflow:hidden;';
+      circle.appendChild(wrap);
+    }
+    // Remove any previous #orb3d
+    const old = wrap.querySelector('#orb3d'); if(old) old.remove();
+
+    const cv = document.createElement('canvas');
+    cv.id='orb3d'; cv.style.cssText='position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:50%';
+    wrap.appendChild(cv);
+
+    const DPR = Math.min(devicePixelRatio||1, 2);
+    function fit(){
+      const r = cv.getBoundingClientRect();
+      cv.width = Math.max(2, Math.floor(r.width * DPR));
+      cv.height= Math.max(2, Math.floor(r.height* DPR));
+    }
+    new ResizeObserver(()=>{fit(); initOrUpdate();}).observe(cv);
+    fit();
+
+    // Try WebGL2 then WebGL
+    const gl = cv.getContext('webgl2', {alpha:true, antialias:true}) || cv.getContext('webgl', {alpha:true, antialias:true});
+    const hasGL = !!gl;
+
+    // Settings (reads LS presets if present)
+    function lsNum(key, def){ try{ const v=localStorage.getItem(key); return v==null? def : parseFloat(v); } catch(_){ return def; } }
+    function archKey(){ try{ const s=document.getElementById('arch-select'); return (s?.value||'atlas').replace(/\.html$/,'').toLowerCase(); }catch(_){ return 'atlas'; } }
+    function settings(){
+      const a = archKey();
+      const count = Math.round(lsNum(`dual.atom.${a}.count`, lsNum('dual.atom.count', 200)));
+      const orbit = lsNum(`dual.atom.${a}.orbit`, lsNum('dual.atom.orbit', .75));
+      const glow  = lsNum(`dual.atom.${a}.glow`,  lsNum('dual.atom.glow',  .46));
+      const bloomOn = (localStorage.getItem('dual.ui.bloom')==='1');
+      return {count: Math.max(32, Math.min(1200, count)), orbitRadius: Math.max(.5, Math.min(.9, orbit)), glow: Math.max(0, Math.min(1, glow)), bloomOn};
+    }
+
+    let animRAF=null, program=null, buf=null, u={}, pts=0, clock=0, _cfg=null;
+
+    // Build GL program
+    function makeGL(){
+      if(!gl) return false;
+      const vs = `#version 100
+      precision mediump float;
+      attribute float aIdx;
+      uniform float uCount, uTime, uOrbit, uSize;
+      uniform vec2 uRes;
+      varying float vL;
+      // golden angle for distribution
+      float ga = 2.39996323;
+      void main(){
+        float i = aIdx;
+        float n = max(1.0, uCount);
+        float t = uTime*0.9;
+        float a = i*ga + t*0.2;
+        float y = (i/n)*2.0 - 1.0;
+        float r = sqrt(1.0 - y*y);
+        // base sphere
+        vec3 p = vec3(r*cos(a), y, r*sin(a));
+
+        // orbit deformation
+        float wob = 0.06*sin(t + i*0.13);
+        p *= (uOrbit + wob);
+
+        // rotate slowly
+        float s = sin(t*0.25), c = cos(t*0.25);
+        mat2 rot = mat2(c,-s,s,c);
+        vec3 q = vec3(rot*vec2(p.x,p.z), p.y);
+
+        // perspective
+        float camZ = 1.9;
+        float z = q.z + camZ;
+        float invz = 1.0 / z;
+        vec2 ndc = q.xy * invz;
+        // fit to canvas
+        float aspect = uRes.x / uRes.y;
+        ndc.x *= aspect;
+        gl_Position = vec4(ndc, 0.0, 1.0);
+        float size = uSize * (1.5 + 1.2*sin(i*0.3 + t*1.1));
+        gl_PointSize = size * invz;
+        vL = clamp(0.45 + 0.55*(1.0 - invz), 0.0, 1.0);
+      }`;
+      const fs = `#ifdef GL_ES
+      precision mediump float;
+      #endif
+      varying float vL;
+      uniform float uGlow;
+      uniform vec3 uColA, uColB;
+      void main(){
+        // point sprite square chip
+        vec2 uv = gl_PointCoord*2.0 - 1.0;
+        float d = max(abs(uv.x), abs(uv.y));
+        float edge = smoothstep(1.0, 0.95, 1.0 - d);
+        vec3 col = mix(uColA, uColB, vL);
+        // inner specular
+        float spec = pow(max(0.0, 1.0 - dot(uv,uv)), 3.0);
+        vec3 rgb = col*(.55+.45*vL) + spec * (0.65 + 0.35*uGlow);
+        gl_FragColor = vec4(rgb, edge);
+      }`;
+      function compile(type,src){
+        const s = gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
+        if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){ console.warn(gl.getShaderInfoLog(s)); return null; }
+        return s;
+      }
+      const v = compile(gl.VERTEX_SHADER, vs);
+      const f = compile(gl.FRAGMENT_SHADER, fs);
+      if(!v || !f) return false;
+      program = gl.createProgram(); gl.attachShader(program,v); gl.attachShader(program,f); gl.linkProgram(program);
+      if(!gl.getProgramParameter(program, gl.LINK_STATUS)){ console.warn(gl.getProgramInfoLog(program)); return false; }
+      gl.useProgram(program);
+      // setup buffer of indices [0..N)
+      buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      // attrib
+      const aIdx = gl.getAttribLocation(program, 'aIdx');
+      gl.enableVertexAttribArray(aIdx); gl.vertexAttribPointer(aIdx, 1, gl.FLOAT, false, 0, 0);
+      // uniforms
+      u.count = gl.getUniformLocation(program, 'uCount');
+      u.time  = gl.getUniformLocation(program, 'uTime');
+      u.orbit = gl.getUniformLocation(program, 'uOrbit');
+      u.size  = gl.getUniformLocation(program, 'uSize');
+      u.res   = gl.getUniformLocation(program, 'uRes');
+      u.glow  = gl.getUniformLocation(program, 'uGlow');
+      u.colA  = gl.getUniformLocation(program, 'uColA');
+      u.colB  = gl.getUniformLocation(program, 'uColB');
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+      return true;
+    }
+
+    function hexToRgb(hex){
+      hex = hex.replace('#','');
+      const r=parseInt(hex.substring(0,2),16)/255;
+      const g=parseInt(hex.substring(2,4),16)/255;
+      const b=parseInt(hex.substring(4,6),16)/255;
+      return [r,g,b];
+    }
+
+    function palette(){
+      // try to read CSS variable --arch-color if available
+      const cssCol = getComputedStyle(document.documentElement).getPropertyValue('--arch-color').trim() || '#5fa3ff';
+      const a = hexToRgb(cssCol);
+      const b = [Math.min(1,a[0]+.25), Math.min(1,a[1]+.25), Math.min(1,a[2]+.25)];
+      return {a:a, b:b};
+    }
+
+    function initOrUpdate(){
+      _cfg = settings();
+      if(hasGL && !program){
+        if(!makeGL()) return;
+      }
+      if(hasGL){
+        // update buffer if count changed
+        if(pts !== _cfg.count){
+          const arr = new Float32Array(_cfg.count);
+          for(let i=0;i<_cfg.count;i++) arr[i]=i;
+          gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+          gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+          pts = _cfg.count;
+        }
+      }
+    }
+
+    function render(t){
+      if(!cv.isConnected) return; // detached
+      if(!hasGL){ renderFallback2D(t); animRAF=requestAnimationFrame(render); return; }
+      const col = palette();
+      gl.viewport(0,0,cv.width,cv.height);
+      gl.clearColor(0,0,0,0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.useProgram(program);
+      gl.uniform1f(u.count, _cfg.count);
+      gl.uniform1f(u.time,  t*0.001);
+      gl.uniform1f(u.orbit, _cfg.orbitRadius);
+      const baseSize = Math.max(1.5, cv.width/450.0);
+      const sizeBoost = _cfg.bloomOn ? 1.35 : 1.0;
+      gl.uniform1f(u.size, baseSize* sizeBoost * window.devicePixelRatio);
+      gl.uniform2f(u.res, cv.width, cv.height);
+      gl.uniform1f(u.glow, _cfg.glow);
+      gl.uniform3fv(u.colA, col.a);
+      gl.uniform3fv(u.colB, col.b);
+      gl.drawArrays(gl.POINTS, 0, pts);
+      animRAF = requestAnimationFrame(render);
+    }
+
+    // Fallback Canvas 2D (simple rotating dots)
+    let ctx2d=null;
+    function renderFallback2D(ms){
+      if(!ctx2d){ ctx2d = cv.getContext('2d'); }
+      const t = ms*0.001;
+      const W=cv.width, H=cv.height, R=Math.min(W,H)*0.45*_cfg.orbitRadius;
+      ctx2d.clearRect(0,0,W,H);
+      ctx2d.save(); ctx2d.translate(W/2,H/2);
+      const n=_cfg.count, wob=0.06*Math.sin(t);
+      for(let i=0;i<n;i++){
+        const a = i*2.39996323 + t*0.2;
+        const y = (i/n)*2-1;
+        const r = Math.sqrt(1 - y*y);
+        const px = r*Math.cos(a), pz = r*Math.sin(a), py = y;
+        // rotate
+        const s=Math.sin(t*0.25), c=Math.cos(t*0.25);
+        const X = (c*px - s*pz), Z = (s*px + c*pz), Y = py;
+        const invz = 1/(Z+1.9);
+        const x = X*R*invz, y2= Y*R*invz;
+        const sz = (1.5 + 1.2*Math.sin(i*0.3 + t*1.1)) * invz * (cv.width/450);
+        const alpha = Math.min(1, Math.max(.15, invz));
+        ctx2d.fillStyle = `rgba(200,230,255,${alpha})`;
+        ctx2d.fillRect(x - sz, y2 - sz, sz*2, sz*2);
+      }
+      ctx2d.restore();
+    }
+
+    function start(){
+      cancelAnimationFrame(animRAF); animRAF=null;
+      initOrUpdate();
+      animRAF = requestAnimationFrame(render);
+    }
+
+    // React to LS changes we control (bloom/atom values) via simple polling
+    let lastSig='';
+    setInterval(()=>{
+      const s = JSON.stringify(settings());
+      if(s!==lastSig){ lastSig=s; initOrUpdate(); }
+    }, 400);
+
+    // External messages (from parent scripts)
+    window.addEventListener('storage', (ev)=>{
+      if(ev.key && (ev.key.startsWith('dual.atom.') || ev.key==='dual.ui.bloom')) initOrUpdate();
+    });
+
+    // Kickoff
+    start();
+  }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', ()=> setTimeout(mount, MOUNT_DELAY));
+  else setTimeout(mount, MOUNT_DELAY);
+})();
+</script>
+
+
+<!-- PATCH v3.5.4 — ARK3D Dual-Ring Blend (fusion de arquétipos) -->
+<script id="ark3d-dual-blend">
+(function(){
+  const MOUNT_DELAY = 60;
+  let layers = null; // [{name,color,count,orbitRadius,spin,glow,size}, ...] up to 2
+
+  function hexToRgb(hex){ hex=hex.replace('#',''); return [parseInt(hex.slice(0,2),16)/255,parseInt(hex.slice(2,4),16)/255,parseInt(hex.slice(4,6),16)/255]; }
+  function cssArchColor(){ const v=getComputedStyle(document.documentElement).getPropertyValue('--arch-color').trim(); return v||'#5fa3ff'; }
+
+  function defaultLayers(){
+    const base = (document.getElementById('arch-select')?.value||'atlas').replace(/\.html$/,'').toLowerCase();
+    const col1 = cssArchColor();
+    // Second layer: soft complementary
+    const col2 = '#b684ff';
+    return [
+      { name: base, color: col1, count: 220, orbitRadius: .74, spin: .62, glow: .42, size:.010 },
+      { name: 'serena', color: col2, count: 160, orbitRadius: .82, spin: .48, glow: .36, size:.010 }
+    ];
+  }
+
+  function mount(){
+    const circle = document.querySelector('.arch-circle');
+    if(!circle) return;
+    let wrap = circle.querySelector('.orb-wrap');
+    if(!wrap){
+      wrap = document.createElement('div');
+      wrap.className='orb-wrap';
+      wrap.style.cssText='position:absolute;inset:6%;border-radius:50%;overflow:hidden;';
+      circle.appendChild(wrap);
+    }
+    // remove older canvases
+    wrap.querySelectorAll('#orb3dDual,#orb3d').forEach(n=>n.remove());
+
+    const cv = document.createElement('canvas');
+    cv.id='orb3dDual'; cv.style.cssText='position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:50%';
+    wrap.appendChild(cv);
+
+    const DPR = Math.min(devicePixelRatio||1, 2);
+    function fit(){
+      const r = cv.getBoundingClientRect();
+      cv.width = Math.max(2, Math.floor(r.width * DPR));
+      cv.height= Math.max(2, Math.floor(r.height* DPR));
+    }
+    new ResizeObserver(()=>{fit(); initOrUpdate();}).observe(cv);
+    fit();
+
+    const gl = cv.getContext('webgl2', {alpha:true, antialias:true}) || cv.getContext('webgl', {alpha:true, antialias:true});
+    const hasGL = !!gl;
+    let program=null, buf=null, u={}, pts=0, pts2=0, clock=0, animRAF=null;
+
+    function lsBool(k){ try{return localStorage.getItem(k)==='1'}catch(_){return false} }
+    function activeLayers(){ return (layers && layers.length) ? layers.slice(0,2) : defaultLayers(); }
+
+    function makeGL(){
+      if(!gl) return false;
+      const vs = `#version 100
+      precision mediump float;
+      attribute float aIdx;
+      uniform float uCount, uTime, uOrbit, uSize, uSpin;
+      uniform vec2 uRes;
+      varying float vL;
+      float ga = 2.39996323;
+      void main(){
+        float i = aIdx;
+        float n = max(1.0, uCount);
+        float t = uTime;
+        float a = i*ga + t*uSpin;
+        float y = (i/n)*2.0 - 1.0;
+        float r = sqrt(1.0 - y*y);
+        vec3 p = vec3(r*cos(a), y, r*sin(a));
+        float wob = 0.08*sin(t + i*0.21);
+        p *= (uOrbit + wob);
+        float s = sin(t*0.32), c = cos(t*0.32);
+        mat2 rot = mat2(c,-s,s,c);
+        vec3 q = vec3(rot*vec2(p.x,p.z), p.y);
+        float camZ = 1.9;
+        float z = q.z + camZ;
+        float invz = 1.0 / z;
+        vec2 ndc = q.xy * invz;
+        float aspect = uRes.x / uRes.y;
+        ndc.x *= aspect;
+        gl_Position = vec4(ndc, 0.0, 1.0);
+        float size = uSize * (1.4 + 1.1*sin(i*0.19 + t*1.2));
+        gl_PointSize = size * invz;
+        vL = clamp(0.45 + 0.55*(1.0 - invz), 0.0, 1.0);
+      }`;
+      const fs = `#ifdef GL_ES
+      precision mediump float;
+      #endif
+      varying float vL;
+      uniform float uGlow;
+      uniform vec3 uColA, uColB;
+      void main(){
+        vec2 uv = gl_PointCoord*2.0 - 1.0;
+        float d = max(abs(uv.x), abs(uv.y));
+        float edge = smoothstep(1.0, 0.93, 1.0 - d);
+        vec3 col = mix(uColA, uColB, vL);
+        float spec = pow(max(0.0, 1.0 - dot(uv,uv)), 3.0);
+        vec3 rgb = col*(.55+.45*vL) + spec * (0.65 + 0.35*uGlow);
+        gl_FragColor = vec4(rgb, edge);
+      }`;
+      function sh(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.warn(gl.getShaderInfoLog(s));return null;}return s;}
+      const v=sh(gl.VERTEX_SHADER,vs), f=sh(gl.FRAGMENT_SHADER,fs); if(!v||!f) return false;
+      program = gl.createProgram(); gl.attachShader(program,v); gl.attachShader(program,f); gl.linkProgram(program);
+      if(!gl.getProgramParameter(program, gl.LINK_STATUS)){ console.warn(gl.getProgramInfoLog(program)); return false; }
+      gl.useProgram(program);
+      buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      const aIdx = gl.getAttribLocation(program, 'aIdx'); gl.enableVertexAttribArray(aIdx); gl.vertexAttribPointer(aIdx, 1, gl.FLOAT, false, 0, 0);
+      u.count=gl.getUniformLocation(program,'uCount'); u.time=gl.getUniformLocation(program,'uTime'); u.orbit=gl.getUniformLocation(program,'uOrbit');
+      u.size=gl.getUniformLocation(program,'uSize'); u.res=gl.getUniformLocation(program,'uRes'); u.glow=gl.getUniformLocation(program,'uGlow');
+      u.colA=gl.getUniformLocation(program,'uColA'); u.colB=gl.getUniformLocation(program,'uColB'); u.spin=gl.getUniformLocation(program,'uSpin');
+      gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+      return true;
+    }
+
+    function updateBuffers(L){
+      const total = Math.max(L[0]?.count||0, L[1]?.count||0);
+      if(total!==pts){
+        const arr = new Float32Array(total);
+        for(let i=0;i<total;i++) arr[i]=i;
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+        pts=total;
+      }
+    }
+
+    function paletteFor(hex, boost){
+      const a = hexToRgb(hex||cssArchColor());
+      const b = [Math.min(1,a[0]+.28*boost), Math.min(1,a[1]+.28*boost), Math.min(1,a[2]+.28*boost)];
+      return {a,b};
+    }
+
+    function drawLayer(cfg, time, resx, resy){
+      const pal = paletteFor(cfg.color, 1.0);
+      gl.uniform1f(u.count, cfg.count);
+      gl.uniform1f(u.time,  time);
+      gl.uniform1f(u.orbit, cfg.orbitRadius);
+      const bloomOn = lsBool('dual.ui.bloom');
+      const baseSize = Math.max(1.5, resx/480.0) * (cfg.size || .010) * (bloomOn? 1.35:1.0) * window.devicePixelRatio;
+      gl.uniform1f(u.size,  baseSize);
+      gl.uniform2f(u.res,   resx, resy);
+      gl.uniform1f(u.glow,  cfg.glow);
+      gl.uniform3fv(u.colA, pal.a);
+      gl.uniform3fv(u.colB, pal.b);
+      gl.uniform1f(u.spin,  cfg.spin || .62);
+      gl.drawArrays(gl.POINTS, 0, cfg.count);
+    }
+
+    function render(t){
+      if(!cv.isConnected) return;
+      const L = activeLayers();
+      if(!hasGL){ render2D(t, L); animRAF=requestAnimationFrame(render); return; }
+      gl.viewport(0,0,cv.width,cv.height);
+      gl.clearColor(0,0,0,0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.useProgram(program);
+      updateBuffers(L);
+      // Inner ring first, then outer (for subtle additive blend overlap)
+      const time = t*0.001;
+      drawLayer(L[0], time, cv.width, cv.height);
+      if(L[1]) drawLayer(L[1], time+0.37, cv.width, cv.height);
+      animRAF = requestAnimationFrame(render);
+    }
+
+    // 2D fallback dual
+    let ctx2d=null;
+    function render2D(ms, L){
+      if(!ctx2d) ctx2d = cv.getContext('2d');
+      const t=ms*0.001; ctx2d.clearRect(0,0,cv.width,cv.height); ctx2d.save(); ctx2d.translate(cv.width/2, cv.height/2);
+      function draw(cfg, tshift){
+        const R=Math.min(cv.width,cv.height)*0.45*cfg.orbitRadius;
+        const n=cfg.count; for(let i=0;i<n;i++){
+          const a = i*2.39996323 + (t+tshift)*(cfg.spin||.62);
+          const y = (i/n)*2-1; const r=Math.sqrt(1-y*y);
+          const px=r*Math.cos(a), pz=r*Math.sin(a), py=y;
+          const s=Math.sin(t*0.32), c=Math.cos(t*0.32);
+          const X=(c*px - s*pz), Z=(s*px + c*pz), Y=py;
+          const invz = 1/(Z+1.9);
+          const x = X*R*invz, y2 = Y*R*invz;
+          const sz = (1.4 + 1.1*Math.sin(i*0.19 + t*1.2))*invz*(cv.width/480);
+          ctx2d.fillStyle = cfg.color || 'rgba(200,230,255,.9)';
+          ctx2d.globalAlpha = Math.min(1, Math.max(.12, invz));
+          ctx2d.fillRect(x-sz,y2-sz,sz*2,sz*2);
+        }
+      }
+      draw(L[0], 0.0); if(L[1]) draw(L[1], 0.37);
+      ctx2d.restore();
+    }
+
+    function start(){ cancelAnimationFrame(animRAF); animRAF=null; if(hasGL && !program){ if(!makeGL()) return; } animRAF=requestAnimationFrame(render); }
+    function initOrUpdate(){ start(); }
+
+    // Listen to messages to update layers on the fly
+    window.addEventListener('message', (ev)=>{
+      const d=ev.data||{};
+      if(d.type==='atomConfigLayers' && Array.isArray(d.layers)){
+        // Normalize and clamp
+        layers = d.layers.slice(0,2).map((x,i)=>({ 
+          name: x.name||('layer'+i),
+          color: x.color||cssArchColor(),
+          count: Math.max(8, Math.min(1200, Math.floor(x.count||220))),
+          orbitRadius: Math.max(.50, Math.min(.90, x.orbitRadius||(.70+i*.08))),
+          spin: x.spin==null? (.62 - i*0.08) : x.spin,
+          glow: x.glow==null? .42 : Math.max(0,Math.min(1,x.glow)),
+          size: x.size==null? .010 : x.size
+        }));
+        initOrUpdate();
+      }
+      if(d.type==='atomConfig' && d.data){
+        // Apply scalar config to the first layer for compatibility
+        const L = activeLayers();
+        const first = Object.assign({}, L[0], d.data);
+        layers = [first, L[1]];
+        initOrUpdate();
+      }
+      if(d.type==='bloomToggle'){ initOrUpdate(); }
+    });
+
+    start();
+  }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', ()=> setTimeout(mount, MOUNT_DELAY));
+  else setTimeout(mount, MOUNT_DELAY);
+})();
+</script>
+
+
+<!-- PATCH v3.5.5 — LSPanel chips → ARK3D Dual-Ring binding -->
+<script id="ark3d-lspanel-binding-v355">
+(function(){
+  const ORDER = []; // remembers click order of selected chips
+  const MAX_LAYERS = 2;
+
+  const PRESET = {
+    atlas:{color:'#3b69ff',count:220,orbit:.72,spin:.62,glow:.42},
+    nova:{color:'#ff52b1',count:260,orbit:.74,spin:.70,glow:.46},
+    vitalis:{color:'#22d3ee',count:200,orbit:.72,spin:.60,glow:.40},
+    pulse:{color:'#00bfff',count:240,orbit:.74,spin:.68,glow:.44},
+    artemis:{color:'#ff7a00',count:180,orbit:.70,spin:.58,glow:.38},
+    serena:{color:'#b684ff',count:180,orbit:.82,spin:.54,glow:.36},
+    kaos:{color:'#ff4d6d',count:200,orbit:.78,spin:.66,glow:.46},
+    genus:{color:'#10b981',count:170,orbit:.70,spin:.54,glow:.36},
+    lumine:{color:'#ffd54f',count:210,orbit:.77,spin:.58,glow:.50},
+    rhea:{color:'#00d1b2',count:160,orbit:.68,spin:.52,glow:.34},
+    solus:{color:'#6495ed',count:190,orbit:.73,spin:.56,glow:.42},
+    aion:{color:'#8b5cf6',count:200,orbit:.75,spin:.60,glow:.46}
+  };
+
+  function archKey(){ const s=document.getElementById('arch-select'); return (s?.value||'atlas').replace(/\.html$/,'').toLowerCase(); }
+
+  function lsNum(k, d){ try{ const v=localStorage.getItem(k); return v==null? d : parseFloat(v); }catch(_){ return d; } }
+  function readLSForArch(a){
+    const c = lsNum(`dual.atom.${a}.count`, NaN);
+    const o = lsNum(`dual.atom.${a}.orbit`, NaN);
+    const g = lsNum(`dual.atom.${a}.glow`,  NaN);
+    const p = PRESET[a] || PRESET.atlas;
+    return {
+      name:a,
+      color:p.color,
+      count: isNaN(c)? p.count: Math.max(8, Math.min(1200, Math.floor(c))),
+      orbitRadius: isNaN(o)? p.orbit: Math.max(.50, Math.min(.90, o)),
+      spin: p.spin,
+      glow: isNaN(g)? p.glow: Math.max(0, Math.min(1, g)),
+      size:.010
+    };
+  }
+
+  function postLayers(layers){
+    try{
+      const fr=document.getElementById('arch-frame');
+      fr && fr.contentWindow && fr.contentWindow.postMessage({ type:'atomConfigLayers', layers }, '*');
+    }catch(_){}
+  }
+
+  function selectedChips(){
+    const sec = document.getElementById('archChip3DSection');
+    if(!sec) return [];
+    return Array.from(sec.querySelectorAll('.arch-chip.on')).map(n=> n.textContent.trim().toLowerCase());
+  }
+
+  function normalizeOrder(active){
+    // keep previous click order where still active; append new actives
+    const keep = ORDER.filter(x=> active.includes(x));
+    const add  = active.filter(x=> !keep.includes(x));
+    const all  = keep.concat(add);
+    ORDER.length = 0; Array.prototype.push.apply(ORDER, all.slice(0,MAX_LAYERS));
+    if (ORDER.length<1) ORDER.push(archKey());
+    if (ORDER.length<2){
+      // add a soft complement (serena) if only one
+      if (!ORDER.includes('serena')) ORDER.push('serena');
+      else ORDER.push('nova');
+    }
+    // ensure max 2
+    ORDER.length = MAX_LAYERS;
+    return ORDER.slice(0,MAX_LAYERS);
+  }
+
+  function buildAndSend(){
+    const active = selectedChips();             // ['nova','serena', ...]
+    const pair = normalizeOrder(active);        // e.g., ['nova','serena']
+    const L = pair.map(readLSForArch);
+    // inner ring slightly smaller orbit than outer if equal
+    if (Math.abs(L[0].orbitRadius - L[1].orbitRadius) < 0.04){
+      L[0].orbitRadius = Math.max(.52, L[0].orbitRadius - .05);
+      L[1].orbitRadius = Math.min(.90, L[1].orbitRadius + .05);
+    }
+    postLayers(L);
+  }
+
+  function bindChips(){
+    const sec = document.getElementById('archChip3DSection');
+    if(!sec || sec.dataset._bindV355) return;
+    sec.dataset._bindV355='1';
+    sec.addEventListener('click', function(ev){
+      const btn = ev.target.closest('.arch-chip');
+      if(!btn) return;
+      // toggle handled by existing JS; give it a tick then compute
+      setTimeout(buildAndSend, 30);
+    }, {passive:true});
+    // initial send
+    setTimeout(buildAndSend, 120);
+  }
+
+  function bindOnLSOpen(){
+    const btn = document.getElementById('btnLS');
+    if(btn && !btn.dataset._arkBind355){
+      btn.dataset._arkBind355='1';
+      btn.addEventListener('click', ()=> setTimeout(bindChips, 100), {passive:true});
+    } else {
+      setTimeout(bindChips, 200);
+    }
+  }
+
+  // Recompute when arch changes
+  function bindArchChange(){
+    const sel = document.getElementById('arch-select');
+    if(sel && !sel.dataset._arkBindArch355){
+      sel.dataset._arkBindArch355='1';
+      sel.addEventListener('change', ()=> setTimeout(buildAndSend, 80), {passive:true});
+    }
+  }
+
+  // On boot
+  function boot(){ bindOnLSOpen(); bindArchChange(); setTimeout(buildAndSend, 200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+  document.addEventListener('ls:disabled-changed', ()=> setTimeout(bindChips, 80));
+  // Also rebuild after iframe loads
+  (function(){ const fr=document.getElementById('arch-frame'); fr && fr.addEventListener('load', ()=> setTimeout(buildAndSend, 60)); })();
+})();
+</script>
+
 </body></html>
