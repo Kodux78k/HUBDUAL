@@ -352,7 +352,7 @@ body::after{content:'';position:fixed;inset:0;background:none !important;pointer
     .badge { display: inline-flex; gap: 6px; align-items: center; padding: .38rem .65rem; border: 1px solid #ffffff18; background: #0f1428; border-radius: 999px; font-weight: 800; position: relative }
     .badge.fx-trans:hover { box-shadow: 0 10px 24px rgba(0,0,0,.5) }
     nav.tabbar { position: fixed; left: 0; right: 0; bottom: env(safe-area-inset-bottom, 0); height: var(--tabsH); z-index: 1500; display: flex; justify-content: center; padding: 6px 14px }
-    .tabbar .inner { width: 100%; max-width: 820px; display: flex; justify-content: space-around; align-items: center; background: var(--surface); border: var(--bd); border-radius: 22px; box-shadow: var(--shadow); padding: 10px 14px }
+    .tabbar .inner { width: 100%; max-width: 820px; display: flex; justify-content: space-around; align-items: center; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(10px); border: var(--bd); border-radius: 22px; box-shadow: var(--shadow); padding: 10px 14px }
     .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--mut); font-size: 11px; font-weight: 800; padding: 8px; border-radius: 14px; cursor: pointer; position: relative }
     .tab.fx-trans:hover { background: rgba(255,255,255,.06) }
     .tab.active { color: var(--fg); background: rgba(255,255,255,.10); box-shadow: 0 0 0 2px rgba(255,255,255,.10) }
@@ -1355,6 +1355,183 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
 }
 </style>
 
+
+<style id="hdpro-override">
+
+/* === HD•PRO Override (Dual UNO) ==============================
+   - Handle (quase invisível) para abrir/fechar LS Panel (#brain)
+   - Painel "HD Pro" dentro do LS Panel (estatísticas + ações)
+   - Metrificadores animados de Storage (LocalStorage/IndexedDB/Total)
+   - Toggle para colapsar opções avançadas do ORB/FPS
+   ================================================================= */
+:root{
+  --hdpro-glass: rgba(12,16,24,.64);
+  --hdpro-line: 1px solid rgba(143,211,255,.14);
+  --hdpro-ok: var(--ok, #39ffb6);
+  --hdpro-warn: var(--warn, #ffb86b);
+  --hdpro-err: var(--err, #ff6b6b);
+}
+
+/* Botão/área de pega "tango" (quase invisível) */
+#lsHandle{
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 8px) + 6px);
+  left: 8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.18);
+  box-shadow: 0 8px 20px rgba(0,0,0,.45);
+  opacity: .14;
+  z-index: 1600;
+  transition: opacity .18s ease, transform .18s ease, background .18s ease;
+  backdrop-filter: blur(6px);
+}
+#lsHandle:hover, #lsHandle:active{ opacity:.42; transform: scale(1.06); }
+#lsHandle.on{ opacity:.8; background: rgba(57,255,182,.25); }
+
+/* Painel HD Pro embutido no LS (#brain .popover) */
+.hdpro-sec{
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 16px;
+  background: var(--hdpro-glass);
+  border: var(--hdpro-line);
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+}
+.hdpro-sec .sec-hdr{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:10px; margin-bottom:8px;
+}
+.hdpro-sec .sec-hdr h3{
+  margin:0; font-weight:900; font-size:14px; letter-spacing:.04em;
+}
+.hdpro-grid{
+  display:grid; grid-template-columns: 1fr; gap:10px;
+}
+.hdpro-row{ display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center; }
+.hdpro-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+
+/* Meters */
+.hdpro-meter{
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px;
+  overflow: hidden;
+  height: 14px;
+  position: relative;
+}
+.hdpro-meter .bar{
+  position:absolute; left:0; top:0; height:100%;
+  width:0%;
+  background: linear-gradient(90deg, var(--grad-a), var(--grad-b));
+  transition: width .8s cubic-bezier(.22,.61,.36,1);
+  box-shadow: inset 0 0 12px rgba(0,0,0,.25);
+}
+.hdpro-label{ font-size:12px; color: var(--mut, rgba(245,247,255,.68)); }
+.hdpro-val{ font-size:12px; font-weight:800; }
+
+/* Toggle de avançados ORB/FPS */
+.hdpro-toggle{
+  display:flex; align-items:center; gap:8px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px; padding: 8px 10px;
+  font-size:12px; font-weight:800;
+  cursor:pointer;
+}
+.hdpro-adv-hidden{ display:none !important; }
+
+/* Botões compactos coerentes com tema */
+.hd-btn{ 
+  background: linear-gradient(180deg, rgba(13,22,34,.7), rgba(9,14,22,.7));
+  border: 1px solid rgba(143,211,255,.18);
+  color: var(--fg);
+  border-radius: 12px; padding: 8px 10px; font-weight:800;
+}
+.hd-btn.danger{ border-color: rgba(255,107,107,.35); }
+.hd-btn.ok{ border-color: rgba(57,255,182,.35); }
+
+/* Toast simples */
+#hdToast{
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(14px + env(safe-area-inset-bottom, 0));
+  background: rgba(12,16,24,.92);
+  border: 1px solid rgba(255,255,255,.18);
+  color: var(--fg);
+  border-radius: 14px; padding: 10px 14px;
+  font-weight:800; font-size:12px;
+  box-shadow: 0 14px 40px rgba(0,0,0,.45);
+  z-index: 1700; opacity: 0; pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+#hdToast.show{ opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+</style>
+<style>
+/* Gradient icon tuning (Send/Voice/Text) */
+#homeInputOverlay button svg, #homeVoiceBtn svg, #homeTextBtn svg{
+  display:block;
+}
+
+</style>
+<style>
+/* Tabbar gradient tune */
+.tabbar .tab { color: var(--muted); }
+.tabbar .tab.active { color: var(--fg); }
+.tabbar .tab svg { display:block; margin: 0 auto 2px; }
+
+</style>
+<style>
+/* Inline gradient icons — unify sizing/alignment */
+button svg, .tabbar .tab svg { display:block; }
+
+</style>
+<style id="ATOM_UI_PATCH">
+:root{ --tabsH:58px; }
+nav.tabbar{ padding:4px 12px calc(env(safe-area-inset-bottom) + 4px) }
+.tabbar .inner{ padding:8px 12px }
+.tab{ padding:6px; font-size:10px }
+.arch-circle{ position:relative; border:1px solid rgba(255,255,255,.14);
+  box-shadow: 0 18px 50px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.06); }
+.arch-circle::after{ opacity:.6; }
+.arch-circle > canvas#atomCanvas{
+  position:absolute; inset:0; pointer-events:none; z-index:3;
+  opacity:.88; mix-blend-mode:screen; filter:saturate(120%) contrast(110%);
+}
+.arch-circle > .arch-fab{
+  position:absolute; z-index:4; top:8px; right:8px;
+  width:34px; height:34px; border-radius:999px; display:grid; place-items:center;
+  border:1px solid rgba(255,255,255,.18);
+  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+  box-shadow:0 6px 16px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06) inset;
+  color:#eaf2ff; cursor:pointer; -webkit-tap-highlight-color:transparent;
+}
+.arch-circle > .arch-fab:active{ transform:translateY(1px) scale(.98) }
+.card{ box-shadow: 0 14px 40px rgba(0,0,0,.42), inset 0 0 0 1px rgba(255,255,255,.05) }
+.icon-pill{ background:rgba(15,20,34,.78); border-color:#ffffff1f }
+.icon-ghost{ color:#b9c6da }
+</style>
+
+<!-- OVERLAY: background-only patch -->
+<style id="OVERLAY_BG_ONLY">
+/* Mantém o overlay sempre no background (atrás de tudo). */
+body::after{ content:none !important; }
+/* Overlay como camada de background (1ª), gradiente Nebula/Blue atrás dela (2ª). */
+body{
+  background:
+    radial-gradient(120% 120% at 50% 40%,
+      var(--arch-overlay, rgba(0,0,0,0)) 0%,
+      rgba(0,0,0,0) 62%),
+    linear-gradient(42deg, var(--grad-a), var(--grad-b)) fixed !important;
+}
+</style>
+<script id="OVERLAY_DEFAULT_BOOT">
+// Overlay ON por padrão até o primeiro arquétipo aplicar a cor própria.
+try{ document.documentElement.style.setProperty('--arch-overlay','rgba(64,158,255,.22)'); }catch{}
+</script>
+
 </head>
 <body>
   <!-- Splash screen displayed on initial load -->
@@ -1365,23 +1542,63 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
   <!-- ===== Header ===== -->
   <header class="mast">
     <button class="ib fx-trans fx-press ring" id="btnBack" title="Voltar" aria-label="Voltar">
-    <img src="icons/arrow-left.svg" alt="Voltar" width="20" height="20" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/arrow-left.svg'">
-      <span class="ripple"></span>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="gradNebulaBack" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <polyline points="15 18 9 12 15 6" stroke="url(#gradNebulaBack)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span>
     </button>
     <div class="title">
       <h1>HUB UNO</h1>
       <small>Dual · Trinity</small>
     </div>
     <button class="ib fx-trans fx-press ring" id="btnDownload" title="Baixar HTML">
-<img src="icons/download.svg" alt="Download" width="20" height="20" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/download.svg'">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <path d="M12 3v10" stroke="url(#g1)" stroke-width="2" stroke-linecap="round"/>
+  <polyline points="7 11 12 16 17 11" stroke="url(#g1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="4" y="18" width="16" height="3" rx="1.5" fill="url(#g1)" opacity=".3"/>
+</svg>
       <span class="ripple"></span>
     </button>
     <button class="ib fx-trans fx-press ring" id="btnHelp" title="Ajuda / Atalhos">
-<img src="icons/question-circle.svg" alt="Ajuda" width="20" height="20" onerror="this.onerror=null;this.src='icons/question-circle.svg'">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="g2" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="10" stroke="url(#g2)" stroke-width="2"/>
+  <path d="M9.5 9a2.5 2.5 0 1 1 4.4 1.5c-.6.7-1.4 1-1.9 1.6-.3.3-.5.7-.5 1.4" stroke="url(#g2)" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="12" cy="18" r="1" fill="url(#g2)"/>
+</svg>
       <span class="ripple"></span>
     </button>
     <button class="ib fx-trans fx-press ring" id="btnBrain" title="Brain">
-<img src="icons/brain.svg" alt="Brain" width="20" height="20" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/brain.svg'">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="g3" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <path d="M8 6a3 3 0 0 1 6 0 3 3 0 0 1 3 3 3 3 0 0 1 3 3 4 4 0 0 1-4 4H8a4 4 0 0 1-4-4 3 3 0 0 1 3-3 3 3 0 0 1 1-3z"
+    stroke="url(#g3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
       <span class="ripple"></span>
     </button>
   <button class="ib fx-trans fx-press ring" id="btnLS" title="Local Storage" aria-label="Local Storage">
@@ -1417,7 +1634,16 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
               <div class="mut">Monólito: Apps embutidos + Viewer + Dock + Atalhos</div>
             </div>
             <div class="ico">
-<img src="icons/bolt.svg" alt="Energia" width="24" height="24" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/bolt.svg'">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="url(#g4)" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="g4" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/>
+</svg>
             </div>
           </div>
         </div>
@@ -1427,11 +1653,29 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
                da bolinha e seguirá o layout vertical da arch-container. -->
           <div class="arch-switcher">
             <button class="btn fx-trans fx-press ring" id="arch-prev" title="Anterior">
-              <img src="icons/chevron-left.svg" alt="Anterior" width="16" height="16" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/chevron-left.svg'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g5" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <polyline points="15 18 9 12 15 6" stroke="url(#g5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
             <span class="ripple"></span></button>
             <select id="arch-select" title="Escolher arquétipo"><option value="./archetypes3d/value="./archetypes3d/atlas.html">atlas.html</option><option value="./archetypes3d/value="./archetypes3d/nova.html">nova.html</option><option value="./archetypes3d/value="./archetypes3d/vitalis.html">vitalis.html</option><option value="./archetypes3d/value="./archetypes3d/pulse.html">pulse.html</option><option value="./archetypes3d/value="./archetypes3d/artemis.html">artemis.html</option><option value="./archetypes3d/value="./archetypes3d/serena.html">serena.html</option><option value="./archetypes3d/value="./archetypes3d/kaos.html">kaos.html</option><option value="./archetypes3d/value="./archetypes3d/genus.html">genus.html</option><option value="./archetypes3d/value="./archetypes3d/lumine.html">lumine.html</option><option value="./archetypes3d/value="./archetypes3d/rhea.html">rhea.html</option><option value="./archetypes3d/value="./archetypes3d/solus.html">solus.html</option><option value="./archetypes3d/value="./archetypes3d/aion.html">aion.html</option></select>
             <button class="btn fx-trans fx-press ring" id="arch-next" title="Próximo">
-              <img src="icons/chevron-right.svg" alt="Próximo" width="16" height="16" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/chevron-right.svg'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g6" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <polyline points="9 18 15 12 9 6" stroke="url(#g6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
             <span class="ripple"></span></button>
           </div>
           <div class="arch-circle">
@@ -1454,34 +1698,101 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
           <!-- Menu de arquétipos: permite acessar Apps, Stack, Usuário, Revo e Home -->
           <div id="archMenu" class="arch-menu">
             <button data-nav="apps">
-              <img src="icons/folder-open.svg" alt="Apps" width="20" height="20" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/folder-open.svg'">
-              <span>Apps</span>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="gradNebulaTab" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <rect x="3" y="3" width="7" height="7" rx="2" stroke="url(#gradNebulaTab)" stroke-width="2"/>
+  <rect x="14" y="3" width="7" height="7" rx="2" stroke="url(#gradNebulaTab)" stroke-width="2"/>
+  <rect x="3" y="14" width="7" height="7" rx="2" stroke="url(#gradNebulaTab)" stroke-width="2"/>
+  <rect x="14" y="14" width="7" height="7" rx="2" stroke="url(#gradNebulaTab)" stroke-width="2"/>
+</svg><span>Apps</span>
             <span class="ripple"></span></button>
             <button data-nav="stack">
-              <img src="icons/layer-group.svg" alt="Stack" width="20" height="20" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/layer-group.svg'">
-              <span>Stack</span>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="gradNebulaTab" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <polygon points="12 2 2 7 12 12 22 7 12 2" stroke="url(#gradNebulaTab)" stroke-width="2" fill="none"/>
+  <polyline points="2 12 12 17 22 12" stroke="url(#gradNebulaTab)" stroke-width="2" fill="none"/>
+  <polyline points="2 17 12 22 22 17" stroke="url(#gradNebulaTab)" stroke-width="2" fill="none"/>
+</svg><span>Stack</span>
             <span class="ripple"></span></button>
             <button data-nav="brain">
-              <img src="icons/user.svg" alt="Usuário" width="20" height="20" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/user.svg'">
-              <span>Usuário</span>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="gradNebulaTab" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <path d="M8 6a3 3 0 0 1 6 0 3 3 0 0 1 3 3 3 3 0 0 1 3 3 4 4 0 0 1-4 4H8a4 4 0 0 1-4-4 3 3 0 0 1 3-3 3 3 0 0 1 1-3z"
+    stroke="url(#gradNebulaTab)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span>Usuário</span>
             <span class="ripple"></span></button>
             <button data-nav="home">
-              <img src="icons/yin-yang.svg" alt="Arquétipo" width="20" height="20" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/yin-yang.svg'">
-              <span>Arquétipo</span>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="gradNebulaTab" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <path d="M3 10.5L12 3l9 7.5" stroke="url(#gradNebulaTab)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M5 10v10h14V10" stroke="url(#gradNebulaTab)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span>Arquétipo</span>
             <span class="ripple"></span></button>
             <button data-nav="chat">
-              <img src="icons/comments.svg" alt="Chat" width="20" height="20" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/comments.svg'">
-              <span>Chat</span>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="gradNebulaTab" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8z"
+    stroke="url(#gradNebulaTab)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span>Chat</span>
             <span class="ripple"></span></button>
           <button data-audio="true" id="archAudioBtn">
-            <img src="icons/microphone-lines.svg" alt="Áudio" width="20" height="20" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/microphone-lines.svg'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g7" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g7)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
             <span>Áudio</span>
           <span class="ripple"></span></button>
           </div>
         </div><div class="cards">
           <button class="card fx-trans fx-press ring" data-nav="apps">
             <div class="ico">
-<img src="icons/folder-open.svg" alt="Apps" width="24" height="24" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/folder-open.svg'">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g8" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <path d="M3 6h6l2 2h10v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6z" stroke="url(#g8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
             </div>
             <div>
               <div style="font-weight:800">Apps</div>
@@ -1491,7 +1802,18 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
           </button>
           <button class="card fx-trans fx-press ring" data-nav="stack">
             <div class="ico">
-<img src="icons/layer-group.svg" alt="Stack" width="24" height="24" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/layer-group.svg'">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="g9" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <polygon points="12 2 2 7 12 12 22 7 12 2" stroke="url(#g9)" stroke-width="2" fill="none"/>
+  <polyline points="2 12 12 17 22 12" stroke="url(#g9)" stroke-width="2" fill="none"/>
+  <polyline points="2 17 12 22 22 17" stroke="url(#g9)" stroke-width="2" fill="none"/>
+</svg>
             </div>
             <div>
               <div style="font-weight:800">Stack</div>
@@ -1501,7 +1823,17 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
           </button>
           <button class="card fx-trans fx-press ring" data-nav="brain">
             <div class="ico">
-<img src="icons/user.svg" alt="Usuário" width="24" height="24" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/user.svg'">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="g10" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="8" r="4" stroke="url(#g10)" stroke-width="2"/>
+  <path d="M4 20a8 5 0 0 1 16 0" stroke="url(#g10)" stroke-width="2" stroke-linecap="round"/>
+</svg>
             </div>
             <div>
               <div style="font-weight:800">Usuário</div>
@@ -1511,7 +1843,17 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
           </button>
           <button class="card fx-trans fx-press ring" data-nav="home">
             <div class="ico">
-<img src="icons/yin-yang.svg" alt="Arquétipo" width="24" height="24" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/yin-yang.svg'">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g11" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g11)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g11)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
             </div>
             <div>
               <div style="font-weight:800">Arquétipo</div>
@@ -1539,7 +1881,16 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
                 <input id="openInside" type="checkbox" checked=""> abrir dentro
               </label>
               <button id="btnToggleLocal" class="btn fx-trans fx-press ring">
-                <img src="icons/folder-open.svg" alt="Locais" width="16" height="16" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/folder-open.svg'" style="margin-right:4px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g12" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <path d="M3 6h6l2 2h10v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6z" stroke="url(#g12)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
                 Mostrar Locais<span class="ripple"></span>
               </button>
             </div>
@@ -1547,22 +1898,202 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
               <!-- Aceita arquivos .json além de HTML/TXT para permitir upload de catálogos personalizados -->
               <input id="fileLocal" type="file" accept=".html,.htm,.txt,.json" multiple="" class="input ring">
               <button id="btnImport" class="btn fx-trans fx-press ring">
-                <img src="icons/plus-circle.svg" alt="Adicionar" width="16" height="16" onerror="this.onerror=null;this.src='icons/plus-circle.svg'" style="margin-right:4px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g13" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g13)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g13)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
                 Adicionar Locais<span class="ripple"></span>
               </button>
               <button id="btnExport" class="btn fx-trans fx-press ring">
-                <img src="icons/file-export.svg" alt="Exportar" width="16" height="16" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/file-export.svg'" style="margin-right:4px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g14" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g14)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g14)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
                 Exportar Locais<span class="ripple"></span>
               </button>
               <button id="btnClear" class="btn fx-trans fx-press ring">
-                <img src="icons/trash.svg" alt="Limpar" width="16" height="16" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/trash.svg'" style="margin-right:4px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g15" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g15)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g15)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
                 Limpar Locais<span class="ripple"></span>
               </button>
             </div>
             <div id="appsCount" class="mut">15 apps</div>
           </div>
         </div>
-        <div id="appsWrap" class="apps-wrap"><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Ampara</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%2021s-6-3.5-6-8a4%204%200%200%201%206-3%204%204%200%200%201%206%203c0%204.5-6%208-6%208z%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Serena · Ampara">Serena ·…</div><div class="mut">Acolhimento e suporte emocional.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Arcana</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%203v6M12%2015v6%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%223%22%2F%3E%3Cpath%20d%3D%22M19%205l-3%203M5%2019l3-3M5%205l3%203M19%2019l-3-3%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Solus · Arcana">Solus ·…</div><div class="mut">Harmonização energética e meditação.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Brilhare</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%224%22%2F%3E%3Cpath%20d%3D%22M12%202v2M12%2020v2M2%2012h2M20%2012h2M4.9%204.9l1.4%201.4M17.7%2017.7l1.4%201.4M4.9%2019.1l1.4-1.4M17.7%206.3l1.4-1.4%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Lumine · Brilhare">Lumine ·…</div><div class="mut">Inspiração leve e atividades lúdicas.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Cartesius</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M3%2012h18M12%203v18%22%2F%3E%3Cpath%20d%3D%22M5%208c3%202%2011%202%2014%200M5%2016c3-2%2011-2%2014%200%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Atlas · Cartesius">Atlas ·…</div><div class="mut">Planejador estratégico com cronogramas e checklists.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Disruptor</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%204l7%207-7%207%22%2F%3E%3Cpath%20d%3D%22M20%204l-7%207%207%207%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Kaos · Disruptor">Kaos ·…</div><div class="mut">Questiona padrões e propõe soluções ousadas.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Evolutia</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M7%2012c0-2.2%201.8-4%204-4%201.2%200%202.3.5%203%201.3M17%2012c0%202.2-1.8%204-4%204-1.2%200-2.3-.5-3-1.3%22%2F%3E%3Cpath%20d%3D%22M3%2012h4M17%2012h4%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Aion · Evolutia">Aion ·…</div><div class="mut">Microações estratégicas e evolução.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Fabricus</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%227%22%20y%3D%227%22%20width%3D%2210%22%20height%3D%2210%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M7%207l5-3%205%203M17%2017l-5%203-5-3%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Genus · Fabricus">Genus ·…</div><div class="mut">Protótipos e materialização de ideias.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Inspira</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%202v4M12%2018v4M2%2012h4M18%2012h4%22%2F%3E%3Cpath%20d%3D%22M5.6%205.6l2.8%202.8M15.6%2015.6l2.8%202.8M18.4%205.6l-2.8%202.8M8.4%2015.6l-2.8%202.8%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%223%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Nova · Inspira">Nova ·…</div><div class="mut">Criativa que desbloqueia ideias com mapas mentais e exercícios.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Momentum</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2012h4l2-5%204%2010%202-5h6%22%2F%3E%3Cpath%20d%3D%22M13%203l-2%204%203%201-2%204%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Vitalis · Momentum">Vitalis ·…</div><div class="mut">Rotinas físicas, hacks biológicos e motivação.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Naviga</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2012h12%22%2F%3E%3Cpath%20d%3D%22M13%206l6%206-6%206%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Artemis · Naviga">Artemis ·…</div><div class="mut">Explora conhecimentos e rotas de aprendizado.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Outros</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M3%2012h18M12%203v18%22%2F%3E%3Cpath%20d%3D%22M5%208c3%202%2011%202%2014%200M5%2016c3-2%2011-2%2014%200%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Dual_esqueci">Dual_esqueci</div><div class="mut">HTML local</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M3%2012h18M12%203v18%22%2F%3E%3Cpath%20d%3D%22M5%208c3%202%2011%202%2014%200M5%2016c3-2%2011-2%2014%200%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="index_kobllux_voicefix">index_kobllux_voicefix</div><div class="mut">HTML local</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M3%2012h18M12%203v18%22%2F%3E%3Cpath%20d%3D%22M5%208c3%202%2011%202%2014%200M5%2016c3-2%2011-2%2014%200%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="index-100">index-100</div><div class="mut">HTML local</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Raízes</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%203v6%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%229%22%20r%3D%224%22%2F%3E%3Cpath%20d%3D%22M12%2013v2l-2%202M12%2015l2%202M12%2017v3%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Rhea · Raízes">Rhea ·…</div><div class="mut">Vínculos e memórias emocionais.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Resona</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><img alt="Favorito" src="icons/star.svg"><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M2%2012h3l2-4%203%208%202-4h8%22%2F%3E%3Cpath%20d%3D%22M20%208v-3M20%2019v-3%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Pulse · Resona">Pulse ·…</div><div class="mut">Trilhas sonoras e ajuste de som emocional.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div></div>
+        <div id="appsWrap" class="apps-wrap"><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Ampara</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g16" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g16)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g16)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%2021s-6-3.5-6-8a4%204%200%200%201%206-3%204%204%200%200%201%206%203c0%204.5-6%208-6%208z%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Serena · Ampara">Serena ·…</div><div class="mut">Acolhimento e suporte emocional.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Arcana</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g17" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g17)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g17)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%203v6M12%2015v6%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%223%22%2F%3E%3Cpath%20d%3D%22M19%205l-3%203M5%2019l3-3M5%205l3%203M19%2019l-3-3%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Solus · Arcana">Solus ·…</div><div class="mut">Harmonização energética e meditação.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Brilhare</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g18" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g18)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g18)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%224%22%2F%3E%3Cpath%20d%3D%22M12%202v2M12%2020v2M2%2012h2M20%2012h2M4.9%204.9l1.4%201.4M17.7%2017.7l1.4%201.4M4.9%2019.1l1.4-1.4M17.7%206.3l1.4-1.4%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Lumine · Brilhare">Lumine ·…</div><div class="mut">Inspiração leve e atividades lúdicas.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Cartesius</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g19" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g19)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g19)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M3%2012h18M12%203v18%22%2F%3E%3Cpath%20d%3D%22M5%208c3%202%2011%202%2014%200M5%2016c3-2%2011-2%2014%200%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Atlas · Cartesius">Atlas ·…</div><div class="mut">Planejador estratégico com cronogramas e checklists.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Disruptor</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g20" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g20)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g20)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%204l7%207-7%207%22%2F%3E%3Cpath%20d%3D%22M20%204l-7%207%207%207%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Kaos · Disruptor">Kaos ·…</div><div class="mut">Questiona padrões e propõe soluções ousadas.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Evolutia</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g21" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g21)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g21)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M7%2012c0-2.2%201.8-4%204-4%201.2%200%202.3.5%203%201.3M17%2012c0%202.2-1.8%204-4%204-1.2%200-2.3-.5-3-1.3%22%2F%3E%3Cpath%20d%3D%22M3%2012h4M17%2012h4%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Aion · Evolutia">Aion ·…</div><div class="mut">Microações estratégicas e evolução.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Fabricus</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g22" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g22)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g22)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%227%22%20y%3D%227%22%20width%3D%2210%22%20height%3D%2210%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M7%207l5-3%205%203M17%2017l-5%203-5-3%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Genus · Fabricus">Genus ·…</div><div class="mut">Protótipos e materialização de ideias.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Inspira</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g23" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g23)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g23)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%202v4M12%2018v4M2%2012h4M18%2012h4%22%2F%3E%3Cpath%20d%3D%22M5.6%205.6l2.8%202.8M15.6%2015.6l2.8%202.8M18.4%205.6l-2.8%202.8M8.4%2015.6l-2.8%202.8%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%223%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Nova · Inspira">Nova ·…</div><div class="mut">Criativa que desbloqueia ideias com mapas mentais e exercícios.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Momentum</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g24" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g24)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g24)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2012h4l2-5%204%2010%202-5h6%22%2F%3E%3Cpath%20d%3D%22M13%203l-2%204%203%201-2%204%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Vitalis · Momentum">Vitalis ·…</div><div class="mut">Rotinas físicas, hacks biológicos e motivação.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Naviga</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g25" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g25)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g25)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2012h12%22%2F%3E%3Cpath%20d%3D%22M13%206l6%206-6%206%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Artemis · Naviga">Artemis ·…</div><div class="mut">Explora conhecimentos e rotas de aprendizado.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Outros</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g26" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g26)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g26)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M3%2012h18M12%203v18%22%2F%3E%3Cpath%20d%3D%22M5%208c3%202%2011%202%2014%200M5%2016c3-2%2011-2%2014%200%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Dual_esqueci">Dual_esqueci</div><div class="mut">HTML local</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div><div class="app-card fx-trans fx-lift"><button class="fav-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g27" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g27)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g27)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M3%2012h18M12%203v18%22%2F%3E%3Cpath%20d%3D%22M5%208c3%202%2011%202%2014%200M5%2016c3-2%2011-2%2014%200%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="index_kobllux_voicefix">index_kobllux_voicefix</div><div class="mut">HTML local</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div><div class="app-card fx-trans fx-lift"><button class="fav-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g28" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g28)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g28)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M3%2012h18M12%203v18%22%2F%3E%3Cpath%20d%3D%22M5%208c3%202%2011%202%2014%200M5%2016c3-2%2011-2%2014%200%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="index-100">index-100</div><div class="mut">HTML local</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Raízes</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g29" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g29)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g29)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%203v6%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%229%22%20r%3D%224%22%2F%3E%3Cpath%20d%3D%22M12%2013v2l-2%202M12%2015l2%202M12%2017v3%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Rhea · Raízes">Rhea ·…</div><div class="mut">Vínculos e memórias emocionais.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div><div class="apps-group"><h3 style="margin: 16px 4px 8px; font-size: 15px; font-weight: 800; color: var(--mut);">Resona</h3><div class="grid"><div class="app-card fx-trans fx-lift"><button class="fav-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g30" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g30)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g30)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span></button><div class="app-icon"><img alt="" width="24" height="24" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2523f5f7ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M2%2012h3l2-4%203%208%202-4h8%22%2F%3E%3Cpath%20d%3D%22M20%208v-3M20%2019v-3%22%2F%3E%3C%2Fsvg%3E"></div><div style="flex: 1 1 0%;"><div class="app-title" title="Pulse · Resona">Pulse ·…</div><div class="mut">Trilhas sonoras e ajuste de som emocional.</div><button class="btn fx-trans fx-press ring">Abrir<span class="ripple"></span></button></div></div></div></div></div>
       </div>
     </section>
 
@@ -1573,17 +2104,47 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
           <div style="font-weight:800; display:flex; align-items:center; gap:8px">
             Sessões
             <button id="btnCloseAll" class="btn fx-trans fx-press ring" title="Fechar todas">
-              <img src="icons/xmark.svg" alt="Fechar todas" width="16" height="16" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/xmark.svg'" style="margin-right:4px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g31" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g31)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g31)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
               Fechar todas<span class="ripple"></span>
             </button>
             <!-- Botão para criar grupos de sessões -->
             <button id="btnAddGroup" class="btn fx-trans fx-press ring" title="Novo grupo">
-              <img src="icons/folder-plus.svg" alt="Novo grupo" width="16" height="16" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/folder-plus.svg'" style="margin-right:4px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g32" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g32)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g32)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
               Novo grupo<span class="ripple"></span>
             </button>
             <!-- Botão para enviar um HTML local e abrir como sessão -->
             <button id="btnStackUpload" class="btn fx-trans fx-press ring" title="Upload HTML">
-              <img src="icons/file-upload.svg" alt="Upload HTML" width="16" height="16" onerror="this.onerror=null;this.src='icons/file-upload.svg'" style="margin-right:4px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+
+  <defs>
+    <linearGradient id="g33" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#g33)" stroke-width="2"/>
+  <path d="M12 7v5l4 2" stroke="url(#g33)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
               Upload HTML<span class="ripple"></span>
             </button>
             <input id="stackUpload" type="file" accept=".html,text/html" style="display:none">
@@ -1730,25 +2291,73 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
   <nav class="tabbar">
     <div class="inner">
       <button class="tab fx-trans fx-press ring" data-nav="home">
-<img src="icons/house.svg" alt="Home" width="18" height="18" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/house.svg'">
-        <span style="display:none">Home</span><span class="ripple"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="gradNebulaTab" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <path d="M3 10.5L12 3l9 7.5" stroke="url(#gradNebulaTab)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M5 10v10h14V10" stroke="url(#gradNebulaTab)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span style="display:none">Home</span><span class="ripple"></span>
       </button>
       <button class="tab fx-trans fx-press ring" data-nav="apps">
-<img src="icons/folder-open.svg" alt="Apps" width="18" height="18" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/folder-open.svg'">
-        <span style="display:none">Apps</span><span class="ripple"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="gradNebulaTab" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <rect x="3" y="3" width="7" height="7" rx="2" stroke="url(#gradNebulaTab)" stroke-width="2"/>
+  <rect x="14" y="3" width="7" height="7" rx="2" stroke="url(#gradNebulaTab)" stroke-width="2"/>
+  <rect x="3" y="14" width="7" height="7" rx="2" stroke="url(#gradNebulaTab)" stroke-width="2"/>
+  <rect x="14" y="14" width="7" height="7" rx="2" stroke="url(#gradNebulaTab)" stroke-width="2"/>
+</svg><span style="display:none">Apps</span><span class="ripple"></span>
       </button>
       <button class="tab fx-trans fx-press ring" data-nav="stack">
-<img src="icons/layer-group.svg" alt="Stack" width="18" height="18" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/layer-group.svg'">
-        <span style="display:none">Stack</span><span class="ripple"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="gradNebulaTab" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <polygon points="12 2 2 7 12 12 22 7 12 2" stroke="url(#gradNebulaTab)" stroke-width="2" fill="none"/>
+  <polyline points="2 12 12 17 22 12" stroke="url(#gradNebulaTab)" stroke-width="2" fill="none"/>
+  <polyline points="2 17 12 22 22 17" stroke="url(#gradNebulaTab)" stroke-width="2" fill="none"/>
+</svg><span style="display:none">Stack</span><span class="ripple"></span>
       </button>
       <button class="tab fx-trans fx-press ring active" data-nav="brain">
-<img src="icons/brain.svg" alt="Brain" width="18" height="18" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/brain.svg'">
-        <span style="display:none">Brain</span><span class="ripple"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="gradNebulaTab" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <path d="M8 6a3 3 0 0 1 6 0 3 3 0 0 1 3 3 3 3 0 0 1 3 3 4 4 0 0 1-4 4H8a4 4 0 0 1-4-4 3 3 0 0 1 3-3 3 3 0 0 1 1-3z"
+    stroke="url(#gradNebulaTab)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span style="display:none">Brain</span><span class="ripple"></span>
       </button>
       <!-- Botão da nova aba Chat -->
       <button class="tab fx-trans fx-press ring" data-nav="chat">
-<img src="icons/comments.svg" alt="Chat" width="18" height="18" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/comments.svg'">
-        <span style="display:none">Chat</span><span class="ripple"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+  <defs>
+    <linearGradient id="gradNebulaTab" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8z"
+    stroke="url(#gradNebulaTab)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span style="display:none">Chat</span><span class="ripple"></span>
       </button>
     </div>
   </nav>
@@ -1757,20 +2366,42 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
 
   <!-- Controles de texto e voz empilhados acima da barra de navegação -->
   <div id="homeButtons" class="home-btns">
-    <button id="homeTextBtn" class="home-btn">
-      <img src="icons/pen-to-square.svg" alt="Texto" width="20" height="20" onerror="this.onerror=null;this.src='icons/pen-to-square.svg'">
-    <span class="ripple"></span></button>
-    <button id="homeVoiceBtn" class="home-btn">
-      <img src="icons/microphone.svg" alt="Voz" width="20" height="20" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/microphone.svg'">
-    <span class="ripple"></span></button>
+    <button id="homeTextBtn" class="home-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="gradNebulaPen" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <path d="M3 21l3.9-1 11.7-11.7a2.5 2.5 0 0 0-3.5-3.5L3.9 16.5 3 21z" fill="url(#gradNebulaPen)" />
+  <path d="M14 6l4 4" stroke="url(#gradNebulaPen)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="ripple"></span></button>
+    <button id="homeVoiceBtn" class="home-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="url(#gradNebula)" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <defs>
+    <linearGradient id="gradNebula" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4z"/>
+  <path d="M19 11a7 7 0 0 1-14 0"/>
+  <path d="M12 19v4"/>
+</svg><span class="ripple"></span></button>
   </div>
   <!-- Overlay de input para envio rápido de mensagens na Home -->
   <div id="homeInputOverlay">
     <form id="homeInputForm" autocomplete="off">
       <input id="homeInput" type="text" placeholder="Escreva aqui…" autocomplete="off">
-      <button type="submit">
-        <img src="icons/paper-plane.svg" alt="Enviar" width="18" height="18" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/paper-plane.svg'">
-      <span class="ripple"></span></button>
+      <button type="submit"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="gradNebula" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FFFF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4 12L20 4L13 20L11 13L4 12Z" fill="url(#gradNebula)" opacity="0.95"/>
+</svg><span class="ripple"></span></button>
     </form>
   </div>
 
@@ -2214,7 +2845,8 @@ html[data-overlay="off"] #arch-fadeCover{ background: transparent !important; }
 
     /* ===================== Navegação + Estado ===================== */
     function nav(key) {
-      // Remapeia a antiga aba 'revo' para 'chat'
+      const __ov = document.getElementById('homeInputOverlay'); const __tb = document.getElementById('homeTextBtn'); if(__ov){ __ov.style.display='none'; } if(__tb){ __tb.classList.remove('active'); }
+// Remapeia a antiga aba 'revo' para 'chat'
       if (key === 'revo') key = 'chat';
       // Adicionamos 'chat' à lista de abas para suportar a nova seção
       const tabs = ['home', 'apps', 'stack', 'brain', 'chat'];
@@ -5613,4 +6245,311 @@ document.getElementById('orbWrap')?.addEventListener('click', function(){ try{ w
 })();
 </script>
 
+
+<script id="hdpro-override-js">
+
+// === HD•PRO Override (Dual UNO) ===================================
+(function(){
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+  const on = (el, ev, fn) => el && el.addEventListener(ev, fn);
+
+  function toast(msg, ms=1800){
+    let t = $('#hdToast'); 
+    if(!t){ t = document.createElement('div'); t.id='hdToast'; document.body.appendChild(t); }
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t.__t); t.__t = setTimeout(()=>t.classList.remove('show'), ms);
+  }
+
+  // 1) Handle quase invisível para abrir/fechar LS panel (#brain)
+  function mountHandle(){
+    if($('#lsHandle')) return;
+    const btn = document.createElement('button');
+    btn.id = 'lsHandle';
+    btn.title = 'Abrir/fechar painel (LS)';
+    document.body.appendChild(btn);
+
+    function toggleBrain(){
+      const brain = $('#brain');
+      if(!brain){ toast('Painel LS não encontrado (#brain)'); return; }
+      brain.classList.toggle('hide');
+      btn.classList.toggle('on', !brain.classList.contains('hide'));
+    }
+    on(btn, 'click', toggleBrain);
+  }
+
+  // 2) Painel HD Pro dentro do #brain (LS Panel)
+  function mountHDPro(){
+    const brain = $('#brain .popover') || $('#brain');
+    if(!brain || brain.__hdproMounted) return;
+    brain.__hdproMounted = true;
+
+    // Secção base
+    const sec = document.createElement('section');
+    sec.className = 'hdpro-sec';
+    sec.innerHTML = `
+      <div class="sec-hdr">
+        <h3>HD • Pro — Sistema</h3>
+        <button class="hd-btn ok" id="hdRefresh">Atualizar</button>
+      </div>
+
+      <div class="hdpro-grid">
+        <div class="hdpro-row">
+          <div>
+            <div class="hdpro-label">LocalStorage</div>
+            <div class="hdpro-meter"><div class="bar" id="barLS"></div></div>
+          </div>
+          <div class="hdpro-val" id="valLS">–</div>
+        </div>
+
+        <div class="hdpro-row">
+          <div>
+            <div class="hdpro-label">IndexedDB (estimado)</div>
+            <div class="hdpro-meter"><div class="bar" id="barIDB"></div></div>
+          </div>
+          <div class="hdpro-val" id="valIDB">–</div>
+        </div>
+
+        <div class="hdpro-row">
+          <div>
+            <div class="hdpro-label">Total (Storage API)</div>
+            <div class="hdpro-meter"><div class="bar" id="barTotal"></div></div>
+          </div>
+          <div class="hdpro-val" id="valTotal">–</div>
+        </div>
+
+        <div class="hdpro-actions">
+          <button class="hd-btn" id="btnToggleOrb">Ocultar opções avançadas do ORB/FPS</button>
+          <button class="hd-btn" id="btnImportFix">Importar HTML (corrigido)</button>
+          <input id="__fileImportHD" type="file" accept=".html,.htm" style="display:none" />
+          <button class="hd-btn danger" id="btnClearLS">Limpar LocalStorage</button>
+          <button class="hd-btn danger" id="btnClearIDB">Limpar IndexedDB</button>
+        </div>
+      </div>
+    `;
+    brain.appendChild(sec);
+
+    // 2a) Toggle avançados ORB/FPS
+    on($('#btnToggleOrb', sec), 'click', ()=>{
+      const advSelectors = [
+        '[data-orb-adv]',
+        '#orbAdv', '.orb-adv', '.orb-advanced', '[data-orb-advanced]',
+        '#fpsPanel', '.fps-adv', '#orbControls', '.orb-controls'
+      ];
+      let toggled = 0;
+      advSelectors.forEach(sel => {
+        $$(sel).forEach(el => { 
+          el.classList.toggle('hdpro-adv-hidden'); 
+          toggled++;
+        });
+      });
+      toast(toggled ? 'Avançados ORB/FPS alternados' : 'Nenhum bloco avançado encontrado');
+    });
+
+    // 2b) Import corrigido (abre HTML local numa sessão dentro do app, fallback nova aba)
+    const fileInput = $('#__fileImportHD', sec);
+    on($('#btnImportFix', sec), 'click', ()=> fileInput && fileInput.click());
+    on(fileInput, 'change', (e)=>{
+      const file = e.target.files && e.target.files[0];
+      if(!file) return;
+      const url = URL.createObjectURL(file);
+      const name = file.name || 'arquivo.html';
+      // destino preferencial
+      const anchor = $('#sessionsAnchor') || $('#stackWrap') || $('#v-stack') || $('main');
+      if(anchor){
+        const wrap = document.createElement('div');
+        wrap.className = 'session';
+        wrap.innerHTML = `
+          <div class="hdr">
+            <span class="app-icon">${(name[0]||'W').toUpperCase()}</span>
+            <span class="title">${name}</span>
+            <div class="tools">
+              <button class="btn" data-act="min">Min</button>
+              <button class="btn" data-act="full">Full</button>
+              <button class="btn" data-act="close">Fechar</button>
+            </div>
+          </div>
+          <iframe src="${url}" referrerpolicy="no-referrer"></iframe>
+          <div class="resize-handle" title="Arraste para ajustar altura"></div>
+        `;
+        anchor.appendChild(wrap);
+        // Tools
+        on(wrap.querySelector('[data-act="min"]'), 'click', ()=> wrap.classList.toggle('min'));
+        on(wrap.querySelector('[data-act="full"]'), 'click', ()=> document.body.classList.toggle('session-full'));
+        on(wrap.querySelector('[data-act="close"]'), 'click', ()=> wrap.remove());
+        toast('HTML importado dentro do Stack');
+      }else{
+        window.open(url, '_blank', 'noopener');
+        toast('HTML aberto em nova aba');
+      }
+      e.target.value = '';
+    });
+
+    // 2c) Limpar LocalStorage
+    on($('#btnClearLS', sec), 'click', ()=>{
+      if(confirm('Limpar todo o LocalStorage deste domínio?')){
+        try { localStorage.clear(); toast('LocalStorage limpo'); updateMeters(true); }
+        catch(err){ console.error(err); toast('Erro ao limpar LocalStorage'); }
+      }
+    });
+
+    // 2d) Limpar IndexedDB (melhor esforço)
+    on($('#btnClearIDB', sec), 'click', async ()=>{
+      if(!confirm('Apagar bancos IndexedDB deste domínio?')) return;
+      try{
+        if(indexedDB.databases){
+          const dbs = await indexedDB.databases();
+          await Promise.all((dbs||[]).map(d => d && d.name ? new Promise((res)=>{
+            const req = indexedDB.deleteDatabase(d.name);
+            req.onsuccess = req.onerror = req.onblocked = ()=>res();
+          }) : Promise.resolve()));
+        }else{
+          // Sem enumerate: tente deletar bases comuns do app
+          const common = ['dual', 'uno', 'app', 'db', 'files', 'store'];
+          await Promise.all(common.map(n => new Promise((res)=>{
+            const req = indexedDB.deleteDatabase(n); req.onsuccess = req.onerror = req.onblocked = ()=>res();
+          })));
+        }
+        toast('IndexedDB: pedido de exclusão enviado'); updateMeters(true);
+      }catch(err){
+        console.error(err); toast('IndexedDB: não suportado/erro');
+      }
+    });
+
+    // 2e) Atualizar medidores
+    on($('#hdRefresh', sec), 'click', ()=> updateMeters(true));
+
+    async function estimateStorage(){
+      const est = (navigator.storage && navigator.storage.estimate) ? await navigator.storage.estimate() : {};
+      // est.usage (bytes) inclui IDB + Cache + etc (depende do UA)
+      // LS estimado manualmente (2 bytes por char em UTF-16)
+      let lsBytes = 0;
+      try{
+        for(let i=0;i<localStorage.length;i++){
+          const k = localStorage.key(i);
+          const v = localStorage.getItem(k);
+          lsBytes += 2*((k||'').length + (v||'').length);
+        }
+      }catch{}
+      // Experimento: idbBytes ~ usage - lsBytes (aprox)
+      const usage = est.usage || 0;
+      const quota = est.quota || 0;
+      const idbBytes = Math.max(0, usage - lsBytes);
+
+      return { lsBytes, idbBytes, usage, quota };
+    }
+
+    function fmt(bytes){
+      const u = ['B','KB','MB','GB','TB'];
+      let i=0, n=bytes;
+      while(n>=1024 && i<u.length-1){ n/=1024; i++; }
+      return `${n.toFixed( (i<=1)?0:1)} ${u[i]}`;
+    }
+
+    async function updateMeters(animateNumbers){
+      try{
+        const {lsBytes, idbBytes, usage, quota} = await estimateStorage();
+        const els = {
+          barLS: $('#barLS'), valLS: $('#valLS'),
+          barIDB: $('#barIDB'), valIDB: $('#valIDB'),
+          barTotal: $('#barTotal'), valTotal: $('#valTotal'),
+        };
+        const percent = (num, den) => (den>0)? Math.min(100, Math.round((num/den)*100)) : 0;
+        // Total can use quota as denominator; LS use typical 5MB baseline to visualize
+        const lsCap = 5*1024*1024; // 5MB
+        const pLS = percent(lsBytes, lsCap);
+        const pIDB = quota ? percent(idbBytes, quota) : 0;
+        const pTot = percent(usage, quota);
+
+        if(els.barLS) els.barLS.style.width = pLS + '%';
+        if(els.barIDB) els.barIDB.style.width = pIDB + '%';
+        if(els.barTotal) els.barTotal.style.width = pTot + '%';
+
+        const setNum = (el, val) => { if(el) el.textContent = val; };
+        if(animateNumbers){
+          animateCount( $('#valLS'), lsBytes );
+          animateCount( $('#valIDB'), idbBytes );
+          animateCount( $('#valTotal'), usage );
+        }else{
+          setNum( $('#valLS'), fmt(lsBytes) );
+          setNum( $('#valIDB'), fmt(idbBytes) );
+          setNum( $('#valTotal'), `${fmt(usage)} / ${quota?fmt(quota):'–'}` );
+        }
+      }catch(err){ console.error(err); }
+    }
+
+    function animateCount(el, bytes){
+      if(!el) return;
+      const target = bytes;
+      const start = parseFloat(el.getAttribute('data-last')||'0');
+      const startTime = performance.now();
+      const dur = 600;
+      function step(t){
+        const k = Math.min(1, (t - startTime)/dur);
+        const v = Math.round(start + (target-start)*k);
+        el.textContent = ( (k<1) ? (v + ' B') : (fmt(target)) );
+        if(k<1) requestAnimationFrame(step);
+        else el.setAttribute('data-last', String(target));
+      }
+      requestAnimationFrame(step);
+    }
+
+    updateMeters(false);
+    // Atualização periódica (leve)
+    sec.__interval = setInterval(()=> updateMeters(false), 2500);
+  }
+
+  // 3) Start
+  function boot(){
+    mountHandle();
+    mountHDPro();
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+
+})();
+
+</script>
+<script id="ATOM_ENGINE_PATCH">
+(function(){
+  if (window.__ATOM_PATCH__) return; window.__ATOM_PATCH__ = true;
+  const ATOM_PALETTES = {
+    default : { core:'#7a5bff', ring:'#39ffb6', dust:'#8fd6ff', bg:'#0b0f14' },
+    dopamina: { core:'#ff2d7a', ring:'#ff77aa', dust:'#ffd1e2', bg:'#14080f' },
+    delta7  : { core:'#ffb300', ring:'#ff8400', dust:'#ffe0a6', bg:'#140f08' },
+    asc11   : { core:'#00e6ff', ring:'#39ffb6', dust:'#baf6ff', bg:'#0b0f14' },
+    quan    : { core:'#b347ff', ring:'#9d7aff', dust:'#e2ccff', bg:'#110b14' },
+    orionis : { core:'#00ffab', ring:'#00ffc9', dust:'#c8fff1', bg:'#08140f' },
+    lumenflux:{core:'#9fd3ff', ring:'#e7f0ff', dust:'#ffffff', bg:'#0c121a' },
+    vermiph : { core:'#ff6282', ring:'#ff3d5e', dust:'#ffc0cb', bg:'#14080b' }
+  };
+  const $=(s,r=document)=>r.querySelector(s);
+  const arc=$('.arch-circle'); if(!arc) return;
+  let fab=arc.querySelector('.arch-fab'); if(!fab){ fab=document.createElement('button'); fab.className='arch-fab'; fab.title='Trocar paleta do átomo'; fab.innerHTML='✦'; arc.appendChild(fab); }
+  let cvs=document.getElementById('atomCanvas'); if(!cvs){ cvs=document.createElement('canvas'); cvs.id='atomCanvas'; arc.appendChild(cvs); }
+  const ctx=cvs.getContext('2d');
+  const DPR=()=> (window.devicePixelRatio||1); let W=0,H=0,CX=0,CY=0;
+  function resize(){ const r=arc.getBoundingClientRect(); W=Math.floor(r.width); H=Math.floor(r.height);
+    const d=DPR(); cvs.width=Math.max(1,Math.floor(W*d)); cvs.height=Math.max(1,Math.floor(H*d)); cvs.style.width=W+'px'; cvs.style.height=H+'px'; ctx.setTransform(d,0,0,d,0,0); CX=W/2; CY=H/2;}
+  resize(); addEventListener('resize', resize);
+  const N=120, parts=[]; (function init(){ for(let i=0;i<N;i++){ const radius=0.18+Math.random()*0.34, speed=(Math.random()*0.6+0.2)*(Math.random()<.5?1:-1);
+    parts.push({phi:Math.random()*Math.PI*2,r:radius,s:speed,size:1+Math.random()*2,jitter:Math.random()*0.03}); } })();
+  let PALETTE=ATOM_PALETTES.asc11; function setAtomPalette(n){ PALETTE=ATOM_PALETTES[n]||ATOM_PALETTES.default; try{ fab.style.boxShadow=`0 0 0 1px ${PALETTE.core}55 inset, 0 10px 22px ${PALETTE.core}33`; }catch(_){} }
+  (function hookTheme(){ const map={dopamina:'dopamina',delta7:'delta7',asc11:'asc11',quan:'quan',orionis:'orionis',lumenflux:'lumenflux',vermiph:'vermiph'};
+    if(typeof window.setTheme==='function' && !window.__ATOM_WRAP_THEME__){ window.__ATOM_WRAP_THEME__=true; const orig=window.setTheme;
+      window.setTheme=function(type){ const r=orig.apply(this,arguments); setAtomPalette(map[type]||'default'); return r; };
+    } else { const th=document.body.getAttribute('data-theme'); setAtomPalette(th==='blue1'?'asc11':th==='medium'?'lumenflux':'default'); }
+  })();
+  const cycle=['asc11','dopamina','delta7','orionis','quan','lumenflux','vermiph']; let cidx=0; fab.addEventListener('click',()=>{ cidx=(cidx+1)%cycle.length; setAtomPalette(cycle[cidx]); });
+  function draw(){ ctx.clearRect(0,0,W,H); const m=Math.min(W,H);
+    const g=ctx.createRadialGradient(CX,CY,m*0.08,CX,CY,m*0.55); g.addColorStop(0,PALETTE.core+'22'); g.addColorStop(1,'transparent');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(CX,CY,m*0.55,0,Math.PI*2); ctx.fill();
+    ctx.shadowColor=PALETTE.ring; ctx.shadowBlur=18; ctx.fillStyle=PALETTE.core; ctx.beginPath(); ctx.arc(CX,CY,m*0.06,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+    ctx.strokeStyle=PALETTE.ring+'cc'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(CX,CY,m*0.28,0,Math.PI*2); ctx.stroke();
+    for(let i=0;i<parts.length;i++){ const p=parts[i]; p.phi+=(p.s*0.003); const rr=m*(0.14+p.r*0.42), x=CX+Math.cos(p.phi)*rr, y=CY+Math.sin(p.phi)*rr*(0.82+p.jitter*Math.sin(p.phi*3.0));
+      ctx.fillStyle=PALETTE.dust; ctx.globalAlpha=0.75; ctx.beginPath(); ctx.arc(x,y,p.size,0,Math.PI*2); ctx.fill(); } ctx.globalAlpha=1;
+    requestAnimationFrame(draw); } requestAnimationFrame(draw);
+})();
+</script>
 </body></html>
