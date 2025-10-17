@@ -1532,6 +1532,159 @@ body{
 try{ document.documentElement.style.setProperty('--arch-overlay','rgba(64,158,255,.22)'); }catch{}
 </script>
 
+<style id="CHAT13_CSS">
+.chat-wrap{display:grid;gap:12px}
+.chat-pulse{position:relative;height:10px;border-radius:999px;
+  background:linear-gradient(90deg,var(--grad-a),var(--grad-b));opacity:.8;overflow:hidden}
+.chat-pulse::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(60% 120% at 0% 50%, #fff8 0%, #fff0 60%);
+  animation:pulseRun 2.8s cubic-bezier(.22,.61,.36,1) infinite}
+@keyframes pulseRun{0%{transform:translateX(-40%)}50%{transform:translateX(40%)}100%{transform:translateX(140%)}}
+
+.chat-feed{display:grid;gap:10px}
+.msg{background:var(--surface);border:var(--bd);border-radius:14px;padding:10px}
+.msg.role-user{border-color:#ffffff2a}
+.msg.role-assistant{box-shadow:0 10px 32px rgba(0,0,0,.35)}
+.msg h5{margin:.2rem 0 .35rem;font-size:12px;letter-spacing:.08em;color:var(--mut);text-transform:uppercase}
+
+.chat-composer{display:flex;gap:8px;align-items:center;position:sticky;bottom:0;
+  background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.2));
+  padding:10px;border-radius:16px}
+.chat-composer textarea{flex:1;min-height:44px;max-height:36vh;resize:vertical;border-radius:12px;
+  padding:10px 12px;border:var(--bd);background:rgba(255,255,255,.04);color:var(--fg)}
+.chat-composer .btn{white-space:nowrap}
+</style>
+
+<style id="ARCH_FAB_ROUND_FIX">
+.arch-circle{
+  border-radius:50% !important;
+  overflow:hidden !important;
+  -webkit-clip-path: circle(50% at 50% 50%); clip-path: circle(50% at 50% 50%);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 99.9%, transparent 100%);
+          mask-image: radial-gradient(circle at 50% 50%, #000 99.9%, transparent 100%);
+  isolation:isolate; contain: paint; transform: translateZ(0); will-change: transform;
+  background-clip: padding-box;
+}
+.arch-circle > .arch-fab{
+  background:none !important; mix-blend-mode: normal !important;
+  backface-visibility:hidden; -webkit-backface-visibility:hidden;
+}
+.arch-circle > .arch-fab::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+  box-shadow:0 6px 16px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06) inset;
+}
+/* failsafe de recorte para camadas do orbe */
+.arch-circle > canvas, .arch-circle #orbWrap, .arch-circle .orb-slot, .arch-circle iframe#arch-frame{
+  -webkit-clip-path: circle(50% at 50% 50%); clip-path: circle(50% at 50% 50%);
+}
+</style>
+
+<style id="KODUX_BLOCKS_CSS">
+/* ===== Chat • Kodux Blocks ===== */
+#v-chat { display: none; }
+#v-chat.view.active, #v-chat.active { display: flex; }
+
+#chatFeed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--surface, rgba(15,17,32,.65));
+  border: var(--bd, 1px solid rgba(255,255,255,.12));
+  border-radius: var(--r2, 22px);
+  padding: 12px;
+  box-shadow: var(--shadow, 0 14px 40px rgba(0,0,0,.45));
+  max-height: unset;         /* deixe a página rolar */
+  overflow: visible;         /* evita scroll duplo */
+}
+
+.kx-msg { max-width: 86%; }
+.kx-msg.user { align-self: flex-end; }
+.kx-msg.ai   { align-self: flex-start; }
+
+.kx-bubble {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding: 10px 12px;
+}
+.kx-msg.user .kx-bubble { background: rgba(255,255,255,.10); border-radius: 16px 16px 0 16px; }
+.kx-msg.ai   .kx-bubble { background: rgba(57,255,182,.10);  border-radius: 16px 16px 16px 0;  }
+
+.kx-block + .kx-block { margin-top: 10px; }
+
+.kx-text p { margin: 0 0 .6em 0; }
+.kx-text p:last-child { margin-bottom: 0; }
+
+.kx-list { padding-left: 1.1em; }
+.kx-list li { margin: .25em 0; }
+
+.kx-code { position: relative; }
+.kx-code pre {
+  margin: 0;
+  padding: 10px 12px;
+  background: #0b0f14;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 12px;
+  overflow: auto;
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  color: #e8f0ff;
+  tab-size: 2;
+  white-space: pre;
+}
+.kx-code .lang {
+  position: absolute;
+  top: 6px; right: 8px;
+  font-size: 10px;
+  opacity: .7;
+}
+.kx-code .copy {
+  position: absolute;
+  top: 6px; right: 40px;
+  font-size: 11px;
+  font-weight: 800;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 8px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+.kx-callout {
+  display: flex; gap: 8px; align-items: flex-start;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+
+/* ===== Composer fix (input + send) ===== */
+.chat-composer {
+  position: sticky;
+  bottom: calc(var(--tabsH, 74px) + 12px);
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: var(--surface-strong, rgba(15,17,32,.88));
+  border: var(--bd, 1px solid rgba(255,255,255,.12));
+  border-radius: 16px;
+  padding: 10px;
+  box-shadow: var(--shadow, 0 14px 40px rgba(0,0,0,.45));
+  z-index: 5;
+}
+.chat-composer input[type="text"]{
+  flex: 1; border: 0; outline: 0;
+  background: #0f1426; color: var(--fg, #f5f7ff);
+  border-radius: 12px; padding: 10px 12px;
+}
+.chat-composer button{ min-width: 88px; }
+
+/* ===== Scroll safety ===== */
+html, body { overflow-y: auto !important; }
+main { overflow: auto !important; -webkit-overflow-scrolling: touch; }
+.view { overflow: auto !important; -webkit-overflow-scrolling: touch; }
+</style>
 </head>
 <body>
   <!-- Splash screen displayed on initial load -->
@@ -2281,9 +2434,25 @@ try{ document.documentElement.style.setProperty('--arch-overlay','rgba(64,158,25
 
     <!-- CHAT (Dual • Chat) -->
     <section id="v-chat" class="view">
-      <!-- Feed de mensagens do chat -->
-      <div id="chatFeed"><div class="msg user">Você: Essa versão tá daora</div><div class="msg user">Você: Essa versão tá daora</div><div class="msg user">Você: Essa versão tá daora</div><div class="msg user">Você: Dual e aí beleza como está</div><div class="msg user">Você: Dual e aí beleza como está</div><div class="msg user">Você: Dual e aí beleza como está</div><div class="msg user">Você: E aí alô</div><div class="msg user">Você: E aí alô</div><div class="msg user">Você: E aí alô</div><div class="msg user">Você: E aí beleza</div><div class="msg user">Você: E aí beleza</div><div class="msg user">Você: E aí beleza</div><div class="msg user">Você: Essa versão tá daora</div><div class="msg user">Você: Essa versão tá daora</div><div class="msg user">Você: Essa versão tá daora</div><div class="msg user">Você: Dual e aí beleza como está</div><div class="msg user">Você: Dual e aí beleza como está</div><div class="msg user">Você: Dual e aí beleza como está</div><div class="msg user">Você: E aí alô</div><div class="msg user">Você: E aí alô</div><div class="msg user">Você: E aí alô</div><div class="msg user">Você: E aí beleza</div><div class="msg user">Você: E aí beleza</div><div class="msg user">Você: E aí beleza</div></div>
-    </section>
+  <div class="grid">
+    <div class="card">
+      <div style="font-weight:800;margin-bottom:6px">Pulso em Expansão</div>
+      <div class="chat-pulse" id="chatPulse"></div>
+    </div>
+
+    <div class="card">
+      <div class="chat-wrap">
+        <div id="chatFeed" class="chat-feed" aria-live="polite"></div>
+
+        <div class="chat-composer">
+          <textarea id="chatInput" placeholder="Escreva sua intenção... (Shift+Enter quebra linha)"></textarea>
+          <button id="chatSend" class="btn prime">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
   </main>
 
   <!-- DOCK & TABS -->
@@ -6550,6 +6719,300 @@ document.getElementById('orbWrap')?.addEventListener('click', function(){ try{ w
     for(let i=0;i<parts.length;i++){ const p=parts[i]; p.phi+=(p.s*0.003); const rr=m*(0.14+p.r*0.42), x=CX+Math.cos(p.phi)*rr, y=CY+Math.sin(p.phi)*rr*(0.82+p.jitter*Math.sin(p.phi*3.0));
       ctx.fillStyle=PALETTE.dust; ctx.globalAlpha=0.75; ctx.beginPath(); ctx.arc(x,y,p.size,0,Math.PI*2); ctx.fill(); } ctx.globalAlpha=1;
     requestAnimationFrame(draw); } requestAnimationFrame(draw);
+})();
+</script>
+<script id="CHAT13_JS">
+(()=>{
+const CHAT_BACKEND = "openrouter";
+const OPENROUTER_CONF = {
+  model: (localStorage.getItem('dual.openrouter.model') || 'openai/gpt-4o-mini'),
+  endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+  key: localStorage.getItem('dual.keys.openrouter') || ''
+};
+
+const BLOCKS = [
+  ["Sinal","Contextualize a intenção do usuário em 1 frase objetiva."],
+  ["Mapa","Liste 3-5 pontos-chave do problema."],
+  ["Hipóteses","Traga 3 hipóteses testáveis."],
+  ["Dados","Quais dados mínimos precisamos coletar?"],
+  ["Ações 10min","Aplique uma micro-ação que cabe em 10 minutos."],
+  ["Riscos","Alerte sobre 2 riscos ou armadilhas."],
+  ["Recursos","Sugira 3 recursos (apps, docs, pessoas)."],
+  ["Sequência","Desenhe a ordem ótima em 4 passos."],
+  ["Expansão","Mostre 2 variações criativas do caminho."],
+  ["Métrica","Defina 1 métrica simples de sucesso."],
+  ["Checkpoint","O que revisar em 24h?"],
+  ["Compromisso","Gere 1 compromisso curto e claro."],
+  ["Fecho","Feche com 1 frase que mantenha o pulso."]
+];
+
+function sanitize(md){
+  const esc = (s)=>s.replace(/[&<>]/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;' }[m]));
+  md = md.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+         .replace(/\*(.+?)\*/g,'<em>$1</em>')
+         .replace(/`([^`]+?)`/g,'<code>$1</code>')
+         .replace(/\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  return md.split('\n').map(ln=>'<p>'+esc(ln)+'</p>').join('');
+}
+
+const feed = document.getElementById('chatFeed');
+function push(role, title, html){
+  const el = document.createElement('div');
+  el.className = `msg role-${role}`;
+  el.innerHTML = (title ? `<h5>${title}</h5>` : '') + (html||'');
+  feed.appendChild(el);
+  el.scrollIntoView({behavior:'smooth',block:'end'});
+}
+function pushBlock(title){
+  const el = document.createElement('div');
+  el.className = 'msg role-assistant';
+  el.innerHTML = `<h5>${title}</h5><div class="mut">…</div>`;
+  feed.appendChild(el);
+  el.scrollIntoView({behavior:'smooth',block:'end'});
+  return el;
+}
+
+async function callOpenRouter(messages){
+  if(!OPENROUTER_CONF.key){ throw new Error('Chave OpenRouter ausente (defina em localStorage: dual.keys.openrouter)'); }
+  const body = { model: OPENROUTER_CONF.model, messages, temperature: 0.7 };
+  const r = await fetch(OPENROUTER_CONF.endpoint, {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization':`Bearer ${OPENROUTER_CONF.key}`,
+      'HTTP-Referer': location.origin,
+      'X-Title':'HUB UNO Chat13'
+    },
+    body: JSON.stringify(body)
+  });
+  if(!r.ok){ throw new Error('OpenRouter HTTP '+r.status); }
+  const j = await r.json();
+  return j.choices?.[0]?.message?.content || '';
+}
+
+async function chat13Pipeline(userText){
+  const baseSystem = "Você é o Chat13 do HUB UNO. Responda de forma breve, clara e aplicável para cada bloco.";
+  const baseMsgs = [{role:'system', content: baseSystem}, {role:'user', content: userText}];
+  for(const [title, instr] of BLOCKS){
+    const dom = pushBlock(title);
+    try{
+      const content = await callOpenRouter([
+        ...baseMsgs,
+        {role:'user', content: `Bloco: ${title}. Instrução: ${instr}.
+Formate com frases curtas, listas quando fizer sentido, e sem rodeios.`}
+      ]);
+      dom.innerHTML = `<h5>${title}</h5>${sanitize(content)}`;
+    }catch(e){
+      dom.innerHTML = `<h5>${title}</h5><p class="mut">[erro: ${e.message}]</p>`;
+    }
+  }
+}
+
+const input = document.getElementById('chatInput');
+document.getElementById('chatSend').addEventListener('click', async ()=>{
+  const text = (input.value||'').trim();
+  if(!text) return;
+  push('user','Você', sanitize(text));
+  input.value = ''; input.focus();
+  try{ await chat13Pipeline(text); }
+  catch(e){ push('assistant','Erro', `<p class="mut">${e.message}</p>`); }
+});
+
+input.addEventListener('keydown',(e)=>{
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); document.getElementById('chatSend').click(); }
+});
+
+const pulse = document.getElementById('chatPulse');
+function setPulseSpeed(fast){ pulse.style.setProperty('animation-duration', fast?'1.6s':'2.8s'); }
+input.addEventListener('focus', ()=>setPulseSpeed(true));
+input.addEventListener('blur',  ()=>setPulseSpeed(false));
+
+push('assistant','Pronto','<p>Chat 13-Blocos iniciado. Escreva sua intenção e aperte <strong>Enviar</strong>.</p>');
+})();
+</script>
+
+<script id="KODUX_RENDER_JS">
+(function(){
+  const byId = (id) => document.getElementById(id);
+  const feedEl = () => byId('chatFeed') || document.querySelector('#v-chat #chatFeed');
+
+  function ensureComposer(){
+    if (document.getElementById('chatComposer')) return;
+    const vchat = document.getElementById('v-chat') || document.querySelector('[data-view="chat"], #view-chat, .view#v-chat');
+    if (!vchat) return;
+    const composer = document.createElement('div');
+    composer.className = 'chat-composer';
+    composer.id = 'chatComposer';
+    composer.innerHTML = `
+      <input id="chatInput" type="text" placeholder="Digite sua mensagem e pressione Enter" />
+      <button id="chatSend" class="btn prime">Enviar</button>
+    `;
+    vchat.appendChild(composer);
+
+    const input = composer.querySelector('#chatInput');
+    const btn   = composer.querySelector('#chatSend');
+    const send  = () => {
+      const text = input.value.trim();
+      if (!text) return;
+      window.dispatchEvent(new CustomEvent('kodux:send', { detail: { text } }));
+      // Mostra mensagem do usuário imediatamente
+      koduxRender([{type:'text', text}], { role: 'user' });
+      input.value = '';
+    };
+    input.addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+    });
+    btn.addEventListener('click', send);
+  }
+
+  function scrollBottom(){
+    const f = feedEl();
+    if (!f) return;
+    // se o feed tiver overflow interno, use scroll; caso contrário, scroll da página
+    try { f.scrollTop = f.scrollHeight; } catch(e){}
+    try { window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'}); } catch(e){}
+  }
+
+  function el(tag, cls){
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    return e;
+  }
+
+  function copyText(text){
+    try { navigator.clipboard.writeText(text); } catch(e){}
+  }
+
+  function renderBlocks(container, blocks){
+    blocks.forEach((b)=>{
+      switch(b.type){
+        case 'text': {
+          const wrap = el('div', 'kx-block kx-text');
+          // simples quebra de linhas em <p>
+          (b.text || '').split(/\n{2,}/).forEach(p=>{
+            const P = el('p'); P.textContent = p; wrap.appendChild(P);
+          });
+          container.appendChild(wrap);
+        } break;
+        case 'list': {
+          const wrap = el('div', 'kx-block kx-list');
+          const ul = el('ul');
+          (b.items || []).forEach(it=>{ const li = el('li'); li.textContent = it; ul.appendChild(li); });
+          wrap.appendChild(ul);
+          container.appendChild(wrap);
+        } break;
+        case 'code': {
+          const wrap = el('div', 'kx-block kx-code');
+          const pre = el('pre');
+          pre.textContent = b.code || '';
+          const copy = el('button', 'copy'); copy.type = 'button'; copy.textContent = 'Copiar';
+          copy.addEventListener('click', ()=> copyText(b.code || ''));
+          const lang = el('span', 'lang'); lang.textContent = (b.lang||'code').toUpperCase();
+          wrap.appendChild(pre); wrap.appendChild(copy); wrap.appendChild(lang);
+          container.appendChild(wrap);
+        } break;
+        case 'callout': {
+          const wrap = el('div', 'kx-block kx-callout');
+          const icon = el('div'); icon.textContent = b.emoji || '💡';
+          const txt  = el('div'); txt.textContent = b.text || '';
+          wrap.appendChild(icon); wrap.appendChild(txt);
+          container.appendChild(wrap);
+        } break;
+        case 'html': {
+          const wrap = el('div', 'kx-block kx-html');
+          wrap.innerHTML = b.html || '';
+          container.appendChild(wrap);
+        } break;
+        default: {
+          const wrap = el('div', 'kx-block kx-text');
+          const P = el('p'); P.textContent = (b.text || JSON.stringify(b));
+          wrap.appendChild(P);
+          container.appendChild(wrap);
+        }
+      }
+    });
+  }
+
+  // Markdown → blocks (mínimo viável)
+  function mdToBlocks(md){
+    if (Array.isArray(md)) return md;
+    if (typeof md !== 'string') return [{type:'text', text: String(md)}];
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    const blocks = [];
+    let i = 0;
+    while (i < lines.length){
+      const line = lines[i];
+      // code fence
+      if (/^```/.test(line)){
+        const lang = line.replace(/^```+/, '').trim().toLowerCase() || 'text';
+        i++;
+        const buf = [];
+        while (i < lines.length && !/^```/.test(lines[i])) { buf.push(lines[i]); i++; }
+        blocks.push({type:'code', lang, code: buf.join('\n')});
+        // skip closing ```
+        if (i < lines.length && /^```/.test(lines[i])) i++;
+        continue;
+      }
+      // list
+      if (/^[-*]\s+/.test(line)){
+        const items = [];
+        while (i < lines.length && /^[-*]\s+/.test(lines[i])){
+          items.push(lines[i].replace(/^[-*]\s+/, ''));
+          i++;
+        }
+        blocks.push({type:'list', items});
+        continue;
+      }
+      // callout > ...
+      if (/^>\s+/.test(line)){
+        const call = [];
+        while (i < lines.length && /^>\s+/.test(lines[i])){
+          call.push(lines[i].replace(/^>\s+/, ''));
+          i++;
+        }
+        blocks.push({type:'callout', text: call.join(' '), emoji: '💬'});
+        continue;
+      }
+      // paragraph
+      const paras = [line];
+      i++;
+      while (i < lines.length && lines[i] && !/^```|^[-*]\s+|^>\s+/.test(lines[i])){
+        paras.push(lines[i]);
+        i++;
+      }
+      const text = paras.join('\n').trim();
+      if (text) blocks.push({type:'text', text});
+    }
+    return blocks;
+  }
+
+  // API pública
+  function koduxRender(blocksOrMd, opts = {}){
+    const f = feedEl();
+    if (!f) return;
+    const role = (opts.role || 'ai').toLowerCase();
+    const msg  = el('div', `kx-msg ${role}`);
+    const bubble = el('div', 'kx-bubble');
+    msg.appendChild(bubble);
+    f.appendChild(msg);
+
+    const blocks = mdToBlocks(blocksOrMd);
+    renderBlocks(bubble, blocks);
+    requestAnimationFrame(scrollBottom);
+    return msg;
+  }
+
+  // Exponha no window
+  window.koduxRender = koduxRender;
+  window.koduxMdToBlocks = mdToBlocks;
+
+  // hook inicial
+  document.addEventListener('DOMContentLoaded', function(){
+    ensureComposer();
+    // Se existir o banner/preview antigo, oculte‑o no modo chat
+    const msgPreview = document.getElementById('msgPreview');
+    if (msgPreview) msgPreview.style.display = 'none';
+  });
 })();
 </script>
 </body></html>
