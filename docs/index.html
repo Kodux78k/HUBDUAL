@@ -1489,29 +1489,66 @@ button svg, .tabbar .tab svg { display:block; }
 
 </style>
 <style id="ATOM_UI_PATCH">
-:root{ --tabsH:58px; }
-nav.tabbar{ padding:4px 12px calc(env(safe-area-inset-bottom) + 4px) }
-.tabbar .inner{ padding:8px 12px }
-.tab{ padding:6px; font-size:10px }
-.arch-circle{ position:relative; border:1px solid rgba(255,255,255,.14);
-  box-shadow: 0 18px 50px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.06); }
-.arch-circle::after{ opacity:.6; }
+/* 1) círculo real, tudo recortado */
+.arch-circle{
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  isolation: isolate; /* blenda só dentro do círculo */
+}
+
+/* 2) pseudo-elements sempre circulares + sem clique */
+.arch-circle::before,
+.arch-circle::after{
+  content:"";
+  position:absolute; inset:0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* 3) tinta com fade radial (sem quadrado) */
+.arch-circle::after{
+  z-index: 6;
+  background: radial-gradient(circle at 50% 50%,
+              var(--arch-overlay, rgba(64,158,255,.22)) 62%,
+              rgba(64,158,255,0) 86%);
+  mix-blend-mode: overlay;
+  opacity: .35; /* se quiser mais forte: .5 ~ .6 */
+  transition: opacity var(--arch-switch-fade, 120ms) ease;
+}
+
+/* 4) véu só durante a troca (evita flash) */
+html.arch-switching .arch-circle::after{ opacity: 0; }
+.arch-circle::before{
+  z-index: 7; opacity: 0;
+  transition: opacity var(--arch-switch-fade, 120ms) ease;
+}
+html.arch-switching .arch-circle::before{
+  opacity: 1;
+  background: radial-gradient(circle at 50% 50%,
+              var(--arch-veil-core, rgba(12,14,24,.88)) 62%,
+              rgba(12,14,24,0) 86%);
+}
+
+/* 5) canvas do átomo fica sob o overlay e clippado ao círculo */
 .arch-circle > canvas#atomCanvas{
-  position:absolute; inset:0; pointer-events:none; z-index:3;
+  position:absolute; inset:0; pointer-events:none;
+  z-index: 5; /* abaixo do ::after(6) e ::before(7) */
   opacity:.88; mix-blend-mode:screen; filter:saturate(120%) contrast(110%);
 }
-.arch-circle > .arch-fab{
-  position:absolute; z-index:4; top:8px; right:8px;
-  width:34px; height:34px; border-radius:999px; display:grid; place-items:center;
-  border:1px solid rgba(255,255,255,.18);
-  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
-  box-shadow:0 6px 16px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06) inset;
-  color:#eaf2ff; cursor:pointer; -webkit-tap-highlight-color:transparent;
+
+/* 6) botões por cima e clicáveis */
+.arch-circle .arch-nav,
+.arch-circle [data-arch-nav],
+.arch-circle .arch-controls,
+.arch-circle .arch-controls *,
+.arch-nav, .arch-nav *,
+[data-arch-nav], [data-arch-nav] *,
+#arch-next, #arch-prev, #archetypeNext, #archetypePrev,
+.btn-arch-next, .btn-arch-prev, .arrow-arch-next, .arrow-arch-prev{
+  position: relative;
+  z-index: 30 !important;
+  pointer-events: auto !important;
 }
-.arch-circle > .arch-fab:active{ transform:translateY(1px) scale(.98) }
-.card{ box-shadow: 0 14px 40px rgba(0,0,0,.42), inset 0 0 0 1px rgba(255,255,255,.05) }
-.icon-pill{ background:rgba(15,20,34,.78); border-color:#ffffff1f }
-.icon-ghost{ color:#b9c6da }
 </style>
 
 <!-- OVERLAY: background-only patch -->
@@ -1554,137 +1591,6 @@ try{ document.documentElement.style.setProperty('--arch-overlay','rgba(64,158,25
   padding:10px 12px;border:var(--bd);background:rgba(255,255,255,.04);color:var(--fg)}
 .chat-composer .btn{white-space:nowrap}
 </style>
-
-<style id="ARCH_FAB_ROUND_FIX">
-.arch-circle{
-  border-radius:50% !important;
-  overflow:hidden !important;
-  -webkit-clip-path: circle(50% at 50% 50%); clip-path: circle(50% at 50% 50%);
-  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 99.9%, transparent 100%);
-          mask-image: radial-gradient(circle at 50% 50%, #000 99.9%, transparent 100%);
-  isolation:isolate; contain: paint; transform: translateZ(0); will-change: transform;
-  background-clip: padding-box;
-}
-.arch-circle > .arch-fab{
-  background:none !important; mix-blend-mode: normal !important;
-  backface-visibility:hidden; -webkit-backface-visibility:hidden;
-}
-.arch-circle > .arch-fab::before{
-  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
-  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
-  box-shadow:0 6px 16px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06) inset;
-}
-/* failsafe de recorte para camadas do orbe */
-.arch-circle > canvas, .arch-circle #orbWrap, .arch-circle .orb-slot, .arch-circle iframe#arch-frame{
-  -webkit-clip-path: circle(50% at 50% 50%); clip-path: circle(50% at 50% 50%);
-}
-</style>
-
-<style id="KODUX_BLOCKS_CSS">
-/* ===== Chat • Kodux Blocks ===== */
-#v-chat { display: none; }
-#v-chat.view.active, #v-chat.active { display: flex; }
-
-#chatFeed {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: var(--surface, rgba(15,17,32,.65));
-  border: var(--bd, 1px solid rgba(255,255,255,.12));
-  border-radius: var(--r2, 22px);
-  padding: 12px;
-  box-shadow: var(--shadow, 0 14px 40px rgba(0,0,0,.45));
-  max-height: unset;         /* deixe a página rolar */
-  overflow: visible;         /* evita scroll duplo */
-}
-
-.kx-msg { max-width: 86%; }
-.kx-msg.user { align-self: flex-end; }
-.kx-msg.ai   { align-self: flex-start; }
-
-.kx-bubble {
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 16px;
-  padding: 10px 12px;
-}
-.kx-msg.user .kx-bubble { background: rgba(255,255,255,.10); border-radius: 16px 16px 0 16px; }
-.kx-msg.ai   .kx-bubble { background: rgba(57,255,182,.10);  border-radius: 16px 16px 16px 0;  }
-
-.kx-block + .kx-block { margin-top: 10px; }
-
-.kx-text p { margin: 0 0 .6em 0; }
-.kx-text p:last-child { margin-bottom: 0; }
-
-.kx-list { padding-left: 1.1em; }
-.kx-list li { margin: .25em 0; }
-
-.kx-code { position: relative; }
-.kx-code pre {
-  margin: 0;
-  padding: 10px 12px;
-  background: #0b0f14;
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius: 12px;
-  overflow: auto;
-  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-  color: #e8f0ff;
-  tab-size: 2;
-  white-space: pre;
-}
-.kx-code .lang {
-  position: absolute;
-  top: 6px; right: 8px;
-  font-size: 10px;
-  opacity: .7;
-}
-.kx-code .copy {
-  position: absolute;
-  top: 6px; right: 40px;
-  font-size: 11px;
-  font-weight: 800;
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.15);
-  border-radius: 8px;
-  padding: 2px 6px;
-  cursor: pointer;
-}
-
-.kx-callout {
-  display: flex; gap: 8px; align-items: flex-start;
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius: 12px;
-  padding: 8px 10px;
-}
-
-/* ===== Composer fix (input + send) ===== */
-.chat-composer {
-  position: sticky;
-  bottom: calc(var(--tabsH, 74px) + 12px);
-  margin-top: 8px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  background: var(--surface-strong, rgba(15,17,32,.88));
-  border: var(--bd, 1px solid rgba(255,255,255,.12));
-  border-radius: 16px;
-  padding: 10px;
-  box-shadow: var(--shadow, 0 14px 40px rgba(0,0,0,.45));
-  z-index: 5;
-}
-.chat-composer input[type="text"]{
-  flex: 1; border: 0; outline: 0;
-  background: #0f1426; color: var(--fg, #f5f7ff);
-  border-radius: 12px; padding: 10px 12px;
-}
-.chat-composer button{ min-width: 88px; }
-
-/* ===== Scroll safety ===== */
-html, body { overflow-y: auto !important; }
-main { overflow: auto !important; -webkit-overflow-scrolling: touch; }
-.view { overflow: auto !important; -webkit-overflow-scrolling: touch; }
-</style>
 </head>
 <body>
   <!-- Splash screen displayed on initial load -->
@@ -1709,6 +1615,8 @@ main { overflow: auto !important; -webkit-overflow-scrolling: touch; }
     <div class="title">
       <h1>HUB UNO</h1>
       <small>Dual · Trinity</small>
+      <!-- PATCH: Badge indicating 78K is active; hidden by default -->
+      <span id="badge78k" style="display:none;margin-left:8px;font-size:0.75rem;color:#f5f7ff;" title="78K ativo">⚡ 78K ativo</span>
     </div>
     <button class="ib fx-trans fx-press ring" id="btnDownload" title="Baixar HTML">
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1817,7 +1725,20 @@ main { overflow: auto !important; -webkit-overflow-scrolling: touch; }
   <polyline points="15 18 9 12 15 6" stroke="url(#g5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
             <span class="ripple"></span></button>
-            <select id="arch-select" title="Escolher arquétipo"><option value="./archetypes3d/value="./archetypes3d/atlas.html">atlas.html</option><option value="./archetypes3d/value="./archetypes3d/nova.html">nova.html</option><option value="./archetypes3d/value="./archetypes3d/vitalis.html">vitalis.html</option><option value="./archetypes3d/value="./archetypes3d/pulse.html">pulse.html</option><option value="./archetypes3d/value="./archetypes3d/artemis.html">artemis.html</option><option value="./archetypes3d/value="./archetypes3d/serena.html">serena.html</option><option value="./archetypes3d/value="./archetypes3d/kaos.html">kaos.html</option><option value="./archetypes3d/value="./archetypes3d/genus.html">genus.html</option><option value="./archetypes3d/value="./archetypes3d/lumine.html">lumine.html</option><option value="./archetypes3d/value="./archetypes3d/rhea.html">rhea.html</option><option value="./archetypes3d/value="./archetypes3d/solus.html">solus.html</option><option value="./archetypes3d/value="./archetypes3d/aion.html">aion.html</option></select>
+            <select id="arch-select" title="Escolher arquétipo">
+  <option value="./archetypes/atlas.html">atlas.html</option>
+  <option value="./archetypes/nova.html">nova.html</option>
+  <option value="./archetypes/vitalis.html">vitalis.html</option>
+  <option value="./archetypes/pulse.html">pulse.html</option>
+  <option value="./archetypes/artemis.html">artemis.html</option>
+  <option value="./archetypes/serena.html">serena.html</option>
+  <option value="./archetypes/kaos.html">kaos.html</option>
+  <option value="./archetypes/genus.html">genus.html</option>
+  <option value="./archetypes/lumine.html">lumine.html</option>
+  <option value="./archetypes/rhea.html">rhea.html</option>
+  <option value="./archetypes/solus.html">solus.html</option>
+  <option value="./archetypes/aion.html">aion.html</option>
+</select>
             <button class="btn fx-trans fx-press ring" id="arch-next" title="Próximo">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
 
@@ -1841,7 +1762,7 @@ main { overflow: auto !important; -webkit-overflow-scrolling: touch; }
               <div class="orb-glow" id="orbGlow"></div>
               <canvas id="particles"></canvas>
               <div class="ring"></div>
-              <div class="call" id="orbCall">Toque para pulsar · Nebula</div>
+              <div class="call" id="orbCall">·</div>
             </div>
 
             <iframe id="arch-frame" title="Archetype Core" sandbox="allow-scripts" referrerpolicy="no-referrer" src="./archetypes/atlas.html"></iframe>
@@ -2426,7 +2347,7 @@ main { overflow: auto !important; -webkit-overflow-scrolling: touch; }
           <div class="card fx-trans fx-lift" style="display:block">
             <div style="font-weight:800">Logs</div>
             <div class="mut" style="font-size:11px;margin-bottom:4px">Eventos recentes</div>
-            <pre id="logs" style="margin:0;font:12px/1.4 ui-monospace,monospace;color:var(--mut);max-height:140px;overflow:auto"></pre>
+            <pre id="logs" style="margin:0;font:12px/1.4 ui-monospace,monospace;color:var(--mut);max-height:140px;overflow:auto;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere"></pre>
           </div>
           </div>
       </div>
@@ -2773,15 +2694,23 @@ main { overflow: auto !important; -webkit-overflow-scrolling: touch; }
           LS.set('infodose:voices', saved);
         }
         archList.forEach(name => {
+          // Cria um acordeão (detalhes) para cada arquétipo. O nome sem extensão aparece no cabeçalho.
+          const detailsEl = document.createElement('details');
+          detailsEl.className = 'voice-accordion';
+          const summary = document.createElement('summary');
+          const baseName = name.replace(/\.html$/i, '');
+          summary.textContent = baseName.charAt(0).toUpperCase() + baseName.slice(1);
+          summary.style.cursor = 'pointer';
+          summary.style.fontWeight = '700';
+          summary.style.marginBottom = '4px';
+          detailsEl.appendChild(summary);
+          // Contêiner para o seletor de voz e botão de teste
           const row = document.createElement('div');
           row.style.display = 'flex';
           row.style.alignItems = 'center';
           row.style.gap = '8px';
           row.style.flexWrap = 'wrap';
-          const label = document.createElement('span');
-          label.textContent = name;
-          label.style.minWidth = '70px';
-          label.style.fontWeight = '700';
+          // Seletor de voz
           const sel = document.createElement('select');
           sel.className = 'input ring';
           sel.style.maxWidth = '220px';
@@ -2796,23 +2725,26 @@ main { overflow: auto !important; -webkit-overflow-scrolling: touch; }
             saved[name] = sel.value;
             LS.set('infodose:voices', saved);
           };
+          // Botão de teste
           const btnTest = document.createElement('button');
           btnTest.className = 'btn fx-trans fx-press ring';
           btnTest.textContent = 'Teste';
-          const rp = document.createElement('span'); rp.className = 'ripple'; btnTest.appendChild(rp);
+          const rp = document.createElement('span');
+          rp.className = 'ripple';
+          btnTest.appendChild(rp);
           addRipple(btnTest);
           btnTest.onclick = () => {
-            const utter = new SpeechSynthesisUtterance(`Olá, eu sou ${name}`);
+            const utter = new SpeechSynthesisUtterance(`Olá, eu sou ${baseName}`);
             const voiceName = saved[name] || sel.value;
             const voice = voices.find(v => v.name === voiceName);
             if (voice) utter.voice = voice;
             speechSynthesis.cancel();
             speechSynthesis.speak(utter);
           };
-          row.appendChild(label);
           row.appendChild(sel);
           row.appendChild(btnTest);
-          wrap.appendChild(row);
+          detailsEl.appendChild(row);
+          wrap.appendChild(detailsEl);
         });
       }
       populateVoices();
@@ -5569,6 +5501,8 @@ main .row > * + * { margin-top: .5rem; }
         <label for="lsImportFile" style="display:inline-block"><button type="button">Importar</button></label>
         <input id="lsImportFile" type="file" accept="application/json" hidden>
         <button id="lsClearDisabled">Limpar desativados</button>
+        <!-- PATCH: Toggle 78K within LS Panel -->
+        <button id="lsToggle78k" aria-pressed="false" title="Ativar/Desativar estado 78K">⚡ 78K: OFF</button>
         <button id="lsClose">Fechar</button>
       </div>
     </div>
@@ -6829,190 +6763,273 @@ input.addEventListener('blur',  ()=>setPulseSpeed(false));
 
 push('assistant','Pronto','<p>Chat 13-Blocos iniciado. Escreva sua intenção e aperte <strong>Enviar</strong>.</p>');
 })();
-</script>
+</script> <style id="ARCH_FAB_ROUND_FIX">
+.arch-circle{
+  border-radius:50% !important;
+  overflow:hidden !important;
+  -webkit-clip-path: circle(50% at 50% 50%); clip-path: circle(50% at 50% 50%);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 99.9%, transparent 100%);
+          mask-image: radial-gradient(circle at 50% 50%, #000 99.9%, transparent 100%);
+  isolation:isolate; contain: paint; transform: translateZ(0); will-change: transform;
+  background-clip: padding-box;
+}
+.arch-circle > .arch-fab{
+  background:none !important; mix-blend-mode: normal !important;
+  backface-visibility:hidden; -webkit-backface-visibility:hidden;
+}
+.arch-circle > .arch-fab::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+  box-shadow:0 6px 16px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06) inset;
+}
+/* failsafe de recorte para camadas do orbe */
+.arch-circle > canvas, .arch-circle #orbWrap, .arch-circle .orb-slot, .arch-circle iframe#arch-frame{
+  -webkit-clip-path: circle(50% at 50% 50%); clip-path: circle(50% at 50% 50%);
+}
+</style>
 
-<script id="KODUX_RENDER_JS">
+<!-- === UNO • ORB dos Arquétipos (Injected) === -->
+<style id="UNO_ARCH_ORB_STYLES">
+  #arch-orb-wrap{width:min(82vw,360px);aspect-ratio:1/1;display:grid;place-items:center;
+    background:radial-gradient(60% 60% at 50% 45%,#0b1424 0%,#0a1120 50%,#070d1a 100%);
+    border:1px solid #1a314a;border-radius:24px;box-shadow:0 0 32px #00e7ff1f,inset 0 0 24px #001b2f80;
+    padding:14px;margin:10px auto}
+  #arch-orb{width:100%;height:100%;display:block}
+</style>
+
+<div id="arch-orb-wrap" aria-label="Orb dos Arquétipos (UNO)">
+  <svg id="arch-orb" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="neo" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#ff52e5"/><stop offset="1" stop-color="#00c5e5"/>
+      </linearGradient>
+      <linearGradient id="neo2" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#39FFB6"/><stop offset="1" stop-color="#00c5e5"/>
+      </linearGradient>
+      <radialGradient id="orbGlow" cx="50%" cy="50%" r="60%">
+        <stop offset="0%" stop-color="#00e7ff" stop-opacity=".25"/>
+        <stop offset="65%" stop-color="#00e7ff" stop-opacity=".05"/>
+        <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+      </radialGradient>
+
+      <symbol id="orb-horus" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="80" fill="url(#orbGlow)" />
+        <circle cx="100" cy="100" r="78" fill="none" stroke="url(#neo)" stroke-width="3"/>
+        <circle cx="100" cy="100" r="68" fill="none" stroke="url(#neo2)" stroke-width="2" opacity=".8"/>
+        <g>
+          <path d="M45,100 Q60,80 100,80 Q140,80 155,100 Q140,120 100,120 Q60,120 45,100 Z"
+                fill="none" stroke="url(#neo)" stroke-width="4" stroke-linecap="round" />
+          <circle cx="100" cy="100" r="10" fill="url(#neo2)"/>
+          <path d="M105,112 q22,14 36,22" fill="none" stroke="#00e7ff" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+          <path d="M95,112 q-10,10 -14,18" fill="none" stroke="#ff52e5" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+          <path d="M60,95 q18,-16 40,-16 q22,0 40,16" fill="none" stroke="#39FFB6" stroke-width="2" opacity=".7"/>
+        </g>
+      </symbol>
+
+      <symbol id="delta-vortex" viewBox="0 0 200 200">
+        <polygon points="100,22 178,160 22,160" fill="none" stroke="url(#neo)" stroke-width="6" stroke-linejoin="round"/>
+        <g stroke="url(#neo2)" fill="none" stroke-width="2" opacity=".95">
+          <path d="M100,42 c40,0 54,30 58,48 c4,20 -6,42 -22,53 c-18,13 -43,13 -62,0 c-16,-11 -26,-33 -22,-53 c4,-18 18,-48 48,-48" />
+          <path d="M100,58 c30,0 42,22 45,36 c3,15 -5,31 -17,39 c-14,9 -33,9 -47,0 c-12,-8 -20,-24 -17,-39 c3,-14 14,-36 36,-36" opacity=".9"/>
+          <path d="M100,74 c20,0 28,14 30,24 c2,10 -3,20 -11,26 c-9,6 -22,6 -31,0 c-8,-6 -13,-16 -11,-26 c2,-10 9,-24 23,-24" opacity=".85"/>
+        </g>
+        <g>
+          <circle cx="100" cy="100" r="2" fill="#39FFB6"/>
+          <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="9s" repeatCount="indefinite"/>
+        </g>
+      </symbol>
+
+      <symbol id="icon-atlas" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="30" fill="none" stroke="url(#neo)" stroke-width="6"/>
+        <path d="M20 50h60M50 20v60" stroke="url(#neo)" stroke-width="4"/>
+      </symbol>
+      <symbol id="icon-nova" viewBox="0 0 100 100">
+        <g stroke="url(#neo)" fill="none" stroke-width="5">
+          <circle cx="50" cy="50" r="26"/>
+          <path d="M50 10v20M50 70v20M10 50h20M70 50h20M25 25l10 10M75 25l-10 10M25 75l10-10M75 75l-10-10"/>
+        </g>
+      </symbol>
+      <symbol id="icon-vitalis" viewBox="0 0 100 100">
+        <path d="M20 60 C30 30, 70 30, 80 60" stroke="url(#neo2)" stroke-width="6" fill="none"/>
+        <circle cx="50" cy="60" r="8" fill="url(#neo2)"/>
+      </symbol>
+      <symbol id="icon-pulse" viewBox="0 0 100 100">
+        <polyline points="10,60 30,60 40,30 50,70 60,45 70,60 90,60" fill="none" stroke="url(#neo2)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="icon-artemis" viewBox="0 0 100 100">
+        <path d="M20 80 Q50 20 80 80" fill="none" stroke="url(#neo)" stroke-width="6"/>
+        <circle cx="50" cy="28" r="6" fill="url(#neo)"/>
+      </symbol>
+      <symbol id="icon-serena" viewBox="0 0 100 100">
+        <path d="M20 60 a30 20 0 1 0 60 0" fill="none" stroke="url(#neo)" stroke-width="6"/>
+        <circle cx="50" cy="45" r="10" fill="url(#neo)"/>
+      </symbol>
+      <symbol id="icon-kaos" viewBox="0 0 100 100">
+        <path d="M20 50 L80 50 M50 20 L50 80" stroke="url(#neo)" stroke-width="6"/>
+        <path d="M20 20 L80 80 M80 20 L20 80" stroke="#d800d8" stroke-width="4" opacity=".6"/>
+      </symbol>
+      <symbol id="icon-genus" viewBox="0 0 100 100">
+        <rect x="22" y="22" width="56" height="56" fill="none" stroke="url(#neo)" stroke-width="6" rx="8"/>
+        <circle cx="50" cy="50" r="10" fill="url(#neo)"/>
+      </symbol>
+      <symbol id="icon-lumine" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="22" fill="none" stroke="url(#neo)" stroke-width="6"/>
+        <path d="M50 12v10M50 78v10M12 50h10M78 50h10M24 24l7 7M76 24l-7 7M24 76l7-7M76 76l-7-7"
+              stroke="url(#neo)" stroke-width="4"/>
+      </symbol>
+      <symbol id="icon-solus" viewBox="0 0 100 100">
+        <path d="M20 60 C35 30, 65 30, 80 60" fill="none" stroke="url(#neo)" stroke-width="6"/>
+        <path d="M30 55 Q50 30 70 55" fill="none" stroke="url(#neo)" stroke-width="4" opacity=".7"/>
+      </symbol>
+      <symbol id="icon-aion" viewBox="0 0 100 100">
+        <path d="M20 70 L50 30 L80 70 Z" fill="none" stroke="url(#neo)" stroke-width="6"/>
+        <path d="M35 60 L50 40 L65 60 Z" fill="none" stroke="url(#neo)" stroke-width="4" opacity=".6"/>
+      </symbol>
+      <symbol id="icon-rhea" viewBox="0 0 100 100">
+        <path d="M30 70 C30 50, 70 50, 70 70" stroke="url(#neo2)" stroke-width="6" fill="none"/>
+        <circle cx="50" cy="45" r="9" fill="url(#neo2)"/>
+      </symbol>
+    </defs>
+
+    <use href="#orb-horus"></use>
+    <g opacity=".28"><use href="#delta-vortex"></use></g>
+    <g id="arch-icon-holder" transform="translate(100,100) translate(-50,-50)">
+      <use id="arch-icon" href="#icon-atlas"></use>
+    </g>
+  </svg>
+</div>
+
+<script id="UNO_ARCH_ORB_SCRIPT">
 (function(){
-  const byId = (id) => document.getElementById(id);
-  const feedEl = () => byId('chatFeed') || document.querySelector('#v-chat #chatFeed');
-
-  function ensureComposer(){
-    if (document.getElementById('chatComposer')) return;
-    const vchat = document.getElementById('v-chat') || document.querySelector('[data-view="chat"], #view-chat, .view#v-chat');
-    if (!vchat) return;
-    const composer = document.createElement('div');
-    composer.className = 'chat-composer';
-    composer.id = 'chatComposer';
-    composer.innerHTML = `
-      <input id="chatInput" type="text" placeholder="Digite sua mensagem e pressione Enter" />
-      <button id="chatSend" class="btn prime">Enviar</button>
-    `;
-    vchat.appendChild(composer);
-
-    const input = composer.querySelector('#chatInput');
-    const btn   = composer.querySelector('#chatSend');
-    const send  = () => {
-      const text = input.value.trim();
-      if (!text) return;
-      window.dispatchEvent(new CustomEvent('kodux:send', { detail: { text } }));
-      // Mostra mensagem do usuário imediatamente
-      koduxRender([{type:'text', text}], { role: 'user' });
-      input.value = '';
-    };
-    input.addEventListener('keydown', (e)=>{
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
-    });
-    btn.addEventListener('click', send);
+  const ARCHES=[
+    {id:'atlas',label:'Atlas'},{id:'nova',label:'Nova'},{id:'vitalis',label:'Vitalis'},{id:'pulse',label:'Pulse'},
+    {id:'artemis',label:'Artemis'},{id:'serena',label:'Serena'},{id:'kaos',label:'Kaos'},{id:'genus',label:'Genus'},
+    {id:'lumine',label:'Lumine'},{id:'solus',label:'Solus'},{id:'aion',label:'Aion'},{id:'rhea',label:'Rhea'}
+  ];
+  const $orb=document.getElementById('arch-orb');
+  const $use=document.getElementById('arch-icon');
+  let idx=0;
+  function setArch(key){
+    const i=typeof key==='number' ? ((key%ARCHES.length)+ARCHES.length)%ARCHES.length
+                                  : ARCHES.findIndex(a=>a.id===String(key).toLowerCase());
+    if(i<0) return;
+    idx=i;$use.setAttribute('href','#icon-'+ARCHES[i].id);
+    try{
+      // opcional: mudar overlay do site se usar --grad-a/--grad-b globais
+      const root=document.documentElement;
+      root.style.setProperty('--arch-overlay','rgba(64,158,255,.22)');
+    }catch{}
   }
-
-  function scrollBottom(){
-    const f = feedEl();
-    if (!f) return;
-    // se o feed tiver overflow interno, use scroll; caso contrário, scroll da página
-    try { f.scrollTop = f.scrollHeight; } catch(e){}
-    try { window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'}); } catch(e){}
-  }
-
-  function el(tag, cls){
-    const e = document.createElement(tag);
-    if (cls) e.className = cls;
-    return e;
-  }
-
-  function copyText(text){
-    try { navigator.clipboard.writeText(text); } catch(e){}
-  }
-
-  function renderBlocks(container, blocks){
-    blocks.forEach((b)=>{
-      switch(b.type){
-        case 'text': {
-          const wrap = el('div', 'kx-block kx-text');
-          // simples quebra de linhas em <p>
-          (b.text || '').split(/\n{2,}/).forEach(p=>{
-            const P = el('p'); P.textContent = p; wrap.appendChild(P);
-          });
-          container.appendChild(wrap);
-        } break;
-        case 'list': {
-          const wrap = el('div', 'kx-block kx-list');
-          const ul = el('ul');
-          (b.items || []).forEach(it=>{ const li = el('li'); li.textContent = it; ul.appendChild(li); });
-          wrap.appendChild(ul);
-          container.appendChild(wrap);
-        } break;
-        case 'code': {
-          const wrap = el('div', 'kx-block kx-code');
-          const pre = el('pre');
-          pre.textContent = b.code || '';
-          const copy = el('button', 'copy'); copy.type = 'button'; copy.textContent = 'Copiar';
-          copy.addEventListener('click', ()=> copyText(b.code || ''));
-          const lang = el('span', 'lang'); lang.textContent = (b.lang||'code').toUpperCase();
-          wrap.appendChild(pre); wrap.appendChild(copy); wrap.appendChild(lang);
-          container.appendChild(wrap);
-        } break;
-        case 'callout': {
-          const wrap = el('div', 'kx-block kx-callout');
-          const icon = el('div'); icon.textContent = b.emoji || '💡';
-          const txt  = el('div'); txt.textContent = b.text || '';
-          wrap.appendChild(icon); wrap.appendChild(txt);
-          container.appendChild(wrap);
-        } break;
-        case 'html': {
-          const wrap = el('div', 'kx-block kx-html');
-          wrap.innerHTML = b.html || '';
-          container.appendChild(wrap);
-        } break;
-        default: {
-          const wrap = el('div', 'kx-block kx-text');
-          const P = el('p'); P.textContent = (b.text || JSON.stringify(b));
-          wrap.appendChild(P);
-          container.appendChild(wrap);
-        }
-      }
-    });
-  }
-
-  // Markdown → blocks (mínimo viável)
-  function mdToBlocks(md){
-    if (Array.isArray(md)) return md;
-    if (typeof md !== 'string') return [{type:'text', text: String(md)}];
-    const lines = md.replace(/\r\n/g, '\n').split('\n');
-    const blocks = [];
-    let i = 0;
-    while (i < lines.length){
-      const line = lines[i];
-      // code fence
-      if (/^```/.test(line)){
-        const lang = line.replace(/^```+/, '').trim().toLowerCase() || 'text';
-        i++;
-        const buf = [];
-        while (i < lines.length && !/^```/.test(lines[i])) { buf.push(lines[i]); i++; }
-        blocks.push({type:'code', lang, code: buf.join('\n')});
-        // skip closing ```
-        if (i < lines.length && /^```/.test(lines[i])) i++;
-        continue;
-      }
-      // list
-      if (/^[-*]\s+/.test(line)){
-        const items = [];
-        while (i < lines.length && /^[-*]\s+/.test(lines[i])){
-          items.push(lines[i].replace(/^[-*]\s+/, ''));
-          i++;
-        }
-        blocks.push({type:'list', items});
-        continue;
-      }
-      // callout > ...
-      if (/^>\s+/.test(line)){
-        const call = [];
-        while (i < lines.length && /^>\s+/.test(lines[i])){
-          call.push(lines[i].replace(/^>\s+/, ''));
-          i++;
-        }
-        blocks.push({type:'callout', text: call.join(' '), emoji: '💬'});
-        continue;
-      }
-      // paragraph
-      const paras = [line];
-      i++;
-      while (i < lines.length && lines[i] && !/^```|^[-*]\s+|^>\s+/.test(lines[i])){
-        paras.push(lines[i]);
-        i++;
-      }
-      const text = paras.join('\n').trim();
-      if (text) blocks.push({type:'text', text});
-    }
-    return blocks;
-  }
-
-  // API pública
-  function koduxRender(blocksOrMd, opts = {}){
-    const f = feedEl();
-    if (!f) return;
-    const role = (opts.role || 'ai').toLowerCase();
-    const msg  = el('div', `kx-msg ${role}`);
-    const bubble = el('div', 'kx-bubble');
-    msg.appendChild(bubble);
-    f.appendChild(msg);
-
-    const blocks = mdToBlocks(blocksOrMd);
-    renderBlocks(bubble, blocks);
-    requestAnimationFrame(scrollBottom);
-    return msg;
-  }
-
-  // Exponha no window
-  window.koduxRender = koduxRender;
-  window.koduxMdToBlocks = mdToBlocks;
-
-  // hook inicial
-  document.addEventListener('DOMContentLoaded', function(){
-    ensureComposer();
-    // Se existir o banner/preview antigo, oculte‑o no modo chat
-    const msgPreview = document.getElementById('msgPreview');
-    if (msgPreview) msgPreview.style.display = 'none';
-  });
+  window.ArchOrb={set,set:setArch,get:()=>ARCHES[idx],svg:()=>new XMLSerializer().serializeToString($orb)};
+  const hash=location.hash.replace('#','').trim(); if(hash) setArch(hash);
 })();
 </script>
+<!-- === /UNO • ORB dos Arquétipos (Injected) === -->
+
+<script id="BOOT_ORDER_ORCHESTRATOR">
+(function(){
+  // Deduplicate style/script tags by id and ensure final patch order
+  try{
+    const ORDER = [
+      'blue1Theme','customStyle','multiagent-styles','patch-blue1-theme',
+      'overlay-defaults','ls-panel-css','show-app-title-css',
+      'overlay-css-unify','overlay-guardian-css','orb-slot-css',
+      'hdpro-override','ATOM_UI_PATCH','OVERLAY_BG_ONLY','ARCH_FAB_ROUND_FIX'
+    ];
+    const seen = new Set();
+    // Remove duplicate style/script tags with same id (keep last)
+    ['style','script'].forEach(tag=>{
+      const els = Array.from(document.querySelectorAll(tag+'[id]'));
+      for (let i=0;i<els.length;i++){
+        const id = els[i].id;
+        const dups = els.filter(e=>e.id===id);
+        if (dups.length>1){
+          dups.slice(0, -1).forEach(x=>x.parentNode && x.parentNode.removeChild(x));
+        }
+      }
+    });
+    // Re-append in canonical order near end of HEAD to lock cascade
+    const head = document.head || document.querySelector('head');
+    if (head){
+      ORDER.forEach(id=>{
+        const el = document.getElementById(id);
+        if (el) head.appendChild(el);
+      });
+    }
+  }catch(e){}
+
+  // Service Worker updater (only when using external sw.js)
+  if ('serviceWorker' in navigator){
+    window.addEventListener('load', async () => {
+      try{
+        const reg = await navigator.serviceWorker.register('./sw.js', {scope:'./'});
+        // Ask for update check on load
+        try{ reg.update(); }catch{}
+        // Auto-reload on new SW activation (once)
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function(){
+          if (refreshing) return; refreshing = true; location.reload();
+        });
+        // If there's a waiting worker, tell it to skipWaiting
+        if (reg.waiting){
+          reg.waiting.postMessage({type:'SKIP_WAITING'});
+        }
+        // Listen for waiting in future
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          nw && nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller){
+              nw.postMessage({type:'SKIP_WAITING'});
+            }
+          });
+        });
+        // Handle message from SW
+        navigator.serviceWorker.addEventListener('message', evt => {
+          if (evt && evt.data && evt.data.type === 'RELOAD') location.reload();
+        });
+      }catch(e){/* ignore */}
+    });
+  }
+})();
+</script>
+  <!-- PATCH: 78K toggle for LS Panel and badge -->
+  <script id="patch-ls-toggle-78k">
+  (function(){
+    const LSKEY='dual.state.78k';
+    function isOn(){ return !!localStorage.getItem(LSKEY); }
+    function setUI(on){
+      const lsBtn=document.getElementById('lsToggle78k');
+      if(lsBtn){
+        lsBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        lsBtn.textContent = on ? '⚡ 78K: ON' : '⚡ 78K: OFF';
+        if(lsBtn.classList) lsBtn.classList.toggle('prime', !!on);
+      }
+      const badge=document.getElementById('badge78k');
+      if(badge){
+        badge.style.display = on ? 'inline' : 'none';
+      }
+    }
+    function enable(){
+      localStorage.setItem(LSKEY,'1');
+      try{ if(window.Ativar78K) window.Ativar78K(); }catch(e){}
+      setUI(true);
+    }
+    function disable(){
+      localStorage.removeItem(LSKEY);
+      try{ document.documentElement.style.removeProperty('--arch-overlay'); }catch(e){}
+      setUI(false);
+    }
+    function toggle(){ isOn() ? disable() : enable(); }
+    document.addEventListener('DOMContentLoaded', function(){
+      const btn=document.getElementById('lsToggle78k');
+      if(btn){ btn.addEventListener('click', function(){ toggle(); }); }
+      setUI(isOn());
+    });
+    window.addEventListener('storage', function(ev){
+      if(ev.key===LSKEY){
+        setUI(!!ev.newValue);
+      }
+    });
+  })();
+  </script>
 </body></html>
